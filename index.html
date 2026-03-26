@@ -2,7 +2,7 @@
 <html lang="en" class="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mara's Auditor</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,7 @@
     .modal {
       opacity: 0;
       pointer-events: none;
-      transition: all .2s ease;
+      transition: opacity .2s ease;
     }
     .modal.active {
       opacity: 1;
@@ -55,49 +55,59 @@
       color: white;
       border-color: #2563eb;
     }
+    .thin-scroll::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100,116,139,.35);
+      border-radius: 999px;
+    }
   </style>
 </head>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 h-screen overflow-hidden">
-  <div class="h-full flex flex-col">
-    <header class="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur flex items-center justify-between px-4 md:px-6">
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
-          <i class="fa-solid fa-clipboard-check"></i>
-        </div>
-        <div class="min-w-0">
-          <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
-          <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 md:gap-3">
-        <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-          <i class="fa-solid fa-cloud"></i>
-          <span>No API Linked</span>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
+  <div class="min-h-screen flex flex-col">
+    <header class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div class="min-w-0">
+            <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
+            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
+          </div>
         </div>
 
-        <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-          <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
-          <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+            <i class="fa-solid fa-cloud"></i>
+            <span>No API Linked</span>
+          </div>
 
-        <button id="btn-dash" onclick="switchTab('dash')" class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          Dashboard
-        </button>
-        <button id="btn-list" onclick="switchTab('list')" class="nav-tab text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          Master List
-        </button>
+          <button type="button" onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
+            <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
+          </button>
 
-        <button onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-          <i class="fa-solid fa-gear text-slate-500"></i>
-        </button>
+          <button id="btn-dash" type="button" onclick="switchTab('dash')" class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            Dashboard
+          </button>
+          <button id="btn-list" type="button" onclick="switchTab('list')" class="nav-tab text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            Master List
+          </button>
+
+          <button type="button" onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            <i class="fa-solid fa-gear text-slate-500"></i>
+          </button>
+        </div>
       </div>
     </header>
 
-    <div class="flex-1 overflow-hidden">
-      <main id="view-dash" class="h-full overflow-auto p-4 md:p-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="flex-1 min-h-0">
+      <main id="view-dash" class="h-full overflow-auto thin-scroll p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <div class="glass rounded-2xl p-5">
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Total Audits</p>
             <h2 id="kpi-total" class="text-3xl font-black">0</h2>
@@ -110,7 +120,7 @@
             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
             <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
           </div>
-          <button onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg">
+          <button type="button" onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
             <div class="h-full flex items-center justify-center gap-2">
               <i class="fa-solid fa-plus"></i>
               <span>NEW AUDIT</span>
@@ -136,9 +146,9 @@
       </main>
 
       <main id="view-list" class="hidden h-full overflow-hidden p-4 md:p-6">
-        <div class="glass rounded-2xl h-full overflow-hidden flex flex-col">
-          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            <div class="relative w-full md:w-80">
+        <div class="glass rounded-2xl h-full overflow-hidden flex flex-col min-h-0">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+            <div class="relative w-full lg:w-80">
               <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
               <input
                 id="searchInput"
@@ -148,18 +158,18 @@
                 class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
               />
             </div>
-            <div class="flex gap-2">
-              <button onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
                 Refresh
               </button>
-              <button onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
+              <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
                 <i class="fa-solid fa-plus mr-1"></i>
                 Add Audit
               </button>
             </div>
           </div>
 
-          <div class="flex-1 overflow-auto">
+          <div class="flex-1 overflow-auto thin-scroll min-h-0">
             <table class="w-full text-left text-sm whitespace-nowrap">
               <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                 <tr class="text-[11px] uppercase tracking-wider text-slate-500">
@@ -183,200 +193,204 @@
     </div>
   </div>
 
-  <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-auto">
-    <div class="w-full max-w-6xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl my-8">
-      <div class="sticky top-0 z-10 rounded-t-3xl bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 md:px-6 py-4 flex items-center justify-between">
-        <div>
-          <h2 id="modalTitle" class="text-xl font-black">Create Audit</h2>
-          <p class="text-xs text-slate-500">One row per agent audit</p>
+  <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm p-2 sm:p-4 md:p-6">
+    <div class="w-full max-w-6xl mx-auto h-full flex items-center justify-center">
+      <div class="w-full max-h-[96vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+        <div class="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-start sm:items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h2 id="modalTitle" class="text-xl font-black">Create Audit</h2>
+            <p class="text-xs text-slate-500">One row per agent audit</p>
+          </div>
+          <button type="button" onclick="closeCrudModal()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
-        <button onclick="closeCrudModal()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
 
-      <div class="p-5 md:p-6">
-        <form id="auditForm" class="space-y-6" oninput="calculateScores()">
-          <input type="hidden" id="audit_id" />
+        <div class="flex-1 overflow-auto thin-scroll">
+          <div class="p-4 md:p-6 pb-8">
+            <form id="auditForm" class="space-y-6" oninput="calculateScores()" onsubmit="event.preventDefault(); saveAudit();">
+              <input type="hidden" id="audit_id" />
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Date</label>
-              <input id="audit_date" type="date" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent Name</label>
-              <input id="agent_name" type="text" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
-              <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-            </div>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Date</label>
+                  <input id="audit_date" type="date" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent Name</label>
+                  <input id="agent_name" type="text" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
+                  <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-black text-blue-600 dark:text-blue-400">Basic Info</h3>
+                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                      <span id="disp_basic_weighted">0.00</span> / 50
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Name</label>
+                      <input id="property_name_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt Company</label>
+                      <input id="mgmt_company_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional Mgr</label>
+                      <input id="regional_mgr_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
+                      <input id="email_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label>
+                      <input id="website_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office Hours</label>
+                      <input id="office_hours_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                  </div>
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-black text-blue-600 dark:text-blue-400">Locator Info</h3>
+                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                      <span id="disp_locator_weighted">0.00</span> / 20
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label>
+                      <input id="commission_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator Note</label>
+                      <input id="locator_note_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label>
+                      <input id="requirements_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-black text-blue-600 dark:text-blue-400">Occupancy</h3>
+                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                      <span id="disp_occupancy_weighted">0.00</span> / 10
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label>
+                      <input id="occupancy_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special Coding</label>
+                      <input id="special_coding_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                  </div>
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-black text-blue-600 dark:text-blue-400">Floorplan / Pricing</h3>
+                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                      <span id="disp_floorplan_weighted">0.00</span> / 10
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label>
+                      <input id="pricing_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label>
+                      <input id="availability_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                  </div>
+                </section>
+
+                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-black text-blue-600 dark:text-blue-400">Notation</h3>
+                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                      <span id="disp_notation_weighted">0.00</span> / 10
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-1 gap-3">
+                    <div>
+                      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label>
+                      <input id="notation_score" type="number" min="0" max="5" step="0.01" inputmode="decimal" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error / Note</label>
+                <textarea id="final_error_note" rows="4" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
+              </section>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p>
+                  <div id="disp_basic_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p>
+                  <div id="disp_locator_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4 overflow-hidden">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p>
+                  <div id="disp_occupancy_raw" class="text-2xl font-black break-all">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p>
+                  <div id="disp_floorplan_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p>
+                  <div id="disp_notation_raw" class="text-2xl font-black">0.00</div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Raw</div>
+                  <div id="disp_overall_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="sm:text-right">
+                  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
+                  <div id="disp_overall_score" class="text-4xl font-black">0.00</div>
+                </div>
+              </div>
+            </form>
           </div>
+        </div>
 
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-blue-600 dark:text-blue-400">Basic Info</h3>
-                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                  <span id="disp_basic_weighted">0.00</span> / 50
-                </span>
-              </div>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Name</label>
-                  <input id="property_name_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt Company</label>
-                  <input id="mgmt_company_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional Mgr</label>
-                  <input id="regional_mgr_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
-                  <input id="email_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label>
-                  <input id="website_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office Hours</label>
-                  <input id="office_hours_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-blue-600 dark:text-blue-400">Locator Info</h3>
-                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                  <span id="disp_locator_weighted">0.00</span> / 20
-                </span>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label>
-                  <input id="commission_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator Note</label>
-                  <input id="locator_note_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label>
-                  <input id="requirements_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-blue-600 dark:text-blue-400">Occupancy</h3>
-                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                  <span id="disp_occupancy_weighted">0.00</span> / 10
-                </span>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label>
-                  <input id="occupancy_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special Coding</label>
-                  <input id="special_coding_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-blue-600 dark:text-blue-400">Floorplan / Pricing</h3>
-                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                  <span id="disp_floorplan_weighted">0.00</span> / 10
-                </span>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label>
-                  <input id="pricing_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label>
-                  <input id="availability_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-black text-blue-600 dark:text-blue-400">Notation</h3>
-                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                  <span id="disp_notation_weighted">0.00</span> / 10
-                </span>
-              </div>
-              <div class="grid grid-cols-1 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label>
-                  <input id="notation_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error / Note</label>
-            <textarea id="final_error_note" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
-          </section>
-
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <div class="rounded-2xl bg-slate-900 text-white p-4">
-              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p>
-              <div id="disp_basic_raw" class="text-2xl font-black">0</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900 text-white p-4">
-              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p>
-              <div id="disp_locator_raw" class="text-2xl font-black">0</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900 text-white p-4">
-              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p>
-              <div id="disp_occupancy_raw" class="text-2xl font-black">0</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900 text-white p-4">
-              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p>
-              <div id="disp_floorplan_raw" class="text-2xl font-black">0</div>
-            </div>
-            <div class="rounded-2xl bg-slate-900 text-white p-4">
-              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p>
-              <div id="disp_notation_raw" class="text-2xl font-black">0</div>
-            </div>
-          </div>
-
-          <div class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Raw</div>
-              <div id="disp_overall_raw" class="text-2xl font-black">0</div>
-            </div>
-            <div class="text-right">
-              <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
-              <div id="disp_overall_score" class="text-4xl font-black">0.00</div>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <div class="sticky bottom-0 rounded-b-3xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-5 md:px-6 py-4 flex justify-end gap-3">
-        <button onclick="closeCrudModal()" class="px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-          Cancel
-        </button>
-        <button onclick="saveAudit()" id="saveBtn" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-          <i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit
-        </button>
+        <div class="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
+          <button type="button" onclick="closeCrudModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+            Cancel
+          </button>
+          <button type="submit" form="auditForm" id="saveBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+            <i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -394,11 +408,11 @@
         class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
       />
 
-      <div class="mt-5 flex justify-end gap-3">
-        <button onclick="closeSettings()" class="px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <button type="button" onclick="closeSettings()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
           Close
         </button>
-        <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+        <button type="button" onclick="saveSettings()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
           Save & Connect
         </button>
       </div>
@@ -440,6 +454,7 @@
     function initApp() {
       document.getElementById('appScriptUrl').value = apiUrl;
       renderAll();
+
       if (apiUrl) {
         fetchData();
       } else {
@@ -481,8 +496,8 @@
     }
 
     function openCrudModal(id = null) {
-      document.getElementById('crudModal').classList.add('active');
-      document.getElementById('auditForm').reset();
+      const form = document.getElementById('auditForm');
+      form.reset();
       document.getElementById('audit_id').value = '';
       document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
 
@@ -492,6 +507,7 @@
           Object.keys(record).forEach(key => {
             const el = document.getElementById(key);
             if (!el) return;
+
             if (key === 'audit_date') {
               el.value = normalizeDateForInput(record[key]);
             } else {
@@ -504,6 +520,7 @@
       }
 
       calculateScores();
+      document.getElementById('crudModal').classList.add('active');
     }
 
     function closeCrudModal() {
@@ -516,12 +533,12 @@
       if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
       const d = new Date(s);
       if (isNaN(d.getTime())) return '';
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
     function getTodayLocal() {
       const d = new Date();
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
     function pad(n) {
@@ -537,19 +554,26 @@
       return Math.min(max, Math.max(min, value));
     }
 
+    function round2(n) {
+      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    }
+
     function getScore(id) {
       const el = document.getElementById(id);
       if (!el) return 0;
-      let val = toNumber(el.value);
+
+      let raw = String(el.value || '').trim();
+      if (raw === '') return 0;
+
+      let val = toNumber(raw);
       val = clamp(val, 0, 5);
-      if (el.value !== '' && Number(el.value) !== val) {
+      val = round2(val);
+
+      if (String(val) !== raw && raw !== '') {
         el.value = val;
       }
-      return val;
-    }
 
-    function round2(n) {
-      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+      return val;
     }
 
     function scaleScore(raw, maxRaw, weightedMax) {
@@ -558,29 +582,32 @@
     }
 
     function calculateScores() {
-      const basic_raw =
+      const basic_raw = round2(
         getScore('property_name_score') +
         getScore('mgmt_company_score') +
         getScore('regional_mgr_score') +
         getScore('email_score') +
         getScore('website_score') +
-        getScore('office_hours_score');
+        getScore('office_hours_score')
+      );
 
-      const locator_raw =
+      const locator_raw = round2(
         getScore('commission_score') +
         getScore('locator_note_score') +
-        getScore('requirements_score');
+        getScore('requirements_score')
+      );
 
-      const occupancy_raw =
+      const occupancy_raw = round2(
         getScore('occupancy_score') +
-        getScore('special_coding_score');
+        getScore('special_coding_score')
+      );
 
-      const floorplan_raw =
+      const floorplan_raw = round2(
         getScore('pricing_score') +
-        getScore('availability_score');
+        getScore('availability_score')
+      );
 
-      const notation_raw =
-        getScore('notation_score');
+      const notation_raw = round2(getScore('notation_score'));
 
       const basic_weighted = scaleScore(basic_raw, 30, WEIGHTS.basic);
       const locator_weighted = scaleScore(locator_raw, 15, WEIGHTS.locator);
@@ -588,16 +615,19 @@
       const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
       const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
 
-      const overall_raw = basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw;
+      const overall_raw = round2(
+        basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw
+      );
+
       const overall_score_100 = round2(
         basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted
       );
 
-      setText('disp_basic_raw', basic_raw);
-      setText('disp_locator_raw', locator_raw);
-      setText('disp_occupancy_raw', occupancy_raw);
-      setText('disp_floorplan_raw', floorplan_raw);
-      setText('disp_notation_raw', notation_raw);
+      setText('disp_basic_raw', basic_raw.toFixed(2));
+      setText('disp_locator_raw', locator_raw.toFixed(2));
+      setText('disp_occupancy_raw', occupancy_raw.toFixed(2));
+      setText('disp_floorplan_raw', floorplan_raw.toFixed(2));
+      setText('disp_notation_raw', notation_raw.toFixed(2));
 
       setText('disp_basic_weighted', basic_weighted.toFixed(2));
       setText('disp_locator_weighted', locator_weighted.toFixed(2));
@@ -605,7 +635,7 @@
       setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
       setText('disp_notation_weighted', notation_weighted.toFixed(2));
 
-      setText('disp_overall_raw', overall_raw);
+      setText('disp_overall_raw', overall_raw.toFixed(2));
       setText('disp_overall_score', overall_score_100.toFixed(2));
 
       return {
@@ -690,13 +720,29 @@
         if (apiUrl) {
           setSyncStatus('Saving...', 'spinner', 'loading');
 
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, data: payload })
+          const body = new URLSearchParams();
+          body.set('action', action);
+
+          Object.keys(payload).forEach(key => {
+            body.set(key, payload[key] == null ? '' : String(payload[key]));
           });
 
-          const json = await res.json();
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: body.toString()
+          });
+
+          const text = await res.text();
+          let json;
+
+          try {
+            json = JSON.parse(text);
+          } catch (e) {
+            throw new Error('Invalid server response. Re-check your deployed Apps Script /exec URL and deployment access.');
+          }
 
           if (!json || json.status !== 'success') {
             throw new Error(json?.message || 'Failed to save record.');
@@ -706,13 +752,14 @@
         } else {
           if (action === 'create') {
             payload.audit_id = 'AUD-' + Date.now();
-            db.unshift(payload);
+            db.unshift(normalizeRecord(payload));
           } else {
             const idx = db.findIndex(r => String(r.audit_id) === String(payload.audit_id));
             if (idx === -1) throw new Error('Record not found in local mode.');
-            db[idx] = payload;
+            db[idx] = normalizeRecord(payload);
           }
 
+          db.sort(sortRecords);
           renderAll();
           setSyncStatus('Saved locally', 'cloud', 'neutral');
         }
@@ -732,6 +779,8 @@
       const btn = document.getElementById('saveBtn');
       if (!btn) return;
       btn.disabled = loading;
+      btn.classList.toggle('opacity-70', loading);
+      btn.classList.toggle('cursor-not-allowed', loading);
       btn.innerHTML = loading
         ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
         : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
@@ -744,16 +793,26 @@
         if (apiUrl) {
           setSyncStatus('Deleting...', 'spinner', 'loading');
 
+          const body = new URLSearchParams();
+          body.set('action', 'delete');
+          body.set('audit_id', id);
+
           const res = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'delete',
-              data: { audit_id: id }
-            })
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: body.toString()
           });
 
-          const json = await res.json();
+          const text = await res.text();
+          let json;
+
+          try {
+            json = JSON.parse(text);
+          } catch (e) {
+            throw new Error('Invalid server response while deleting.');
+          }
 
           if (!json || json.status !== 'success') {
             throw new Error(json?.message || 'Failed to delete record.');
@@ -783,7 +842,14 @@
         if (showLoading) setSyncStatus('Loading...', 'spinner', 'loading');
 
         const res = await fetch(apiUrl, { method: 'GET' });
-        const json = await res.json();
+        const text = await res.text();
+
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          throw new Error('Could not read API response. Check your /exec URL and deployment permissions.');
+        }
 
         if (!json || json.status !== 'success') {
           throw new Error(json?.message || 'Failed to load data.');
@@ -822,8 +888,8 @@
 
     function sortRecords(a, b) {
       const da = String(a.audit_date || '');
-      const db = String(b.audit_date || '');
-      if (da !== db) return db.localeCompare(da);
+      const dbb = String(b.audit_date || '');
+      if (da !== dbb) return dbb.localeCompare(da);
       return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
     }
 
@@ -922,13 +988,13 @@
               </span>
             </td>
             <td class="px-5 py-4 text-right">
-              <button onclick="exportPdf('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Export PDF">
+              <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
                 <i class="fa-solid fa-file-pdf"></i>
               </button>
-              <button onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
+              <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+              <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </td>
@@ -1049,13 +1115,7 @@
       });
     }
 
-    function exportPdf(id) {
-      const record = db.find(r => String(r.audit_id) === String(id));
-      if (!record) {
-        alert('Record not found.');
-        return;
-      }
-
+    function buildPdf(record) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
@@ -1119,9 +1179,24 @@
       const lines = doc.splitTextToSize(noteText, 180);
       doc.text(lines, 14, finalY + 18);
 
-      const safeAgent = String(record.agent_name || 'Agent').replace(/[^\w\-]+/g, '_');
-      const safeId = String(record.audit_id || 'Audit').replace(/[^\w\-]+/g, '_');
-      doc.save(`Audit_${safeAgent}_${safeId}.pdf`);
+      return doc;
+    }
+
+    function openPdfInNewTab(id) {
+      const record = db.find(r => String(r.audit_id) === String(id));
+      if (!record) {
+        alert('Record not found.');
+        return;
+      }
+
+      const doc = buildPdf(record);
+      const blob = doc.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 60000);
     }
 
     function escapeHtml(value) {
@@ -1143,6 +1218,13 @@
 
       if (e.target === crudModal) closeCrudModal();
       if (e.target === settingsModal) closeSettings();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeCrudModal();
+        closeSettings();
+      }
     });
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1180,7 +1262,7 @@
           overall_score_100: 90.67,
           final_error_note: 'Sample local record'
         }
-      ];
+      ].map(normalizeRecord);
 
       initApp();
     });
