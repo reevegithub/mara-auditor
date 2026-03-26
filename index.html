@@ -22,6 +22,10 @@
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif']
+          },
+          boxShadow: {
+            soft: '0 12px 32px rgba(15,23,42,.08)',
+            card: '0 8px 24px rgba(15,23,42,.06)',
           }
         }
       }
@@ -29,7 +33,9 @@
   </script>
 
   <style>
+    html, body { height: 100%; }
     body { font-family: 'Inter', sans-serif; }
+
     .glass {
       background: rgba(255,255,255,.88);
       backdrop-filter: blur(12px);
@@ -41,6 +47,7 @@
       border-color: rgba(51,65,85,.95);
       box-shadow: 0 12px 32px rgba(2,6,23,.35);
     }
+
     .modal {
       opacity: 0;
       pointer-events: none;
@@ -50,11 +57,14 @@
       opacity: 1;
       pointer-events: auto;
     }
+
     .nav-tab.active {
       background: #2563eb;
       color: white;
       border-color: #2563eb;
+      box-shadow: 0 8px 20px rgba(37,99,235,.25);
     }
+
     .thin-scroll::-webkit-scrollbar {
       width: 10px;
       height: 10px;
@@ -63,6 +73,7 @@
       background: rgba(100,116,139,.35);
       border-radius: 999px;
     }
+
     .score-input::-webkit-outer-spin-button,
     .score-input::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -70,6 +81,36 @@
     }
     .score-input {
       -moz-appearance: textfield;
+    }
+
+    .loading-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .pulse-dot {
+      animation: pulseDot 1.2s infinite ease-in-out;
+    }
+    .pulse-dot:nth-child(2) { animation-delay: .15s; }
+    .pulse-dot:nth-child(3) { animation-delay: .3s; }
+
+    @keyframes pulseDot {
+      0%, 80%, 100% { transform: scale(.8); opacity: .45; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .table-card {
+      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.9);
+    }
+    .dark .table-card {
+      border-color: rgba(51,65,85,.95);
+      background: rgba(15,23,42,.82);
     }
   </style>
 </head>
@@ -79,12 +120,12 @@
     <header class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
+          <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
           <div class="min-w-0">
             <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
+            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Professional QA Audit System</p>
           </div>
         </div>
 
@@ -102,8 +143,9 @@
           <button id="btn-dash" type="button" onclick="switchTab('dash')" class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             Dashboard
           </button>
-          <button id="btn-list" type="button" onclick="switchTab('list')" class="nav-tab text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            Master List
+
+          <button type="button" onclick="goToAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            A.I Chat
           </button>
 
           <button type="button" onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
@@ -136,7 +178,7 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
           <div class="glass rounded-2xl p-5">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Score Trends</h3>
             <div class="h-72">
@@ -151,34 +193,46 @@
             </div>
           </div>
         </div>
-      </main>
 
-      <main id="view-list" class="hidden h-full overflow-hidden p-4 md:p-6">
-        <div class="glass rounded-2xl h-full overflow-hidden flex flex-col min-h-0">
+        <div class="glass rounded-2xl overflow-hidden">
           <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-            <div class="relative w-full lg:w-80">
-              <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-              <input
-                id="searchInput"
-                type="text"
-                oninput="renderAll()"
-                placeholder="Search by audit ID, agent, channel, note..."
-                class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-              />
+            <div>
+              <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Audit Records</h3>
+              <p class="text-xs text-slate-500 mt-1">Manage, export, and review all audit entries.</p>
             </div>
+
             <div class="flex flex-wrap gap-2">
+              <div class="relative w-full sm:w-72">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input
+                  id="searchInput"
+                  type="text"
+                  oninput="renderAll()"
+                  placeholder="Search by audit ID, agent, channel, note..."
+                  class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
+                />
+              </div>
+
               <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                Refresh
+                <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
               </button>
+
+              <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
+              </button>
+
+              <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
+              </button>
+
               <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
-                <i class="fa-solid fa-plus mr-1"></i>
-                Add Audit
+                <i class="fa-solid fa-plus mr-1"></i>Add Audit
               </button>
             </div>
           </div>
 
-          <div class="flex-1 overflow-auto thin-scroll min-h-0">
-            <div class="min-w-[980px]">
+          <div class="overflow-auto thin-scroll">
+            <div class="min-w-[1100px]">
               <table class="w-full text-left text-sm whitespace-nowrap">
                 <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                   <tr class="text-[11px] uppercase tracking-wider text-slate-500">
@@ -201,6 +255,13 @@
         </div>
       </main>
     </div>
+
+    <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div>© 2026 Mara's Auditor</div>
+        <div>Elegant audit tracking, reporting, and AI-assisted review</div>
+      </div>
+    </footer>
   </div>
 
   <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm p-2 sm:p-4 md:p-6">
@@ -317,7 +378,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p><div id="disp_basic_raw" class="text-2xl font-black">0.00</div></div>
                 <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p><div id="disp_locator_raw" class="text-2xl font-black">0.00</div></div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4 overflow-hidden"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p><div id="disp_occupancy_raw" class="text-2xl font-black break-all">0.00</div></div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p><div id="disp_occupancy_raw" class="text-2xl font-black">0.00</div></div>
                 <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p><div id="disp_floorplan_raw" class="text-2xl font-black">0.00</div></div>
                 <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p><div id="disp_notation_raw" class="text-2xl font-black">0.00</div></div>
               </div>
@@ -372,6 +433,21 @@
     </div>
   </div>
 
+  <div id="loadingOverlay" class="loading-overlay fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6 text-center">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg mb-4">
+        <i id="loadingIcon" class="fa-solid fa-spinner fa-spin text-2xl"></i>
+      </div>
+      <h3 id="loadingTitle" class="text-lg font-black">Processing</h3>
+      <p id="loadingText" class="text-sm text-slate-500 mt-2">Please wait...</p>
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+      </div>
+    </div>
+  </div>
+
   <script>
     const WEIGHTS = {
       basic: 50,
@@ -415,21 +491,42 @@
       }
     }
 
+    function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
+      const overlay = document.getElementById('loadingOverlay');
+      const titleEl = document.getElementById('loadingTitle');
+      const textEl = document.getElementById('loadingText');
+      const iconEl = document.getElementById('loadingIcon');
+
+      titleEl.textContent = title;
+      textEl.textContent = text;
+      iconEl.className = `fa-solid fa-${icon}${spinning ? ' fa-spin' : ''} text-2xl`;
+      overlay.classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
+      localStorage.setItem('maraTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
       renderCharts();
     }
 
+    function applySavedTheme() {
+      const saved = localStorage.getItem('maraTheme');
+      if (saved === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    }
+
+    function goToAI() {
+      window.location.href = 'AI.html';
+    }
+
     function switchTab(tab) {
-      ['dash', 'list'].forEach(id => {
-        document.getElementById('view-' + id).classList.add('hidden');
-        document.getElementById('btn-' + id).classList.remove('active');
-      });
-
-      document.getElementById('view-' + tab).classList.remove('hidden');
-      document.getElementById('btn-' + tab).classList.add('active');
-
-      if (tab === 'dash') renderCharts();
+      document.getElementById('view-dash').classList.remove('hidden');
+      document.getElementById('btn-dash').classList.add('active');
+      renderCharts();
     }
 
     function openSettings() {
@@ -460,11 +557,8 @@
           Object.keys(record).forEach(key => {
             const el = document.getElementById(key);
             if (!el) return;
-            if (key === 'audit_date') {
-              el.value = normalizeDateForInput(record[key]);
-            } else {
-              el.value = record[key] ?? '';
-            }
+            if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
+            else el.value = record[key] ?? '';
           });
         }
       } else {
@@ -521,10 +615,7 @@
       val = clamp(val, 0, 5);
       val = round2(val);
 
-      if (String(val) !== raw && raw !== '') {
-        el.value = val;
-      }
-
+      if (String(val) !== raw && raw !== '') el.value = val;
       return val;
     }
 
@@ -567,13 +658,8 @@
       const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
       const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
 
-      const overall_raw = round2(
-        basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw
-      );
-
-      const overall_score_100 = round2(
-        basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted
-      );
+      const overall_raw = round2(basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw);
+      const overall_score_100 = round2(basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted);
 
       setText('disp_basic_raw', basic_raw.toFixed(2));
       setText('disp_locator_raw', locator_raw.toFixed(2));
@@ -636,11 +722,9 @@
 
         pricing_score: getScore('pricing_score'),
         availability_score: getScore('availability_score'),
-
         notation_score: getScore('notation_score'),
 
         final_error_note: (document.getElementById('final_error_note').value || '').trim(),
-
         ...calc
       };
     }
@@ -665,9 +749,7 @@
 
       const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
         body: body.toString()
       });
 
@@ -677,7 +759,7 @@
         json = JSON.parse(text);
       } catch (e) {
         console.error('Raw server response:', text);
-        throw new Error('Invalid server response. Check Apps Script deployment and make sure latest code is deployed.');
+        throw new Error('Invalid server response. Check Apps Script deployment.');
       }
 
       if (!json || json.status !== 'success') {
@@ -698,6 +780,10 @@
       try {
         isSaving = true;
         toggleSaveButton(true);
+        showLoading(
+          action === 'create' ? 'Creating Audit' : 'Updating Audit',
+          'Saving audit record and recalculating scores...'
+        );
 
         if (apiUrl) {
           setSyncStatus('Saving...', 'spinner', 'loading');
@@ -727,6 +813,7 @@
       } finally {
         isSaving = false;
         toggleSaveButton(false);
+        hideLoading();
       }
     }
 
@@ -745,6 +832,7 @@
       if (!confirm('Delete this audit record?')) return;
 
       try {
+        showLoading('Deleting Audit', 'Removing record and updating dashboard...');
         if (apiUrl) {
           setSyncStatus('Deleting...', 'spinner', 'loading');
           await apiPost({ action: 'delete', audit_id: id });
@@ -759,10 +847,12 @@
         console.error(error);
         alert(error.message || 'Error deleting audit.');
         setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
-    async function fetchData(showLoading = true) {
+    async function fetchData(showOverlay = true) {
       if (!apiUrl) {
         setSyncStatus('No API Linked', 'cloud', 'neutral');
         renderAll();
@@ -770,7 +860,8 @@
       }
 
       try {
-        if (showLoading) setSyncStatus('Loading...', 'spinner', 'loading');
+        if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and logs...');
+        setSyncStatus('Loading...', 'spinner', 'loading');
 
         const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
         const text = await res.text();
@@ -780,7 +871,7 @@
           json = JSON.parse(text);
         } catch (e) {
           console.error('Raw GET response:', text);
-          throw new Error('Could not read API response. Check your /exec URL and deployment permissions.');
+          throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
         }
 
         if (!json || json.status !== 'success') {
@@ -795,6 +886,8 @@
         console.error(error);
         alert(error.message || 'Connection error');
         setSyncStatus('Connection error', 'triangle-exclamation', 'error');
+      } finally {
+        if (showOverlay) hideLoading();
       }
     }
 
@@ -864,12 +957,8 @@
 
     function renderKPIs() {
       const total = db.length;
-      const avg = total
-        ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total)
-        : 0;
-      const agents = new Set(
-        db.map(r => String(r.agent_name || '').trim()).filter(Boolean)
-      ).size;
+      const avg = total ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total) : 0;
+      const agents = new Set(db.map(r => String(r.agent_name || '').trim()).filter(Boolean)).size;
 
       setText('kpi-total', total);
       setText('kpi-avg', `${avg.toFixed(2)}%`);
@@ -963,7 +1052,6 @@
 
       if (trendChart) trendChart.destroy();
       if (agentChart) agentChart.destroy();
-
       if (!db.length) return;
 
       const trendRows = [...db]
@@ -990,16 +1078,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: {
-              min: 0,
-              max: 100,
-              ticks: { color: tickColor },
-              grid: { color: gridColor }
-            },
-            x: {
-              ticks: { color: tickColor },
-              grid: { color: gridColor }
-            }
+            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { color: tickColor }, grid: { color: gridColor } }
           }
         }
       });
@@ -1033,16 +1113,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: {
-              min: 0,
-              max: 100,
-              ticks: { color: tickColor },
-              grid: { color: gridColor }
-            },
-            x: {
-              ticks: { color: tickColor },
-              grid: { display: false }
-            }
+            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { color: tickColor }, grid: { display: false } }
           }
         }
       });
@@ -1051,16 +1123,24 @@
     function buildPdf(record) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
+
       const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 10;
-      const contentWidth = pageWidth - (margin * 2);
+      const margin = 8;
+      const tableX = margin;
+      const wLabel = 112;
+      const wScoreCols = 13;
+      const wScoreTotal = 23;
+      const rowH = 8;
+      const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
 
-      const labelColor = [70, 70, 70];
-      const borderColor = [40, 40, 40];
-      const fillHeader = [225, 225, 225];
-      const fillScore = [236, 228, 191];
+      const fillHeader = [214, 214, 214];
+      const fillScore = [235, 226, 190];
+      const border = [40, 40, 40];
 
-      function box(x, y, w, h, fill) {
+      doc.setDrawColor(...border);
+      doc.setTextColor(10, 10, 10);
+
+      function rect(x, y, w, h, fill = null) {
         if (fill) {
           doc.setFillColor(...fill);
           doc.rect(x, y, w, h, 'FD');
@@ -1069,121 +1149,122 @@
         }
       }
 
-      function txt(text, x, y, opts = {}) {
-        const {
-          size = 8,
-          style = 'normal',
-          align = 'left'
-        } = opts;
+      function text(str, x, y, opts = {}) {
+        const { size = 8, style = 'normal', align = 'left' } = opts;
         doc.setFont('helvetica', style);
         doc.setFontSize(size);
-        doc.text(String(text ?? ''), x, y, { align });
+        doc.text(String(str ?? ''), x, y, { align });
       }
 
-      function row(y, label, score, scoreTotal, height = 8) {
-        box(margin, y, 115, height);
-        box(125, y, 18, height);
-        box(143, y, 18, height);
-        box(161, y, 18, height);
-        box(179, y, 21, height);
-
-        txt(label, margin + 2, y + 5.2, { size: 7 });
-        txt(score, 170, y + 5.2, { size: 7, align: 'center' });
-        txt(scoreTotal, 189.5, y + 5.2, { size: 7, align: 'center' });
+      function scoreMark(score, colIndex, startX, y) {
+        const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
+        if (rounded === colIndex) {
+          text('X', startX + (wScoreCols / 2), y + 5.3, { size: 8, style: 'bold', align: 'center' });
+        }
       }
 
-      box(margin, 10, contentWidth, 14);
-      txt("MRI ApartmentData", pageWidth / 2, 17, { size: 14, style: 'bold', align: 'center' });
-      txt("Audit Form", pageWidth / 2, 22, { size: 11, align: 'center' });
+      function drawSectionHeader(y, title, showScoreLabel = false) {
+        rect(tableX, y, wLabel, rowH, fillHeader);
 
-      box(margin, 24, contentWidth, 10);
-      txt(`Audit Date: ${formatDisplayDate(record.audit_date)}`, margin + 2, 30, { size: 8, style: 'italic' });
+        for (let i = 0; i < 5; i++) {
+          rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH, fillHeader);
+        }
 
-      box(margin, 34, contentWidth, 10);
-      box(margin, 34, 100, 10);
-      box(110, 34, 100, 10);
-      txt(`Agent: ${record.agent_name || '-'}`, margin + 2, 40, { size: 8, style: 'italic' });
-      txt(`Email/AI: ${record.audit_channel || '-'}`, 112, 40, { size: 8, style: 'italic' });
+        rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH, fillScore);
 
-      txt('Criteria for Evaluation (Rate 1-3, 1 being poor, 3 being excellent):', margin, 50, { size: 8 });
+        text(title, tableX + 2, y + 5.2, { size: 7.5, style: 'normal' });
+
+        for (let i = 1; i <= 5; i++) {
+          const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
+          text(i, x, y + 5.2, { size: 7, style: 'bold', align: 'center' });
+        }
+
+        if (showScoreLabel) {
+          text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+            size: 7,
+            style: 'bold',
+            align: 'center'
+          });
+        }
+      }
+
+      function drawRow(y, label, score, scoreTotal, italic = false) {
+        rect(tableX, y, wLabel, rowH);
+        for (let i = 0; i < 5; i++) {
+          rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH);
+        }
+        rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH);
+
+        text(label, tableX + 2, y + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
+
+        for (let i = 1; i <= 5; i++) {
+          scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), y);
+        }
+
+        text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+          size: 7,
+          align: 'center'
+        });
+      }
+
+      rect(margin, 10, tableWidth, 14);
+      text('MRI ApartmentData', margin + (tableWidth / 2), 17, { size: 14, style: 'bold', align: 'center' });
+      text('Audit Form', margin + (tableWidth / 2), 22, { size: 11, align: 'center' });
+
+      rect(margin, 24, tableWidth, 10);
+      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, margin + 2, 30, { size: 8, style: 'italic' });
+
+      rect(margin, 34, tableWidth, 10);
+      rect(margin, 34, 94, 10);
+      rect(margin + 94, 34, tableWidth - 94, 10);
+      text(`Agent: ${record.agent_name || '-'}`, margin + 2, 40, { size: 8, style: 'italic' });
+      text(`Email/AI: ${record.audit_channel || '-'}`, margin + 96, 40, { size: 8, style: 'italic' });
+
+      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', margin, 50, { size: 8 });
 
       let y = 54;
 
-      box(margin, y, 115, 8, fillHeader);
-      box(125, y, 18, 8, fillHeader);
-      box(143, y, 18, 8, fillHeader);
-      box(161, y, 18, 8, fillHeader);
-      box(179, y, 21, 8, fillScore);
-      txt('Basic Information (Counts 2X)', margin + 2, y + 5.2, { size: 8 });
-      txt('Score Total', 189.5, y + 5.2, { size: 7, style: 'bold', align: 'center' });
-      y += 8;
+      drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
+      drawRow(y, 'Property Name:', record.property_name_score, '10'); y += rowH;
+      drawRow(y, 'Management Company:', record.mgmt_company_score, '10'); y += rowH;
+      drawRow(y, 'Apt Mgr/Regional Manager:', record.regional_mgr_score, '10'); y += rowH;
+      drawRow(y, 'Email Address:', record.email_score, '10'); y += rowH;
+      drawRow(y, 'Website:', record.website_score, '10'); y += rowH;
+      drawRow(y, 'Office Hours:', record.office_hours_score, '10'); y += rowH;
+      drawRow(y, 'Subtotal:', record.basic_raw, formatNum(record.basic_weighted), true); y += 10;
 
-      row(y, 'Property Name:', formatNum(record.property_name_score), '10'); y += 8;
-      row(y, 'Management Company:', formatNum(record.mgmt_company_score), '10'); y += 8;
-      row(y, 'Apt Mgr/Regional Manager:', formatNum(record.regional_mgr_score), '10'); y += 8;
-      row(y, 'Email Address:', formatNum(record.email_score), '10'); y += 8;
-      row(y, 'Website:', formatNum(record.website_score), '10'); y += 8;
-      row(y, 'Office Hours:', formatNum(record.office_hours_score), '10'); y += 8;
-      row(y, 'Subtotal:', formatNum(record.basic_raw), formatNum(record.basic_weighted)); y += 10;
+      drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
+      drawRow(y, 'Commission:', record.commission_score, '10'); y += rowH;
+      drawRow(y, 'Note:', record.locator_note_score, '10'); y += rowH;
+      drawRow(y, 'Requirements:', record.requirements_score, '10'); y += rowH;
+      drawRow(y, 'Subtotal:', record.locator_raw, formatNum(record.locator_weighted), true); y += 10;
 
-      box(margin, y, 115, 8, fillHeader);
-      box(125, y, 18, 8, fillHeader);
-      box(143, y, 18, 8, fillHeader);
-      box(161, y, 18, 8, fillHeader);
-      box(179, y, 21, 8, fillScore);
-      txt('Locator Information (Counts 2X)', margin + 2, y + 5.2, { size: 8 });
-      y += 8;
+      drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
+      drawRow(y, 'Occupancy:', record.occupancy_score, '5'); y += rowH;
+      drawRow(y, 'Special Coding:', record.special_coding_score, '5'); y += rowH;
+      drawRow(y, 'Subtotal:', record.occupancy_raw, formatNum(record.occupancy_weighted), true); y += 10;
 
-      row(y, 'Commission:', formatNum(record.commission_score), '10'); y += 8;
-      row(y, 'Note:', formatNum(record.locator_note_score), '10'); y += 8;
-      row(y, 'Requirements:', formatNum(record.requirements_score), '10'); y += 8;
-      row(y, 'Subtotal:', formatNum(record.locator_raw), formatNum(record.locator_weighted)); y += 10;
+      drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
+      drawRow(y, 'Pricing:', record.pricing_score, '5'); y += rowH;
+      drawRow(y, 'Availability:', record.availability_score, '5'); y += rowH;
+      drawRow(y, 'Subtotal:', record.floorplan_raw, formatNum(record.floorplan_weighted), true); y += 10;
 
-      box(margin, y, 115, 8, fillHeader);
-      box(125, y, 18, 8, fillHeader);
-      box(143, y, 18, 8, fillHeader);
-      box(161, y, 18, 8, fillHeader);
-      box(179, y, 21, 8, fillScore);
-      txt('Occupancy/Special', margin + 2, y + 5.2, { size: 8 });
-      y += 8;
+      drawSectionHeader(y, 'Note:'); y += rowH;
+      drawRow(y, 'Notation', record.notation_score, '10'); y += rowH;
 
-      row(y, 'Occupancy:', formatNum(record.occupancy_score), '5'); y += 8;
-      row(y, 'Special Coding:', formatNum(record.special_coding_score), '5'); y += 8;
-      row(y, 'Subtotal:', formatNum(record.occupancy_raw), formatNum(record.occupancy_weighted)); y += 10;
+      rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
+      rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
+      text('Score', tableX + wLabel + (wScoreCols * 5) - 8, y + 5.2, { size: 8, style: 'italic', align: 'right' });
+      text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, { size: 10, style: 'bold', align: 'center' });
+      y += 12;
 
-      box(margin, y, 115, 8, fillHeader);
-      box(125, y, 18, 8, fillHeader);
-      box(143, y, 18, 8, fillHeader);
-      box(161, y, 18, 8, fillHeader);
-      box(179, y, 21, 8, fillScore);
-      txt('Floorplan/Pricing', margin + 2, y + 5.2, { size: 8 });
-      y += 8;
-
-      row(y, 'Pricing:', formatNum(record.pricing_score), '5'); y += 8;
-      row(y, 'Availability:', formatNum(record.availability_score), '5'); y += 8;
-      row(y, 'Subtotal:', formatNum(record.floorplan_raw), formatNum(record.floorplan_weighted)); y += 10;
-
-      box(margin, y, 115, 8, fillHeader);
-      box(125, y, 18, 8, fillHeader);
-      box(143, y, 18, 8, fillHeader);
-      box(161, y, 18, 8, fillHeader);
-      box(179, y, 21, 8, fillScore);
-      txt('Note:', margin + 2, y + 5.2, { size: 8 });
-      y += 8;
-
-      row(y, 'Notation', formatNum(record.notation_score), '10'); y += 10;
-
-      txt('Score', 170, y + 5, { size: 9, style: 'italic' });
-      box(179, y, 21, 10);
-      txt(formatNum(record.overall_score_100), 189.5, y + 6.5, { size: 11, style: 'bold', align: 'center' });
-      y += 16;
-
-      txt('Overall Rating: [Overall Rating out of 100]', margin, y, { size: 8 });
-      txt(formatNum(record.overall_score_100), 155, y, { size: 11, style: 'bold' });
+      text('Overall Rating: [Overall Rating out of 100]', margin, y, { size: 8 });
+      text(formatNum(record.overall_score_100), margin + 150, y, { size: 11, style: 'bold' });
       y += 8;
 
       const note = record.final_error_note || 'All notes and information match.';
-      txt('Error/Note: ' + note, margin, y, { size: 8 });
+      const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
+      text(wrapped, margin, y, { size: 8 });
 
       return doc;
     }
@@ -1195,14 +1276,106 @@
         return;
       }
 
-      const doc = buildPdf(record);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      showLoading('Generating PDF', 'Preparing professional score sheet...');
+      try {
+        const doc = buildPdf(record);
+        const blob = doc.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      } finally {
+        hideLoading();
+      }
+    }
 
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl);
-      }, 60000);
+    function exportCsv() {
+      const rows = getFilteredData();
+      if (!rows.length) {
+        alert('No records to export.');
+        return;
+      }
+
+      showLoading('Exporting CSV', 'Building export file...');
+      try {
+        const headers = [
+          'audit_id','audit_date','agent_name','audit_channel',
+          'basic_weighted','locator_weighted','occupancy_weighted','floorplan_weighted','notation_weighted',
+          'overall_score_100','final_error_note'
+        ];
+
+        const csv = [
+          headers.join(','),
+          ...rows.map(row => headers.map(h => csvEscape(row[h])).join(','))
+        ].join('\n');
+
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'mara_audits.csv');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function exportListPdf() {
+      const rows = getFilteredData();
+      if (!rows.length) {
+        alert('No records to export.');
+        return;
+      }
+
+      showLoading('Exporting PDF', 'Preparing summary report...');
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text("Mara's Auditor - Audit Summary", 14, 14);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
+
+        doc.autoTable({
+          startY: 26,
+          head: [[
+            'Audit ID', 'Date', 'Agent', 'Channel',
+            'Basic', 'Locator', 'Occ', 'Floor', 'Notation', 'Total'
+          ]],
+          body: rows.map(r => [
+            r.audit_id || '',
+            formatDisplayDate(r.audit_date),
+            r.agent_name || '',
+            r.audit_channel || '',
+            formatNum(r.basic_weighted),
+            formatNum(r.locator_weighted),
+            formatNum(r.occupancy_weighted),
+            formatNum(r.floorplan_weighted),
+            formatNum(r.notation_weighted),
+            formatNum(r.overall_score_100) + '%'
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [37, 99, 235] },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+
+        const blob = doc.output('blob');
+        downloadBlob(blob, 'mara_audits_summary.pdf');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
+    function csvEscape(value) {
+      const s = String(value ?? '');
+      return `"${s.replace(/"/g, '""')}"`;
     }
 
     function escapeHtml(value) {
@@ -1219,11 +1392,9 @@
     }
 
     document.addEventListener('click', function(e) {
-      const crudModal = document.getElementById('crudModal');
       const settingsModal = document.getElementById('settingsModal');
-
-      if (e.target === crudModal) closeCrudModal();
       if (e.target === settingsModal) closeSettings();
+      // CRUD modal intentionally does NOT close when clicking outside
     });
 
     document.addEventListener('keydown', function(e) {
@@ -1234,6 +1405,8 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+      applySavedTheme();
+
       db = [
         {
           audit_id: 'AUD-1001',
