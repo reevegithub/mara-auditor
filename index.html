@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mara's Auditor</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226,232,240,.95);
+      box-shadow: 0 12px 32px rgba(15,23,42,.06);
+    }
+    .dark .glass {
+      background: rgba(15,23,42,.78);
+      border-color: rgba(51,65,85,.95);
+      box-shadow: 0 12px 32px rgba(2,6,23,.35);
+    }
+    .modal {
+      opacity: 0;
+      pointer-events: none;
+      transition: all .2s ease;
+    }
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .nav-tab.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 h-screen overflow-hidden">
+  <div class="h-full flex flex-col">
+    <header class="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur flex items-center justify-between px-4 md:px-6">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
+          <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 md:gap-3">
+        <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+          <i class="fa-solid fa-cloud"></i>
+          <span>No API Linked</span>
+        </div>
+
+        <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
+          <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
+        </button>
+
+        <button id="btn-dash" onclick="switchTab('dash')" class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          Dashboard
+        </button>
+        <button id="btn-list" onclick="switchTab('list')" class="nav-tab text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          Master List
+        </button>
+
+        <button onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <i class="fa-solid fa-gear text-slate-500"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-hidden">
+      <main id="view-dash" class="h-full overflow-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="glass rounded-2xl p-5">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Total Audits</p>
+            <h2 id="kpi-total" class="text-3xl font-black">0</h2>
+          </div>
+          <div class="glass rounded-2xl p-5">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Avg Overall Score</p>
+            <h2 id="kpi-avg" class="text-3xl font-black">0%</h2>
+          </div>
+          <div class="glass rounded-2xl p-5">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
+            <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
+          </div>
+          <button onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg">
+            <div class="h-full flex items-center justify-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>NEW AUDIT</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div class="glass rounded-2xl p-5">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Score Trends</h3>
+            <div class="h-72">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-5">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Agent Performance</h3>
+            <div class="h-72">
+              <canvas id="agentChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <main id="view-list" class="hidden h-full overflow-hidden p-4 md:p-6">
+        <div class="glass rounded-2xl h-full overflow-hidden flex flex-col">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <div class="relative w-full md:w-80">
+              <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input
+                id="searchInput"
+                type="text"
+                oninput="renderAll()"
+                placeholder="Search by audit ID, agent, channel, note..."
+                class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
+              />
+            </div>
+            <div class="flex gap-2">
+              <button onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                Refresh
+              </button>
+              <button onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
+                <i class="fa-solid fa-plus mr-1"></i>
+                Add Audit
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+                  <th class="px-5 py-3 font-black">Audit ID / Date</th>
+                  <th class="px-5 py-3 font-black">Agent</th>
+                  <th class="px-5 py-3 font-black">Channel</th>
+                  <th class="px-5 py-3 text-center font-black">Basic</th>
+                  <th class="px-5 py-3 text-center font-black">Locator</th>
+                  <th class="px-5 py-3 text-center font-black">Occ</th>
+                  <th class="px-5 py-3 text-center font-black">Floor</th>
+                  <th class="px-5 py-3 text-center font-black">Notation</th>
+                  <th class="px-5 py-3 text-center font-black">Total</th>
+                  <th class="px-5 py-3 text-right font-black">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 md:p-6 overflow-auto">
+    <div class="w-full max-w-6xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl my-8">
+      <div class="sticky top-0 z-10 rounded-t-3xl bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 md:px-6 py-4 flex items-center justify-between">
+        <div>
+          <h2 id="modalTitle" class="text-xl font-black">Create Audit</h2>
+          <p class="text-xs text-slate-500">One row per agent audit</p>
+        </div>
+        <button onclick="closeCrudModal()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 md:p-6">
+        <form id="auditForm" class="space-y-6" oninput="calculateScores()">
+          <input type="hidden" id="audit_id" />
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Date</label>
+              <input id="audit_date" type="date" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent Name</label>
+              <input id="agent_name" type="text" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
+              <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-blue-600 dark:text-blue-400">Basic Info</h3>
+                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                  <span id="disp_basic_weighted">0.00</span> / 50
+                </span>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Name</label>
+                  <input id="property_name_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt Company</label>
+                  <input id="mgmt_company_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional Mgr</label>
+                  <input id="regional_mgr_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
+                  <input id="email_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label>
+                  <input id="website_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office Hours</label>
+                  <input id="office_hours_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-blue-600 dark:text-blue-400">Locator Info</h3>
+                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                  <span id="disp_locator_weighted">0.00</span> / 20
+                </span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label>
+                  <input id="commission_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator Note</label>
+                  <input id="locator_note_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label>
+                  <input id="requirements_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-blue-600 dark:text-blue-400">Occupancy</h3>
+                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                  <span id="disp_occupancy_weighted">0.00</span> / 10
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label>
+                  <input id="occupancy_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special Coding</label>
+                  <input id="special_coding_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-blue-600 dark:text-blue-400">Floorplan / Pricing</h3>
+                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                  <span id="disp_floorplan_weighted">0.00</span> / 10
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label>
+                  <input id="pricing_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label>
+                  <input id="availability_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-blue-600 dark:text-blue-400">Notation</h3>
+                <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
+                  <span id="disp_notation_weighted">0.00</span> / 10
+                </span>
+              </div>
+              <div class="grid grid-cols-1 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label>
+                  <input id="notation_score" type="number" min="0" max="5" step="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error / Note</label>
+            <textarea id="final_error_note" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
+          </section>
+
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div class="rounded-2xl bg-slate-900 text-white p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p>
+              <div id="disp_basic_raw" class="text-2xl font-black">0</div>
+            </div>
+            <div class="rounded-2xl bg-slate-900 text-white p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p>
+              <div id="disp_locator_raw" class="text-2xl font-black">0</div>
+            </div>
+            <div class="rounded-2xl bg-slate-900 text-white p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p>
+              <div id="disp_occupancy_raw" class="text-2xl font-black">0</div>
+            </div>
+            <div class="rounded-2xl bg-slate-900 text-white p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p>
+              <div id="disp_floorplan_raw" class="text-2xl font-black">0</div>
+            </div>
+            <div class="rounded-2xl bg-slate-900 text-white p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p>
+              <div id="disp_notation_raw" class="text-2xl font-black">0</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Raw</div>
+              <div id="disp_overall_raw" class="text-2xl font-black">0</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
+              <div id="disp_overall_score" class="text-4xl font-black">0.00</div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="sticky bottom-0 rounded-b-3xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-5 md:px-6 py-4 flex justify-end gap-3">
+        <button onclick="closeCrudModal()" class="px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          Cancel
+        </button>
+        <button onclick="saveAudit()" id="saveBtn" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+          <i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+      <h2 class="text-xl font-black mb-2">System Settings</h2>
+      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL.</p>
+
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Apps Script URL</label>
+      <input
+        id="appScriptUrl"
+        type="text"
+        placeholder="https://script.google.com/macros/s/........../exec"
+        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
+      />
+
+      <div class="mt-5 flex justify-end gap-3">
+        <button onclick="closeSettings()" class="px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          Close
+        </button>
+        <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+          Save & Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WEIGHTS = {
+      basic: 50,
+      locator: 20,
+      occupancy: 10,
+      floorplan: 10,
+      notation: 10
+    };
+
+    const SCORE_FIELDS = [
+      'property_name_score',
+      'mgmt_company_score',
+      'regional_mgr_score',
+      'email_score',
+      'website_score',
+      'office_hours_score',
+      'commission_score',
+      'locator_note_score',
+      'requirements_score',
+      'occupancy_score',
+      'special_coding_score',
+      'pricing_score',
+      'availability_score',
+      'notation_score'
+    ];
+
+    let db = [];
+    let apiUrl = localStorage.getItem('maraAppUrl') || '';
+    let trendChart = null;
+    let agentChart = null;
+    let isSaving = false;
+
+    function initApp() {
+      document.getElementById('appScriptUrl').value = apiUrl;
+      renderAll();
+      if (apiUrl) {
+        fetchData();
+      } else {
+        setSyncStatus('No API Linked', 'cloud', 'neutral');
+      }
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      renderCharts();
+    }
+
+    function switchTab(tab) {
+      ['dash', 'list'].forEach(id => {
+        document.getElementById('view-' + id).classList.add('hidden');
+        document.getElementById('btn-' + id).classList.remove('active');
+      });
+
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('btn-' + tab).classList.add('active');
+
+      if (tab === 'dash') renderCharts();
+    }
+
+    function openSettings() {
+      document.getElementById('appScriptUrl').value = apiUrl;
+      document.getElementById('settingsModal').classList.add('active');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    function saveSettings() {
+      apiUrl = (document.getElementById('appScriptUrl').value || '').trim();
+      localStorage.setItem('maraAppUrl', apiUrl);
+      closeSettings();
+      fetchData();
+    }
+
+    function openCrudModal(id = null) {
+      document.getElementById('crudModal').classList.add('active');
+      document.getElementById('auditForm').reset();
+      document.getElementById('audit_id').value = '';
+      document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
+
+      if (id) {
+        const record = db.find(r => String(r.audit_id) === String(id));
+        if (record) {
+          Object.keys(record).forEach(key => {
+            const el = document.getElementById(key);
+            if (!el) return;
+            if (key === 'audit_date') {
+              el.value = normalizeDateForInput(record[key]);
+            } else {
+              el.value = record[key] ?? '';
+            }
+          });
+        }
+      } else {
+        document.getElementById('audit_date').value = getTodayLocal();
+      }
+
+      calculateScores();
+    }
+
+    function closeCrudModal() {
+      document.getElementById('crudModal').classList.remove('active');
+    }
+
+    function normalizeDateForInput(value) {
+      if (!value) return '';
+      const s = String(value);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+
+    function getTodayLocal() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function getScore(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      let val = toNumber(el.value);
+      val = clamp(val, 0, 5);
+      if (el.value !== '' && Number(el.value) !== val) {
+        el.value = val;
+      }
+      return val;
+    }
+
+    function round2(n) {
+      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    }
+
+    function scaleScore(raw, maxRaw, weightedMax) {
+      if (!maxRaw) return 0;
+      return round2((raw / maxRaw) * weightedMax);
+    }
+
+    function calculateScores() {
+      const basic_raw =
+        getScore('property_name_score') +
+        getScore('mgmt_company_score') +
+        getScore('regional_mgr_score') +
+        getScore('email_score') +
+        getScore('website_score') +
+        getScore('office_hours_score');
+
+      const locator_raw =
+        getScore('commission_score') +
+        getScore('locator_note_score') +
+        getScore('requirements_score');
+
+      const occupancy_raw =
+        getScore('occupancy_score') +
+        getScore('special_coding_score');
+
+      const floorplan_raw =
+        getScore('pricing_score') +
+        getScore('availability_score');
+
+      const notation_raw =
+        getScore('notation_score');
+
+      const basic_weighted = scaleScore(basic_raw, 30, WEIGHTS.basic);
+      const locator_weighted = scaleScore(locator_raw, 15, WEIGHTS.locator);
+      const occupancy_weighted = scaleScore(occupancy_raw, 10, WEIGHTS.occupancy);
+      const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
+      const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
+
+      const overall_raw = basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw;
+      const overall_score_100 = round2(
+        basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted
+      );
+
+      setText('disp_basic_raw', basic_raw);
+      setText('disp_locator_raw', locator_raw);
+      setText('disp_occupancy_raw', occupancy_raw);
+      setText('disp_floorplan_raw', floorplan_raw);
+      setText('disp_notation_raw', notation_raw);
+
+      setText('disp_basic_weighted', basic_weighted.toFixed(2));
+      setText('disp_locator_weighted', locator_weighted.toFixed(2));
+      setText('disp_occupancy_weighted', occupancy_weighted.toFixed(2));
+      setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
+      setText('disp_notation_weighted', notation_weighted.toFixed(2));
+
+      setText('disp_overall_raw', overall_raw);
+      setText('disp_overall_score', overall_score_100.toFixed(2));
+
+      return {
+        basic_raw,
+        basic_weighted,
+        locator_raw,
+        locator_weighted,
+        occupancy_raw,
+        occupancy_weighted,
+        floorplan_raw,
+        floorplan_weighted,
+        notation_raw,
+        notation_weighted,
+        overall_raw,
+        overall_score_100
+      };
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function buildPayload() {
+      const calc = calculateScores();
+
+      return {
+        audit_id: (document.getElementById('audit_id').value || '').trim(),
+        audit_date: (document.getElementById('audit_date').value || '').trim(),
+        agent_name: (document.getElementById('agent_name').value || '').trim(),
+        audit_channel: (document.getElementById('audit_channel').value || '').trim(),
+
+        property_name_score: getScore('property_name_score'),
+        mgmt_company_score: getScore('mgmt_company_score'),
+        regional_mgr_score: getScore('regional_mgr_score'),
+        email_score: getScore('email_score'),
+        website_score: getScore('website_score'),
+        office_hours_score: getScore('office_hours_score'),
+
+        commission_score: getScore('commission_score'),
+        locator_note_score: getScore('locator_note_score'),
+        requirements_score: getScore('requirements_score'),
+
+        occupancy_score: getScore('occupancy_score'),
+        special_coding_score: getScore('special_coding_score'),
+
+        pricing_score: getScore('pricing_score'),
+        availability_score: getScore('availability_score'),
+
+        notation_score: getScore('notation_score'),
+
+        final_error_note: (document.getElementById('final_error_note').value || '').trim(),
+
+        ...calc
+      };
+    }
+
+    function validatePayload(payload) {
+      if (!payload.audit_date) {
+        alert('Audit date is required.');
+        return false;
+      }
+      if (!payload.agent_name) {
+        alert('Agent name is required.');
+        return false;
+      }
+      return true;
+    }
+
+    async function saveAudit() {
+      if (isSaving) return;
+
+      const payload = buildPayload();
+      if (!validatePayload(payload)) return;
+
+      const action = payload.audit_id ? 'update' : 'create';
+
+      try {
+        isSaving = true;
+        toggleSaveButton(true);
+
+        if (apiUrl) {
+          setSyncStatus('Saving...', 'spinner', 'loading');
+
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, data: payload })
+          });
+
+          const json = await res.json();
+
+          if (!json || json.status !== 'success') {
+            throw new Error(json?.message || 'Failed to save record.');
+          }
+
+          await fetchData(false);
+        } else {
+          if (action === 'create') {
+            payload.audit_id = 'AUD-' + Date.now();
+            db.unshift(payload);
+          } else {
+            const idx = db.findIndex(r => String(r.audit_id) === String(payload.audit_id));
+            if (idx === -1) throw new Error('Record not found in local mode.');
+            db[idx] = payload;
+          }
+
+          renderAll();
+          setSyncStatus('Saved locally', 'cloud', 'neutral');
+        }
+
+        closeCrudModal();
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error saving audit.');
+        setSyncStatus('Save failed', 'triangle-exclamation', 'error');
+      } finally {
+        isSaving = false;
+        toggleSaveButton(false);
+      }
+    }
+
+    function toggleSaveButton(loading) {
+      const btn = document.getElementById('saveBtn');
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.innerHTML = loading
+        ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
+        : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
+    }
+
+    async function deleteAudit(id) {
+      if (!confirm('Delete this audit record?')) return;
+
+      try {
+        if (apiUrl) {
+          setSyncStatus('Deleting...', 'spinner', 'loading');
+
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'delete',
+              data: { audit_id: id }
+            })
+          });
+
+          const json = await res.json();
+
+          if (!json || json.status !== 'success') {
+            throw new Error(json?.message || 'Failed to delete record.');
+          }
+
+          await fetchData(false);
+        } else {
+          db = db.filter(r => String(r.audit_id) !== String(id));
+          renderAll();
+          setSyncStatus('Deleted locally', 'cloud', 'neutral');
+        }
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error deleting audit.');
+        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+      }
+    }
+
+    async function fetchData(showLoading = true) {
+      if (!apiUrl) {
+        setSyncStatus('No API Linked', 'cloud', 'neutral');
+        renderAll();
+        return;
+      }
+
+      try {
+        if (showLoading) setSyncStatus('Loading...', 'spinner', 'loading');
+
+        const res = await fetch(apiUrl, { method: 'GET' });
+        const json = await res.json();
+
+        if (!json || json.status !== 'success') {
+          throw new Error(json?.message || 'Failed to load data.');
+        }
+
+        db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
+        db.sort(sortRecords);
+        renderAll();
+        setSyncStatus('Synced', 'check', 'success');
+      } catch (error) {
+        console.error(error);
+        setSyncStatus('Connection error', 'triangle-exclamation', 'error');
+      }
+    }
+
+    function normalizeRecord(record) {
+      const obj = { ...record };
+
+      SCORE_FIELDS.forEach(field => {
+        obj[field] = round2(toNumber(obj[field]));
+      });
+
+      [
+        'basic_raw', 'basic_weighted',
+        'locator_raw', 'locator_weighted',
+        'occupancy_raw', 'occupancy_weighted',
+        'floorplan_raw', 'floorplan_weighted',
+        'notation_raw', 'notation_weighted',
+        'overall_raw', 'overall_score_100'
+      ].forEach(field => {
+        obj[field] = round2(toNumber(obj[field]));
+      });
+
+      return obj;
+    }
+
+    function sortRecords(a, b) {
+      const da = String(a.audit_date || '');
+      const db = String(b.audit_date || '');
+      if (da !== db) return db.localeCompare(da);
+      return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
+    }
+
+    function setSyncStatus(text, icon, state) {
+      const el = document.getElementById('syncStatus');
+      if (!el) return;
+
+      const colorMap = {
+        neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
+        error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
+        loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
+      };
+
+      el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
+      el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
+    }
+
+    function getFilteredData() {
+      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      if (!q) return [...db];
+
+      return db.filter(row => {
+        return [
+          row.audit_id,
+          row.audit_date,
+          row.agent_name,
+          row.audit_channel,
+          row.final_error_note
+        ].some(v => String(v || '').toLowerCase().includes(q));
+      });
+    }
+
+    function renderAll() {
+      renderTable();
+      renderKPIs();
+      renderCharts();
+    }
+
+    function renderKPIs() {
+      const total = db.length;
+      const avg = total
+        ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total)
+        : 0;
+      const agents = new Set(
+        db.map(r => String(r.agent_name || '').trim()).filter(Boolean)
+      ).size;
+
+      setText('kpi-total', total);
+      setText('kpi-avg', `${avg.toFixed(2)}%`);
+      setText('kpi-agents', agents);
+    }
+
+    function getScoreBadge(score) {
+      if (score >= 90) return 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400';
+      if (score >= 75) return 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400';
+      if (score >= 60) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400';
+      return 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const rows = getFilteredData();
+
+      if (!rows.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="px-5 py-10 text-center text-slate-500">
+              No audit records found.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(row => {
+        const total = round2(toNumber(row.overall_score_100));
+        const badge = getScoreBadge(total);
+
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <td class="px-5 py-4">
+              <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
+            </td>
+            <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
+            <td class="px-5 py-4 text-center">
+              <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
+                ${formatNum(total)}%
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button onclick="exportPdf('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Export PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+              </button>
+              <button onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return '-';
+      const s = String(value);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        return dt.toLocaleDateString();
+      }
+      const dt = new Date(s);
+      return isNaN(dt.getTime()) ? s : dt.toLocaleDateString();
+    }
+
+    function formatNum(value) {
+      return round2(toNumber(value)).toFixed(2);
+    }
+
+    function renderCharts() {
+      const trendCanvas = document.getElementById('trendChart');
+      const agentCanvas = document.getElementById('agentChart');
+      if (!trendCanvas || !agentCanvas) return;
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const tickColor = isDark ? '#94a3b8' : '#475569';
+      const gridColor = isDark ? 'rgba(148,163,184,.12)' : 'rgba(71,85,105,.12)';
+
+      if (trendChart) trendChart.destroy();
+      if (agentChart) agentChart.destroy();
+
+      if (!db.length) return;
+
+      const trendRows = [...db]
+        .sort((a, b) => String(a.audit_date).localeCompare(String(b.audit_date)))
+        .slice(-12);
+
+      trendChart = new Chart(trendCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: trendRows.map(r => formatDisplayDate(r.audit_date)),
+          datasets: [{
+            label: 'Overall Score',
+            data: trendRows.map(r => toNumber(r.overall_score_100)),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,.10)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: { color: tickColor },
+              grid: { color: gridColor }
+            },
+            x: {
+              ticks: { color: tickColor },
+              grid: { color: gridColor }
+            }
+          }
+        }
+      });
+
+      const agentMap = {};
+      db.forEach(row => {
+        const name = String(row.agent_name || 'Unknown').trim() || 'Unknown';
+        if (!agentMap[name]) agentMap[name] = { total: 0, count: 0 };
+        agentMap[name].total += toNumber(row.overall_score_100);
+        agentMap[name].count += 1;
+      });
+
+      const agentRows = Object.keys(agentMap).map(name => ({
+        name,
+        avg: round2(agentMap[name].total / agentMap[name].count)
+      })).sort((a, b) => b.avg - a.avg);
+
+      agentChart = new Chart(agentCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: agentRows.map(r => r.name),
+          datasets: [{
+            label: 'Average Score',
+            data: agentRows.map(r => r.avg),
+            backgroundColor: '#7c3aed',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: { color: tickColor },
+              grid: { color: gridColor }
+            },
+            x: {
+              ticks: { color: tickColor },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function exportPdf(id) {
+      const record = db.find(r => String(r.audit_id) === String(id));
+      if (!record) {
+        alert('Record not found.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text("Mara's Auditor", 14, 18);
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'normal');
+      doc.text('Audit Report', 14, 26);
+
+      doc.setFontSize(10);
+      doc.text(`Audit ID: ${record.audit_id || '-'}`, 14, 36);
+      doc.text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, 14, 42);
+      doc.text(`Agent Name: ${record.agent_name || '-'}`, 14, 48);
+      doc.text(`Channel: ${record.audit_channel || '-'}`, 14, 54);
+
+      doc.autoTable({
+        startY: 62,
+        theme: 'grid',
+        head: [['Criteria', 'Raw Score', 'Weighted Score']],
+        body: [
+          ['Property Name', formatNum(record.property_name_score), ''],
+          ['Mgmt Company', formatNum(record.mgmt_company_score), ''],
+          ['Regional Mgr', formatNum(record.regional_mgr_score), ''],
+          ['Email', formatNum(record.email_score), ''],
+          ['Website', formatNum(record.website_score), ''],
+          ['Office Hours', formatNum(record.office_hours_score), ''],
+          ['Basic Subtotal', formatNum(record.basic_raw), formatNum(record.basic_weighted)],
+
+          ['Commission', formatNum(record.commission_score), ''],
+          ['Locator Note', formatNum(record.locator_note_score), ''],
+          ['Requirements', formatNum(record.requirements_score), ''],
+          ['Locator Subtotal', formatNum(record.locator_raw), formatNum(record.locator_weighted)],
+
+          ['Occupancy', formatNum(record.occupancy_score), ''],
+          ['Special Coding', formatNum(record.special_coding_score), ''],
+          ['Occupancy Subtotal', formatNum(record.occupancy_raw), formatNum(record.occupancy_weighted)],
+
+          ['Pricing', formatNum(record.pricing_score), ''],
+          ['Availability', formatNum(record.availability_score), ''],
+          ['Floorplan Subtotal', formatNum(record.floorplan_raw), formatNum(record.floorplan_weighted)],
+
+          ['Notation', formatNum(record.notation_score), ''],
+          ['Notation Subtotal', formatNum(record.notation_raw), formatNum(record.notation_weighted)],
+
+          ['Overall Raw', formatNum(record.overall_raw), ''],
+          ['Overall Score', '', `${formatNum(record.overall_score_100)} / 100`]
+        ],
+        headStyles: {
+          fillColor: [37, 99, 235]
+        }
+      });
+
+      const finalY = doc.lastAutoTable.finalY || 80;
+      doc.setFont(undefined, 'bold');
+      doc.text('Final Error / Note:', 14, finalY + 12);
+      doc.setFont(undefined, 'normal');
+
+      const noteText = record.final_error_note || 'None';
+      const lines = doc.splitTextToSize(noteText, 180);
+      doc.text(lines, 14, finalY + 18);
+
+      const safeAgent = String(record.agent_name || 'Agent').replace(/[^\w\-]+/g, '_');
+      const safeId = String(record.audit_id || 'Audit').replace(/[^\w\-]+/g, '_');
+      doc.save(`Audit_${safeAgent}_${safeId}.pdf`);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(value) {
+      return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    document.addEventListener('click', function(e) {
+      const crudModal = document.getElementById('crudModal');
+      const settingsModal = document.getElementById('settingsModal');
+
+      if (e.target === crudModal) closeCrudModal();
+      if (e.target === settingsModal) closeSettings();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      db = [
+        {
+          audit_id: 'AUD-1001',
+          audit_date: '2026-03-24',
+          agent_name: 'Erica Abellan',
+          audit_channel: 'Email',
+          property_name_score: 5,
+          mgmt_company_score: 5,
+          regional_mgr_score: 4,
+          email_score: 5,
+          website_score: 4,
+          office_hours_score: 5,
+          commission_score: 4,
+          locator_note_score: 4,
+          requirements_score: 4,
+          occupancy_score: 5,
+          special_coding_score: 4,
+          pricing_score: 4,
+          availability_score: 5,
+          notation_score: 5,
+          basic_raw: 28,
+          basic_weighted: 46.67,
+          locator_raw: 12,
+          locator_weighted: 16,
+          occupancy_raw: 9,
+          occupancy_weighted: 9,
+          floorplan_raw: 9,
+          floorplan_weighted: 9,
+          notation_raw: 5,
+          notation_weighted: 10,
+          overall_raw: 63,
+          overall_score_100: 90.67,
+          final_error_note: 'Sample local record'
+        }
+      ];
+
+      initApp();
+    });
+  </script>
+</body>
+</html>
