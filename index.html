@@ -108,6 +108,21 @@
       user-select: none;
       filter: grayscale(.1);
     }
+
+.sync-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  display: inline-block;
+  box-shadow: 0 0 0 rgba(34,197,94,.45);
+  animation: syncBlink 1.2s infinite ease-in-out;
+}
+
+@keyframes syncBlink {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,197,94,.45); }
+  50% { opacity: .45; transform: scale(.85); box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
   </style>
 </head>
 
@@ -629,6 +644,12 @@
     let currentPage = 1;
     let rowsPerPage = 10;
 
+let lastUserActivityAt = Date.now();
+let idleSyncTimer = null;
+let isFetchingData = false;
+let isMutatingData = false;
+let lastDataFingerprint = '';
+
     let currentAgentPage = 1;
     let agentRowsPerPage = 10;
 
@@ -1146,38 +1167,35 @@
       return json;
     }
 
-    async function saveAudit() {
-      if (!requireConfiguredApi()) return;
-      if (isSaving) return;
+async function saveAudit() {
+  if (!requireConfiguredApi()) return;
 
-      const payload = buildPayload();
-      if (!validatePayload(payload)) return;
+  const payload = buildPayload();
+  if (!validatePayload(payload)) return;
 
-      const action = payload.audit_id ? 'update' : 'create';
+  const action = payload.audit_id ? 'update' : 'create';
 
-      try {
-        isSaving = true;
-        toggleSaveButton(true);
-        showLoading(
-          action === 'create' ? 'Creating Audit' : 'Updating Audit',
-          'Saving audit record and recalculating scores...'
-        );
+  try {
+    isMutatingData = true;
+    toggleSaveButton(true);
+    showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
+    setSyncStatus('Saving...', 'spinner', 'loading');
 
-        setSyncStatus('Saving...', 'spinner', 'loading');
-        await apiPost({ action, ...payload });
-        await fetchData(false);
-        setSyncStatus('Saved', 'check', 'success');
-        closeCrudModal();
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error saving audit.');
-        setSyncStatus('Save failed', 'triangle-exclamation', 'error');
-      } finally {
-        isSaving = false;
-        toggleSaveButton(false);
-        hideLoading();
-      }
-    }
+    await apiPost({ action, ...payload });
+    await fetchData(false);
+
+    setSyncStatus('Synced', 'check', 'success');
+    closeCrudModal();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error saving audit.');
+    setSyncStatus('Save failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    toggleSaveButton(false);
+    hideLoading();
+  }
+}
 
     async function saveAgent() {
       if (!requireConfiguredApi()) return;
@@ -1218,84 +1236,195 @@
         : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
     }
 
-    async function deleteAudit(id) {
-      if (!requireConfiguredApi()) return;
-      if (!confirm('Delete this audit record?')) return;
+async function deleteAudit(id) {
+  if (!requireConfiguredApi()) return;
+  if (!confirm('Delete this audit record?')) return;
 
-      try {
-        showLoading('Deleting Audit', 'Removing record and updating dashboard...');
-        setSyncStatus('Deleting...', 'spinner', 'loading');
-        await apiPost({ action: 'delete', audit_id: id });
-        await fetchData(false);
-        setSyncStatus('Deleted', 'check', 'success');
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error deleting audit.');
-        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-      } finally {
-        hideLoading();
-      }
+  try {
+    isMutatingData = true;
+    showLoading('Deleting Audit', 'Removing record and updating dashboard...');
+    setSyncStatus('Deleting...', 'spinner', 'loading');
+    await apiPost({ action: 'delete', audit_id: id });
+    await fetchData(false);
+    setSyncStatus('Deleted', 'check', 'success');
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error deleting audit.');
+    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    hideLoading();
+  }
+}
+async function deleteAgent(id) {
+  if (!requireConfiguredApi()) return;
+  if (!confirm('Delete this agent?')) return;
+
+  try {
+    isMutatingData = true;
+    showLoading('Deleting Agent', 'Removing agent...');
+    setSyncStatus('Deleting agent...', 'spinner', 'loading');
+    await apiPost({ action: 'delete_agent', agent_id: id });
+    await fetchData(false);
+    setSyncStatus('Agent deleted', 'check', 'success');
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error deleting agent.');
+    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    hideLoading();
+  }
+}
+
+function isAnyModalOpen() {
+  return ['crudModal', 'agentModal', 'settingsModal'].some(id =>
+    document.getElementById(id)?.classList.contains('active')
+  );
+}
+
+function canAutoSync() {
+  return !!apiUrl && !isAnyModalOpen() && !isFetchingData && !isMutatingData;
+}
+
+function createDataFingerprint(json) {
+  const audits = Array.isArray(json?.data) ? json.data : [];
+  const agents = Array.isArray(json?.agents) ? json.agents : [];
+  const actor = String(json?.actor || '');
+
+  const auditKey = audits.map(row => [
+    row.audit_id || '',
+    row.audit_date || '',
+    row.agent_name || '',
+    row.audit_channel || '',
+    row.property_field_id || '',
+    row.overall_score_100 || '',
+    row.final_error_note || ''
+  ].join('|')).join('||');
+
+  const agentKey = agents.map(row => [
+    row.agent_id || '',
+    row.agent_name || '',
+    row.created_at || ''
+  ].join('|')).join('||');
+
+  return `${actor}###${auditKey}###${agentKey}`;
+}
+
+async function checkForRemoteUpdates() {
+  if (!canAutoSync()) return;
+
+  const idleMs = Date.now() - lastUserActivityAt;
+  if (idleMs < 10000) return;
+
+  try {
+    setSyncStatus('Checking updates...', 'spinner', 'loading');
+
+    const res = await fetch(apiUrl + '?t=' + Date.now(), {
+      method: 'GET',
+      cache: 'no-store'
+    });
+
+    const text = await res.text();
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.error('Raw auto-sync response:', text);
+      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+      return;
     }
 
-    async function deleteAgent(id) {
-      if (!requireConfiguredApi()) return;
-      if (!confirm('Delete this agent?')) return;
-
-      try {
-        showLoading('Deleting Agent', 'Removing agent...');
-        await apiPost({ action: 'delete_agent', agent_id: id });
-        await fetchData(false);
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error deleting agent.');
-      } finally {
-        hideLoading();
-      }
+    if (!json || json.status !== 'success') {
+      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+      return;
     }
 
+    const remoteFingerprint = createDataFingerprint(json);
+
+    if (lastDataFingerprint && remoteFingerprint !== lastDataFingerprint) {
+      db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
+      agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
+      db.sort(sortRecords);
+      currentActorName = json.actor || 'Auditor';
+      lastDataFingerprint = remoteFingerprint;
+
+      applyActorBranding();
+      renderAll();
+      applyLockState();
+      setSyncStatus('New data synced', 'check', 'success');
+      return;
+    }
+
+    setSyncStatus('No new updates', 'check', 'neutral');
+  } catch (error) {
+    console.error(error);
+    setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+  }
+}
+
+function startIdleAutoSync() {
+  if (idleSyncTimer) clearInterval(idleSyncTimer);
+
+  idleSyncTimer = setInterval(() => {
+    checkForRemoteUpdates();
+  }, 3000);
+}
+
+function bindUserActivityListeners() {
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
+    document.addEventListener(evt, markUserActivity, { passive: true });
+  });
+}
     async function fetchData(showOverlay = true) {
-      if (!apiUrl) {
-        setSyncStatus('Setup Required', 'lock', 'error');
-        renderEmptyState();
-        return;
-      }
+  if (!apiUrl) {
+    setSyncStatus('Setup Required', 'lock', 'error');
+    renderEmptyState();
+    return;
+  }
 
-      try {
-        if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and logs...');
-        setSyncStatus('Loading...', 'spinner', 'loading');
+  if (isFetchingData) return;
+  isFetchingData = true;
 
-        const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
-        const text = await res.text();
+  try {
+    if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and logs...');
+    setSyncStatus('Loading...', 'spinner', 'loading');
 
-        let json;
-        try {
-          json = JSON.parse(text);
-        } catch (e) {
-          console.error('Raw GET response:', text);
-          throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
-        }
+    const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
+    const text = await res.text();
 
-        if (!json || json.status !== 'success') {
-          throw new Error(json?.message || 'Failed to load data.');
-        }
-
-        db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
-        agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
-        db.sort(sortRecords);
-        currentActorName = json.actor || 'Auditor';
-
-        applyActorBranding();
-        renderAll();
-        applyLockState();
-        setSyncStatus('Synced', 'check', 'success');
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Connection error');
-        setSyncStatus('Connection error', 'triangle-exclamation', 'error');
-      } finally {
-        if (showOverlay) hideLoading();
-      }
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.error('Raw GET response:', text);
+      throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
     }
+
+    if (!json || json.status !== 'success') {
+      throw new Error(json?.message || 'Failed to load data.');
+    }
+
+    db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
+    agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
+    db.sort(sortRecords);
+    currentActorName = json.actor || 'Auditor';
+    lastDataFingerprint = createDataFingerprint(json);
+
+    applyActorBranding();
+    renderAll();
+    applyLockState();
+    setSyncStatus('Synced', 'check', 'success');
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Connection error');
+    setSyncStatus('Connection error', 'triangle-exclamation', 'error');
+  } finally {
+    isFetchingData = false;
+    if (showOverlay) hideLoading();
+  }
+}
 
     function normalizeRecord(record) {
       const obj = { ...record };
@@ -1332,20 +1461,26 @@
       return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
     }
 
-    function setSyncStatus(text, icon, state) {
-      const el = document.getElementById('syncStatus');
-      if (!el) return;
+ function setSyncStatus(text, icon, state) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
 
-      const colorMap = {
-        neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-        success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
-        error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
-        loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
-      };
+  const colorMap = {
+    neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
+    error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
+    loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
+  };
 
-      el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
-      el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
-    }
+  el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
+
+  if (state === 'success') {
+    el.innerHTML = `<span class="sync-live-dot"></span><span>${escapeHtml(text)}</span>`;
+    return;
+  }
+
+  el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
+}
 
     function clearAuditFilters() {
       document.getElementById('searchInput').value = '';
@@ -2025,10 +2160,13 @@ document.addEventListener('click', function(e) {
       }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-      applySavedTheme();
-      initApp();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+  applySavedTheme();
+  initApp();
+  bindUserActivityListeners();
+  startIdleAutoSync();
+  markUserActivity();
+});
   </script>
 </body>
 </html>
