@@ -1843,21 +1843,22 @@
     doc.setTextColor(10, 10, 10);
     doc.setLineWidth(0.2);
 
-    function drawFooter() {
-      const pages = doc.internal.getNumberOfPages();
+function drawFooter() {
+  const pages = doc.internal.getNumberOfPages();
+  const footerAuditor = String(record.auditor || currentActorName || 'Auditor').trim();
 
-      for (let i = 1; i <= pages; i++) {
-        doc.setPage(i);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7);
-        doc.setTextColor(...footerGray);
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...footerGray);
 
-        doc.text(`Audited By: ${currentActorName || 'Auditor'}`, tableX, footerY);
-        doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
-      }
+    doc.text(`Audited By: ${footerAuditor}`, tableX, footerY);
+    doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
+  }
 
-      doc.setTextColor(10, 10, 10);
-    }
+  doc.setTextColor(10, 10, 10);
+}
 
     function rect(x, y, w, h, fill = null) {
       if (fill) {
