@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mara's Auditor</title>
+  <title>Auditor</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,9 +20,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
           boxShadow: {
             soft: '0 12px 32px rgba(15,23,42,.08)',
             card: '0 8px 24px rgba(15,23,42,.06)',
@@ -103,6 +101,13 @@
       0%, 80%, 100% { transform: scale(.8); opacity: .45; }
       40% { transform: scale(1); opacity: 1; }
     }
+
+    .locked {
+      opacity: .55;
+      pointer-events: none;
+      user-select: none;
+      filter: grayscale(.1);
+    }
   </style>
 </head>
 
@@ -115,15 +120,15 @@
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
           <div class="min-w-0">
-            <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Professional QA Audit System</p>
+            <h1 id="appTitleText" class="font-black text-lg md:text-xl truncate">Auditor</h1>
+            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
           </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
           <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-            <i class="fa-solid fa-cloud"></i>
-            <span>No API Linked</span>
+            <i class="fa-solid fa-lock"></i>
+            <span>Setup Required</span>
           </div>
 
           <button type="button" onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
@@ -152,66 +157,180 @@
 
     <div class="flex-1 min-h-0">
       <main id="view-dash" class="h-full overflow-auto thin-scroll p-4 md:p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-          <div class="glass rounded-2xl p-5">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Total Audits</p>
-            <h2 id="kpi-total" class="text-3xl font-black">0</h2>
-          </div>
-          <div class="glass rounded-2xl p-5">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Avg Overall Score</p>
-            <h2 id="kpi-avg" class="text-3xl font-black">0%</h2>
-          </div>
-          <div class="glass rounded-2xl p-5">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
-            <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
-          </div>
-          <button type="button" onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
-            <div class="h-full flex items-center justify-center gap-2">
-              <i class="fa-solid fa-plus"></i>
-              <span>NEW AUDIT</span>
+        <div id="setupBanner" class="mb-6 glass rounded-2xl p-5 border-blue-200 dark:border-blue-900">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-black text-blue-600 dark:text-blue-400">Setup Required</h2>
+              <p class="text-sm text-slate-500 mt-1">
+                Enter your deployed Google Apps Script Web App URL before using the system.
+              </p>
             </div>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-          <div class="glass rounded-2xl p-5">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Score Trends</h3>
-            <div class="h-72">
-              <canvas id="trendChart"></canvas>
-            </div>
-          </div>
-
-          <div class="glass rounded-2xl p-5">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Agent Performance</h3>
-            <div class="h-72">
-              <canvas id="agentChart"></canvas>
-            </div>
+            <button type="button" onclick="openSettings()" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+              Configure Script URL
+            </button>
           </div>
         </div>
 
-        <div class="glass rounded-2xl overflow-hidden mb-6">
-          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3">
-            <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+        <div id="appContent">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            <div class="glass rounded-2xl p-5">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Total Audits</p>
+              <h2 id="kpi-total" class="text-3xl font-black">0</h2>
+            </div>
+            <div class="glass rounded-2xl p-5">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Avg Overall Score</p>
+              <h2 id="kpi-avg" class="text-3xl font-black">0%</h2>
+            </div>
+            <div class="glass rounded-2xl p-5">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
+              <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
+            </div>
+            <button type="button" onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
+              <div class="h-full flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>NEW AUDIT</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+            <div class="glass rounded-2xl p-5">
+              <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Score Trends</h3>
+              <div class="h-72">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+
+            <div class="glass rounded-2xl p-5">
+              <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Agent Performance</h3>
+              <div class="h-72">
+                <canvas id="agentChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl overflow-hidden mb-6">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+              <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+                <div>
+                  <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Audit Records</h3>
+                  <p class="text-xs text-slate-500 mt-1">Manage, export, and review all audit entries.</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <div class="relative w-full sm:w-72">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input
+                      id="searchInput"
+                      type="text"
+                      oninput="currentPage = 1; renderAll()"
+                      placeholder="Search by audit ID, agent, channel, property field ID, note..."
+                      class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
+                    />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-500">Rows</label>
+                    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+                      <option value="5">5</option>
+                      <option value="10" selected>10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+
+                  <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+                  </button>
+
+                  <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
+                  </button>
+
+                  <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
+                  </button>
+
+                  <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
+                    <i class="fa-solid fa-plus mr-1"></i>Add Audit
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date From</label>
+                  <input id="filterDateFrom" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date To</label>
+                  <input id="filterDateTo" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Agent</label>
+                  <select id="filterAgentName" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                    <option value="">All Agents</option>
+                  </select>
+                </div>
+                <div class="flex items-end">
+                  <button type="button" onclick="clearAuditFilters()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="overflow-auto thin-scroll">
+              <div class="min-w-[1180px]">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                  <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                    <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+                      <th class="px-5 py-3 font-black">Audit ID</th>
+                      <th class="px-5 py-3 font-black">Agent</th>
+                      <th class="px-5 py-3 font-black">Channel</th>
+                      <th class="px-5 py-3 font-black">Property Field ID</th>
+                      <th class="px-5 py-3 text-center font-black">Basic</th>
+                      <th class="px-5 py-3 text-center font-black">Locator</th>
+                      <th class="px-5 py-3 text-center font-black">Occ</th>
+                      <th class="px-5 py-3 text-center font-black">Floor</th>
+                      <th class="px-5 py-3 text-center font-black">Notation</th>
+                      <th class="px-5 py-3 text-center font-black">Total</th>
+                      <th class="px-5 py-3 text-right font-black">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                </table>
+                <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                  <div id="tablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 entries</div>
+                  <div id="paginationControls" class="flex items-center gap-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
               <div>
-                <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Audit Records</h3>
-                <p class="text-xs text-slate-500 mt-1">Manage, export, and review all audit entries.</p>
+                <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Agents</h3>
+                <p class="text-xs text-slate-500 mt-1">Manage agents saved in the Agents sheet and use them in the audit form dropdown.</p>
               </div>
 
               <div class="flex flex-wrap gap-2">
                 <div class="relative w-full sm:w-72">
                   <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                   <input
-                    id="searchInput"
+                    id="agentSearchInput"
                     type="text"
-                    oninput="currentPage = 1; renderAll()"
-                    placeholder="Search by audit ID, agent, channel, note..."
+                    oninput="currentAgentPage = 1; renderAgentsTable()"
+                    placeholder="Search agent..."
                     class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
                   />
                 </div>
 
                 <div class="flex items-center gap-2">
                   <label class="text-xs font-bold text-slate-500">Rows</label>
-                  <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+                  <select id="agentRowsPerPageSelect" onchange="changeAgentRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
                     <option value="5">5</option>
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
@@ -220,116 +339,30 @@
                   </select>
                 </div>
 
-                <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                  <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
-                </button>
-
-                <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                  <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
-                </button>
-
-                <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                  <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
-                </button>
-
-                <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
-                  <i class="fa-solid fa-plus mr-1"></i>Add Audit
+                <button type="button" onclick="openAgentModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <i class="fa-solid fa-user-plus mr-1"></i>Add Agent
                 </button>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date From</label>
-                <input id="filterDateFrom" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+            <div class="overflow-auto thin-scroll">
+              <div class="min-w-[700px]">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                  <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                    <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+                      <th class="px-5 py-3 font-black">Agent ID</th>
+                      <th class="px-5 py-3 font-black">Agent Name</th>
+                      <th class="px-5 py-3 font-black">Created</th>
+                      <th class="px-5 py-3 text-right font-black">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="agentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                </table>
+                <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                  <div id="agentsTablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 agents</div>
+                  <div id="agentsPaginationControls" class="flex items-center gap-2"></div>
+                </div>
               </div>
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date To</label>
-                <input id="filterDateTo" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Agent</label>
-                <select id="filterAgentName" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
-                  <option value="">All Agents</option>
-                </select>
-              </div>
-              <div class="flex items-end">
-                <button type="button" onclick="clearAuditFilters()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="overflow-auto thin-scroll">
-            <div class="min-w-[1180px]">
-              <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                  <tr class="text-[11px] uppercase tracking-wider text-slate-500">
-<th class="px-5 py-3 font-black">Property Field ID</th>
-              <tr class="text-[11px] uppercase tracking-wider text-slate-500">
-  <th class="px-5 py-3 font-black">Audit ID</th>
-  <th class="px-5 py-3 font-black">Agent</th>
-  <th class="px-5 py-3 font-black">Channel</th>
-  <th class="px-5 py-3 font-black">Property Field ID</th>
-  <th class="px-5 py-3 text-center font-black">Basic</th>
-  <th class="px-5 py-3 text-center font-black">Locator</th>
-  <th class="px-5 py-3 text-center font-black">Occ</th>
-  <th class="px-5 py-3 text-center font-black">Floor</th>
-  <th class="px-5 py-3 text-center font-black">Notation</th>
-  <th class="px-5 py-3 text-center font-black">Total</th>
-  <th class="px-5 py-3 text-right font-black">Actions</th>
-</tr>
-                  </tr>
-                </thead>
-                <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-              </table>
-              <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-                <div id="tablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 entries</div>
-                <div id="paginationControls" class="flex items-center gap-2"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass rounded-2xl overflow-hidden">
-          <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-            <div>
-              <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Agents</h3>
-              <p class="text-xs text-slate-500 mt-1">Manage agents saved in the Agents sheet and use them in the audit form dropdown.</p>
-            </div>
-
-            <div class="flex flex-wrap gap-2">
-              <div class="relative w-full sm:w-72">
-                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input
-                  id="agentSearchInput"
-                  type="text"
-                  oninput="renderAgentsTable()"
-                  placeholder="Search agent..."
-                  class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-                />
-              </div>
-
-              <button type="button" onclick="openAgentModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
-                <i class="fa-solid fa-user-plus mr-1"></i>Add Agent
-              </button>
-            </div>
-          </div>
-
-          <div class="overflow-auto thin-scroll">
-            <div class="min-w-[700px]">
-              <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                  <tr class="text-[11px] uppercase tracking-wider text-slate-500">
-                    <th class="px-5 py-3 font-black">Agent ID</th>
-                    <th class="px-5 py-3 font-black">Agent Name</th>
-                    <th class="px-5 py-3 font-black">Created</th>
-                    <th class="px-5 py-3 text-right font-black">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="agentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -338,7 +371,7 @@
 
     <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-        <div>© 2026 Mara's Auditor</div>
+        <div id="footerBrand">© 2026 Auditor</div>
         <div>Audit tracking, reporting, and AI-assisted review</div>
       </div>
     </footer>
@@ -377,10 +410,10 @@
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
                   <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
-<div>
-  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Field ID</label>
-  <input id="property_field_id" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-</div>
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Field ID</label>
+                  <input id="property_field_id" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                </div>
               </div>
 
               <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -524,7 +557,7 @@
   <div id="settingsModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
       <h2 class="text-xl font-black mb-2">System Settings</h2>
-      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL.</p>
+      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL. The system stays locked until this is saved and connected.</p>
 
       <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Apps Script URL</label>
       <input
@@ -589,23 +622,71 @@
 
     let db = [];
     let agentsDb = [];
-    let apiUrl = localStorage.getItem('maraAppUrl') || '';
+    let apiUrl = localStorage.getItem('auditorAppUrl') || '';
     let trendChart = null;
     let agentChart = null;
     let isSaving = false;
     let currentPage = 1;
     let rowsPerPage = 10;
-    let currentActorName = 'Mara';
+
+    let currentAgentPage = 1;
+    let agentRowsPerPage = 10;
+
+    let currentActorName = 'Auditor';
+
+    function getPossessiveActorTitle(actorName) {
+      const actor = String(actorName || '').trim();
+      if (!actor) return 'Auditor';
+      if (actor.toLowerCase().endsWith('s')) return `${actor}' Auditor`;
+      return `${actor}'s Auditor`;
+    }
+
+    function applyActorBranding() {
+      const brandedTitle = getPossessiveActorTitle(currentActorName);
+
+      document.title = brandedTitle;
+
+      const titleEl = document.getElementById('appTitleText');
+      if (titleEl) titleEl.textContent = brandedTitle;
+
+      const footerBrand = document.getElementById('footerBrand');
+      if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
+    }
 
     function initApp() {
       document.getElementById('appScriptUrl').value = apiUrl;
-      renderAll();
+      applyActorBranding();
+      applyLockState();
 
       if (apiUrl) {
         fetchData();
       } else {
-        setSyncStatus('No API Linked', 'cloud', 'neutral');
+        setSyncStatus('Setup Required', 'lock', 'error');
+        renderEmptyState();
       }
+    }
+
+    function applyLockState() {
+      const hasApi = !!apiUrl;
+      const appContent = document.getElementById('appContent');
+      const setupBanner = document.getElementById('setupBanner');
+
+      appContent.classList.toggle('locked', !hasApi);
+      setupBanner.classList.toggle('hidden', hasApi);
+    }
+
+    function requireConfiguredApi() {
+      if (apiUrl) return true;
+      alert('Please enter your Google Apps Script URL first in System Settings.');
+      openSettings();
+      return false;
+    }
+
+    function renderEmptyState() {
+      db = [];
+      agentsDb = [];
+      renderAll();
+      applyActorBranding();
     }
 
     function changeRowsPerPage() {
@@ -614,15 +695,25 @@
       renderTable();
     }
 
+    function changeAgentRowsPerPage() {
+      agentRowsPerPage = Number(document.getElementById('agentRowsPerPageSelect').value || 10);
+      currentAgentPage = 1;
+      renderAgentsTable();
+    }
+
     function goToPage(page) {
       currentPage = page;
       renderTable();
     }
 
+    function goToAgentPage(page) {
+      currentAgentPage = page;
+      renderAgentsTable();
+    }
+
     function renderPagination(totalRows) {
       const pageInfo = document.getElementById('tablePageInfo');
       const controls = document.getElementById('paginationControls');
-
       if (!pageInfo || !controls) return;
 
       const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
@@ -677,6 +768,63 @@
       controls.innerHTML = html;
     }
 
+    function renderAgentsPagination(totalRows) {
+      const pageInfo = document.getElementById('agentsTablePageInfo');
+      const controls = document.getElementById('agentsPaginationControls');
+      if (!pageInfo || !controls) return;
+
+      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
+      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
+
+      const start = totalRows === 0 ? 0 : ((currentAgentPage - 1) * agentRowsPerPage) + 1;
+      const end = Math.min(currentAgentPage * agentRowsPerPage, totalRows);
+
+      pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} agents`;
+
+      let html = '';
+
+      html += `
+        <button type="button"
+          onclick="goToAgentPage(${Math.max(1, currentAgentPage - 1)})"
+          class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+          ${currentAgentPage === 1 ? 'disabled' : ''}>
+          Prev
+        </button>
+      `;
+
+      const totalPagesToShow = Math.ceil(totalRows / agentRowsPerPage) || 1;
+      let startPage = Math.max(1, currentAgentPage - 2);
+      let endPage = Math.min(totalPagesToShow, currentAgentPage + 2);
+
+      if (currentAgentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
+      if (currentAgentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `
+          <button type="button"
+            onclick="goToAgentPage(${i})"
+            class="px-3 py-2 rounded-xl border text-sm font-semibold ${
+              i === currentAgentPage
+                ? 'bg-emerald-600 text-white border-emerald-600'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+            }">
+            ${i}
+          </button>
+        `;
+      }
+
+      html += `
+        <button type="button"
+          onclick="goToAgentPage(${Math.min(totalPagesToShow, currentAgentPage + 1)})"
+          class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
+          ${currentAgentPage === totalPagesToShow ? 'disabled' : ''}>
+          Next
+        </button>
+      `;
+
+      controls.innerHTML = html;
+    }
+
     function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
       const overlay = document.getElementById('loadingOverlay');
       const titleEl = document.getElementById('loadingTitle');
@@ -695,25 +843,27 @@
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
-      localStorage.setItem('maraTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      localStorage.setItem('auditorTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
       renderCharts();
     }
 
     function applySavedTheme() {
-      const saved = localStorage.getItem('maraTheme');
+      const saved = localStorage.getItem('auditorTheme');
       if (saved === 'dark') document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
     }
 
     function goToAI() {
+      if (!requireConfiguredApi()) return;
       window.location.href = 'AI.html';
     }
 
     function goToLogs() {
+      if (!requireConfiguredApi()) return;
       window.location.href = 'Logs.html';
     }
 
-    function switchTab(tab) {
+    function switchTab() {
       document.getElementById('view-dash').classList.remove('hidden');
       document.getElementById('btn-dash').classList.add('active');
       renderCharts();
@@ -728,14 +878,23 @@
       document.getElementById('settingsModal').classList.remove('active');
     }
 
-    function saveSettings() {
-      apiUrl = (document.getElementById('appScriptUrl').value || '').trim();
-      localStorage.setItem('maraAppUrl', apiUrl);
+    async function saveSettings() {
+      const url = (document.getElementById('appScriptUrl').value || '').trim();
+      if (!url) {
+        alert('Apps Script URL is required.');
+        return;
+      }
+
+      apiUrl = url;
+      localStorage.setItem('auditorAppUrl', apiUrl);
       closeSettings();
-      fetchData();
+      applyLockState();
+      await fetchData();
     }
 
     function openCrudModal(id = null) {
+      if (!requireConfiguredApi()) return;
+
       const form = document.getElementById('auditForm');
       form.reset();
       document.getElementById('audit_id').value = '';
@@ -766,6 +925,8 @@
     }
 
     function openAgentModal(id = null) {
+      if (!requireConfiguredApi()) return;
+
       document.getElementById('agent_id').value = '';
       document.getElementById('agent_modal_name').value = '';
       document.getElementById('agentModalTitle').textContent = id ? 'Edit Agent' : 'Add Agent';
@@ -919,7 +1080,7 @@
         audit_date: (document.getElementById('audit_date').value || '').trim(),
         agent_name: (document.getElementById('agent_name').value || '').trim(),
         audit_channel: (document.getElementById('audit_channel').value || '').trim(),
-property_field_id: (document.getElementById('property_field_id').value || '').trim(),
+        property_field_id: (document.getElementById('property_field_id').value || '').trim(),
 
         property_name_score: getScore('property_name_score'),
         mgmt_company_score: getScore('mgmt_company_score'),
@@ -986,6 +1147,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     async function saveAudit() {
+      if (!requireConfiguredApi()) return;
       if (isSaving) return;
 
       const payload = buildPayload();
@@ -1001,26 +1163,10 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
           'Saving audit record and recalculating scores...'
         );
 
-        if (apiUrl) {
-          setSyncStatus('Saving...', 'spinner', 'loading');
-          await apiPost({ action, ...payload });
-          await fetchData(false);
-          setSyncStatus('Saved', 'check', 'success');
-        } else {
-          if (action === 'create') {
-            payload.audit_id = 'AUD-' + Date.now();
-            db.unshift(normalizeRecord(payload));
-          } else {
-            const idx = db.findIndex(r => String(r.audit_id) === String(payload.audit_id));
-            if (idx === -1) throw new Error('Record not found in local mode.');
-            db[idx] = normalizeRecord(payload);
-          }
-
-          db.sort(sortRecords);
-          renderAll();
-          setSyncStatus('Saved locally', 'cloud', 'neutral');
-        }
-
+        setSyncStatus('Saving...', 'spinner', 'loading');
+        await apiPost({ action, ...payload });
+        await fetchData(false);
+        setSyncStatus('Saved', 'check', 'success');
         closeCrudModal();
       } catch (error) {
         console.error(error);
@@ -1034,6 +1180,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     async function saveAgent() {
+      if (!requireConfiguredApi()) return;
+
       const agentId = (document.getElementById('agent_id').value || '').trim();
       const agentName = (document.getElementById('agent_modal_name').value || '').trim();
 
@@ -1044,30 +1192,12 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
       try {
         showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
-        if (apiUrl) {
-          await apiPost({
-            action: agentId ? 'update_agent' : 'create_agent',
-            agent_id: agentId,
-            agent_name: agentName
-          });
-          await fetchData(false);
-        } else {
-          if (agentId) {
-            const idx = agentsDb.findIndex(a => String(a.agent_id) === String(agentId));
-            if (idx >= 0) agentsDb[idx].agent_name = agentName;
-          } else {
-            agentsDb.unshift({
-              agent_id: 'AGT-' + Date.now(),
-              agent_name: agentName,
-              created_at: new Date().toLocaleString()
-            });
-          }
-          renderAgentsTable();
-          renderAgentDropdown();
-          renderAuditFilterAgentDropdown();
-          renderKPIs();
-        }
-
+        await apiPost({
+          action: agentId ? 'update_agent' : 'create_agent',
+          agent_id: agentId,
+          agent_name: agentName
+        });
+        await fetchData(false);
         closeAgentModal();
       } catch (error) {
         console.error(error);
@@ -1089,20 +1219,15 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     async function deleteAudit(id) {
+      if (!requireConfiguredApi()) return;
       if (!confirm('Delete this audit record?')) return;
 
       try {
         showLoading('Deleting Audit', 'Removing record and updating dashboard...');
-        if (apiUrl) {
-          setSyncStatus('Deleting...', 'spinner', 'loading');
-          await apiPost({ action: 'delete', audit_id: id });
-          await fetchData(false);
-          setSyncStatus('Deleted', 'check', 'success');
-        } else {
-          db = db.filter(r => String(r.audit_id) !== String(id));
-          renderAll();
-          setSyncStatus('Deleted locally', 'cloud', 'neutral');
-        }
+        setSyncStatus('Deleting...', 'spinner', 'loading');
+        await apiPost({ action: 'delete', audit_id: id });
+        await fetchData(false);
+        setSyncStatus('Deleted', 'check', 'success');
       } catch (error) {
         console.error(error);
         alert(error.message || 'Error deleting audit.');
@@ -1113,20 +1238,13 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     async function deleteAgent(id) {
+      if (!requireConfiguredApi()) return;
       if (!confirm('Delete this agent?')) return;
 
       try {
         showLoading('Deleting Agent', 'Removing agent...');
-        if (apiUrl) {
-          await apiPost({ action: 'delete_agent', agent_id: id });
-          await fetchData(false);
-        } else {
-          agentsDb = agentsDb.filter(a => String(a.agent_id) !== String(id));
-          renderAgentsTable();
-          renderAgentDropdown();
-          renderAuditFilterAgentDropdown();
-          renderKPIs();
-        }
+        await apiPost({ action: 'delete_agent', agent_id: id });
+        await fetchData(false);
       } catch (error) {
         console.error(error);
         alert(error.message || 'Error deleting agent.');
@@ -1137,8 +1255,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
     async function fetchData(showOverlay = true) {
       if (!apiUrl) {
-        setSyncStatus('No API Linked', 'cloud', 'neutral');
-        renderAll();
+        setSyncStatus('Setup Required', 'lock', 'error');
+        renderEmptyState();
         return;
       }
 
@@ -1164,9 +1282,11 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
         agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
         db.sort(sortRecords);
-        currentActorName = json.actor || 'Mara';
+        currentActorName = json.actor || 'Auditor';
 
+        applyActorBranding();
         renderAll();
+        applyLockState();
         setSyncStatus('Synced', 'check', 'success');
       } catch (error) {
         console.error(error);
@@ -1179,6 +1299,13 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
     function normalizeRecord(record) {
       const obj = { ...record };
+
+      obj.audit_id = String(obj.audit_id || '').trim();
+      obj.audit_date = String(obj.audit_date || '').trim();
+      obj.agent_name = String(obj.agent_name || '').trim();
+      obj.audit_channel = String(obj.audit_channel || '').trim();
+      obj.property_field_id = String(obj.property_field_id || '').trim();
+      obj.final_error_note = String(obj.final_error_note || '').trim();
 
       SCORE_FIELDS.forEach(field => {
         obj[field] = round2(toNumber(obj[field]));
@@ -1245,7 +1372,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
           row.agent_name,
           row.audit_channel,
           row.final_error_note,
- row.property_field_id,
+          row.property_field_id,
         ].some(v => String(v || '').toLowerCase().includes(q));
 
         const matchesDateFrom = !dateFrom || (auditDate && auditDate >= dateFrom);
@@ -1363,38 +1490,38 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         const total = round2(toNumber(row.overall_score_100));
         const badge = getScoreBadge(total);
 
-       return `
-  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-    <td class="px-5 py-4">
-      <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
-      <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
-    </td>
-    <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
-    <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
-    <td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
-    <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
-    <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
-    <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
-    <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
-    <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
-    <td class="px-5 py-4 text-center">
-      <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
-        ${formatNum(total)}%
-      </span>
-    </td>
-    <td class="px-5 py-4 text-right">
-      <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
-        <i class="fa-solid fa-file-pdf"></i>
-      </button>
-      <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
-        <i class="fa-solid fa-pen"></i>
-      </button>
-      <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    </td>
-  </tr>
-`;
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <td class="px-5 py-4">
+              <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
+              <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
+            </td>
+            <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
+            <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
+            <td class="px-5 py-4 text-center">
+              <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
+                ${formatNum(total)}%
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+              </button>
+              <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
       }).join('');
 
       renderPagination(totalRows);
@@ -1412,10 +1539,19 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
             </td>
           </tr>
         `;
+        renderAgentsPagination(0);
         return;
       }
 
-      tbody.innerHTML = rows.map(agent => `
+      const totalRows = rows.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
+
+      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
+
+      const startIndex = (currentAgentPage - 1) * agentRowsPerPage;
+      const pagedRows = rows.slice(startIndex, startIndex + agentRowsPerPage);
+
+      tbody.innerHTML = pagedRows.map(agent => `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
           <td class="px-5 py-4 font-semibold text-emerald-600 dark:text-emerald-400">${escapeHtml(agent.agent_id || '')}</td>
           <td class="px-5 py-4 font-semibold">${escapeHtml(agent.agent_name || '-')}</td>
@@ -1430,6 +1566,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
           </td>
         </tr>
       `).join('');
+
+      renderAgentsPagination(totalRows);
     }
 
     function formatDisplayDate(value) {
@@ -1567,7 +1705,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
           doc.setFontSize(7);
           doc.setTextColor(...footerGray);
 
-          doc.text(`Audited By: ${currentActorName || 'Mara'}`, tableX, footerY);
+          doc.text(`Audited By: ${currentActorName || 'Auditor'}`, tableX, footerY);
           doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
         }
 
@@ -1589,11 +1727,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         doc.setFontSize(size);
         doc.setTextColor(...color);
 
-        if (Array.isArray(str)) {
-          doc.text(str, x, y, { align });
-        } else {
-          doc.text(String(str ?? ''), x, y, { align });
-        }
+        if (Array.isArray(str)) doc.text(str, x, y, { align });
+        else doc.text(String(str ?? ''), x, y, { align });
 
         doc.setTextColor(10, 10, 10);
       }
@@ -1618,11 +1753,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
       function drawSectionHeader(yPos, title, showScoreLabel = false) {
         rect(tableX, yPos, wLabel, rowH, fillHeader);
-
-        for (let i = 0; i < 5; i++) {
-          rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
-        }
-
+        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
         rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH, fillScore);
 
         text(title, tableX + 2, yPos + 5.2, { size: 7.5, style: 'normal' });
@@ -1643,15 +1774,10 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
       function drawRow(yPos, label, score, scoreTotal, italic = false) {
         rect(tableX, yPos, wLabel, rowH);
-        for (let i = 0; i < 5; i++) {
-          rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
-        }
+        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
         rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH);
 
-        text(label, tableX + 2, yPos + 5.2, {
-          size: 7,
-          style: italic ? 'italic' : 'normal'
-        });
+        text(label, tableX + 2, yPos + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
 
         for (let i = 1; i <= 5; i++) {
           scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), yPos);
@@ -1666,40 +1792,26 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
       let y = 10;
 
       rect(tableX, y, tableWidth, 14);
-      text('MRI ApartmentData', tableX + (tableWidth / 2), y + 7, {
-        size: 10,
-        style: 'bold',
-        align: 'center'
-      });
-      text('Audit Form', tableX + (tableWidth / 2), y + 11.5, {
-        size: 8,
-        align: 'center'
-      });
+      text('MRI Apartment Data', tableX + (tableWidth / 2), y + 7, { size: 10, style: 'bold', align: 'center' });
+      text('Audit Form', tableX + (tableWidth / 2), y + 11.5, { size: 8, align: 'center' });
       y += 14;
 
       rect(tableX, y, tableWidth, 10);
-      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, {
-        size: 7,
-        style: 'italic'
-      });
+      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
       y += 10;
 
       rect(tableX, y, tableWidth, 10);
       rect(tableX, y, 94, 10);
       rect(tableX + 94, y, tableWidth - 94, 10);
-      text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, {
-        size: 7,
-        style: 'italic'
-      });
-      text(`Email/AI: ${record.audit_channel || '-'}`, tableX + 96, y + 6, {
-        size: 7,
-        style: 'italic'
-      });
+      text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
+      text(`Channel: ${record.audit_channel || '-'}`, tableX + 96, y + 6, { size: 7, style: 'italic' });
+      y += 10;
+
+      rect(tableX, y, tableWidth, 10);
+      text(`Property Field ID: ${record.property_field_id || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
       y += 13;
 
-      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, {
-        size: 7
-      });
+      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, { size: 7 });
       y += 4;
 
       ensureSpace(8 * rowH + 10);
@@ -1745,19 +1857,14 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         style: 'italic'
       });
 
-      text(
-        formatNum(record.overall_score_100),
-        tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2),
-        y + 5.2,
-        {
-          size: 10,
-          style: 'bold',
-          align: 'center'
-        }
-      );
+      text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
+        size: 10,
+        style: 'bold',
+        align: 'center'
+      });
       y += 11;
 
-      const note = record.final_error_note || 'All notes and information match.';
+      const note = record.final_error_note || 'No note provided.';
       const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
 
       ensureSpace(wrapped.length * 4 + 2);
@@ -1769,6 +1876,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     function openPdfInNewTab(id) {
+      if (!requireConfiguredApi()) return;
+
       const record = db.find(r => String(r.audit_id) === String(id));
       if (!record) {
         alert('Record not found.');
@@ -1788,6 +1897,8 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     }
 
     function exportCsv() {
+      if (!requireConfiguredApi()) return;
+
       const rows = getFilteredData();
       if (!rows.length) {
         alert('No records to export.');
@@ -1797,9 +1908,18 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
       showLoading('Exporting CSV', 'Building export file...');
       try {
         const headers = [
-          'audit_id','audit_date','agent_name','audit_channel',
-          'basic_weighted','locator_weighted','occupancy_weighted','floorplan_weighted','notation_weighted',
-          'overall_score_100','final_error_note'
+          'audit_id',
+          'audit_date',
+          'agent_name',
+          'audit_channel',
+          'property_field_id',
+          'basic_weighted',
+          'locator_weighted',
+          'occupancy_weighted',
+          'floorplan_weighted',
+          'notation_weighted',
+          'overall_score_100',
+          'final_error_note'
         ];
 
         const csv = [
@@ -1807,13 +1927,15 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
           ...rows.map(row => headers.map(h => csvEscape(row[h])).join(','))
         ].join('\n');
 
-        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'mara_audits.csv');
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'auditor_audits.csv');
       } finally {
         hideLoading();
       }
     }
 
     function exportListPdf() {
+      if (!requireConfiguredApi()) return;
+
       const rows = getFilteredData();
       if (!rows.length) {
         alert('No records to export.');
@@ -1827,7 +1949,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
-        doc.text("Mara's Auditor - Audit Summary", 14, 14);
+        doc.text(`${getPossessiveActorTitle(currentActorName)} - Audit Summary`, 14, 14);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
@@ -1836,7 +1958,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         doc.autoTable({
           startY: 26,
           head: [[
-            'Audit ID', 'Date', 'Agent', 'Channel',
+            'Audit ID', 'Date', 'Agent', 'Channel', 'Property Field ID',
             'Basic', 'Locator', 'Occ', 'Floor', 'Notation', 'Total'
           ]],
           body: rows.map(r => [
@@ -1844,6 +1966,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
             formatDisplayDate(r.audit_date),
             r.agent_name || '',
             r.audit_channel || '',
+            r.property_field_id || '',
             formatNum(r.basic_weighted),
             formatNum(r.locator_weighted),
             formatNum(r.occupancy_weighted),
@@ -1857,7 +1980,7 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         });
 
         const blob = doc.output('blob');
-        downloadBlob(blob, 'mara_audits_summary.pdf');
+        downloadBlob(blob, 'auditor_audits_summary.pdf');
       } finally {
         hideLoading();
       }
@@ -1893,8 +2016,10 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
     document.addEventListener('click', function(e) {
       const settingsModal = document.getElementById('settingsModal');
       const agentModal = document.getElementById('agentModal');
+      const crudModal = document.getElementById('crudModal');
       if (e.target === settingsModal) closeSettings();
       if (e.target === agentModal) closeAgentModal();
+      if (e.target === crudModal) closeCrudModal();
     });
 
     document.addEventListener('keydown', function(e) {
@@ -1907,49 +2032,6 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
 
     document.addEventListener('DOMContentLoaded', function() {
       applySavedTheme();
-
-      db = [
-        {
-          audit_id: 'AUD-1001',
-          audit_date: '2026-03-24',
-          agent_name: 'Erica Abellan',
-          audit_channel: 'Email',
-          property_name_score: 5,
-          mgmt_company_score: 5,
-          apartment_mgr_score: 4,
-          regional_mgr_score: 5,
-          email_score: 5,
-          website_score: 5,
-          office_hours_score: 5,
-          commission_score: 5,
-          locator_note_score: 5,
-          requirements_score: 5,
-          occupancy_score: 5,
-          special_coding_score: 5,
-          pricing_score: 5,
-          availability_score: 5,
-          notation_score: 5,
-          basic_raw: 34,
-          basic_weighted: 48.57,
-          locator_raw: 15,
-          locator_weighted: 20,
-          occupancy_raw: 10,
-          occupancy_weighted: 10,
-          floorplan_raw: 10,
-          floorplan_weighted: 10,
-          notation_raw: 5,
-          notation_weighted: 10,
-          overall_raw: 74,
-          overall_score_100: 98.57,
-          final_error_note: 'All notes and information match.'
-        }
-      ].map(normalizeRecord);
-
-      agentsDb = [
-        { agent_id: 'AGT-1001', agent_name: 'Erica Abellan', created_at: '2026-03-24 09:00:00' },
-        { agent_id: 'AGT-1002', agent_name: 'Reeve', created_at: '2026-03-24 09:05:00' }
-      ];
-
       initApp();
     });
   </script>
