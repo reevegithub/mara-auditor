@@ -266,6 +266,7 @@
               <table class="w-full text-left text-sm whitespace-nowrap">
                 <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                   <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+<th class="px-5 py-3 font-black">Property Field ID</th>
                     <th class="px-5 py-3 font-black">Audit ID / Date</th>
                     <th class="px-5 py-3 font-black">Agent</th>
                     <th class="px-5 py-3 font-black">Channel</th>
@@ -373,6 +374,10 @@
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
                   <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
+<div>
+  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Field ID</label>
+  <input id="property_field_id" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+</div>
               </div>
 
               <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -911,6 +916,7 @@
         audit_date: (document.getElementById('audit_date').value || '').trim(),
         agent_name: (document.getElementById('agent_name').value || '').trim(),
         audit_channel: (document.getElementById('audit_channel').value || '').trim(),
+property_field_id: (document.getElementById('property_field_id').value || '').trim(),
 
         property_name_score: getScore('property_name_score'),
         mgmt_company_score: getScore('mgmt_company_score'),
@@ -1235,7 +1241,8 @@
           row.audit_date,
           row.agent_name,
           row.audit_channel,
-          row.final_error_note
+          row.final_error_note,
+ row.property_field_id,
         ].some(v => String(v || '').toLowerCase().includes(q));
 
         const matchesDateFrom = !dateFrom || (auditDate && auditDate >= dateFrom);
@@ -1332,7 +1339,7 @@
       if (!rows.length) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="10" class="px-5 py-10 text-center text-slate-500">
+            <td colspan="11" class="px-5 py-10 text-center text-slate-500">
               No audit records found.
             </td>
           </tr>
@@ -1361,6 +1368,7 @@
             </td>
             <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
             <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
+<td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
             <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
             <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
             <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
