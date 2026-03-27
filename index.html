@@ -495,7 +495,7 @@
       'notation_score'
     ];
 
-    let db = [];
+ 
  let db = [];
 let apiUrl = localStorage.getItem('maraAppUrl') || '';
 let trendChart = null;
@@ -973,9 +973,10 @@ function renderPagination(totalRows) {
 
         db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
         db.sort(sortRecords);
+        currentActorName = json.actor || 'Mara';
         renderAll();
         setSyncStatus('Synced', 'check', 'success');
-        currentActorName = json.actor || 'Mara';
+        
       } catch (error) {
         console.error(error);
         alert(error.message || 'Connection error');
