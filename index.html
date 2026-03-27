@@ -206,35 +206,45 @@
               <p class="text-xs text-slate-500 mt-1">Manage, export, and review all audit entries.</p>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-              <div class="relative w-full sm:w-72">
-                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input
-                  id="searchInput"
-                  type="text"
-                  oninput="renderAll()"
-                  placeholder="Search by audit ID, agent, channel, note..."
-                  class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-                />
-              </div>
+          <div class="flex flex-wrap gap-2">
+  <div class="relative w-full sm:w-72">
+    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+    <input
+      id="searchInput"
+      type="text"
+      oninput="currentPage = 1; renderAll()"
+      placeholder="Search by audit ID, agent, channel, note..."
+      class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
+    />
+  </div>
 
-              <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
-              </button>
+  <div class="flex items-center gap-2">
+    <label class="text-xs font-bold text-slate-500">Rows</label>
+    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+  </div>
 
-              <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
-              </button>
+  <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+    <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+  </button>
 
-              <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
-              </button>
+  <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+    <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
+  </button>
 
-              <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
-                <i class="fa-solid fa-plus mr-1"></i>Add Audit
-              </button>
-            </div>
-          </div>
+  <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+    <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
+  </button>
+
+  <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
+    <i class="fa-solid fa-plus mr-1"></i>Add Audit
+  </button>
+</div>
 
           <div class="overflow-auto thin-scroll">
             <div class="min-w-[1100px]">
@@ -265,16 +275,6 @@
       </main>
     </div>
     
-<div class="flex items-center gap-2">
-  <label class="text-xs font-bold text-slate-500">Rows</label>
-  <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
-    <option value="5">5</option>
-    <option value="10" selected>10</option>
-    <option value="25">25</option>
-    <option value="50">50</option>
-    <option value="100">100</option>
-  </select>
-</div>
     
     <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
@@ -1062,7 +1062,7 @@ function renderPagination(totalRows) {
       return 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400';
     }
 
-    function renderTable() {
+function renderTable() {
   const tbody = document.getElementById('tableBody');
   const rows = getFilteredData();
 
@@ -1080,6 +1080,7 @@ function renderPagination(totalRows) {
 
   const totalRows = rows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
   if (currentPage > totalPages) currentPage = totalPages;
 
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -1121,6 +1122,16 @@ function renderPagination(totalRows) {
       </tr>
     `;
   }).join('');
+
+  renderPagination(totalRows);
+}
+
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
 
   renderPagination(totalRows);
 }
