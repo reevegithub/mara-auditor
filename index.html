@@ -1315,7 +1315,7 @@ async function checkForRemoteUpdates() {
   if (!canAutoSync()) return;
 
   const idleMs = Date.now() - lastUserActivityAt;
-  if (idleMs < 10000) return;
+  if (idleMs < 5000) return;
 
   try {
     setSyncStatus('Checking updates...', 'spinner', 'loading');
@@ -1357,7 +1357,7 @@ async function checkForRemoteUpdates() {
       return;
     }
 
-    setSyncStatus('No new updates', 'check', 'neutral');
+    setSyncStatus('Synced', 'check', 'success');
   } catch (error) {
     console.error(error);
     setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
