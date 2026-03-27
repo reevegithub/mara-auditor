@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mara's Auditor - Logs</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226,232,240,.95);
+      box-shadow: 0 12px 32px rgba(15,23,42,.06);
+    }
+    .dark .glass {
+      background: rgba(15,23,42,.78);
+      border-color: rgba(51,65,85,.95);
+      box-shadow: 0 12px 32px rgba(2,6,23,.35);
+    }
+    .thin-scroll::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100,116,139,.35);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
+  <div class="min-h-screen flex flex-col">
+    <header class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <div>
+            <h1 class="font-black text-lg md:text-xl">Mara's Auditor</h1>
+            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">System Logs</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
+            <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
+          </button>
+
+          <button type="button" onclick="goDashboard()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Dashboard
+          </button>
+
+          <button type="button" onclick="goAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            A.I Chat
+          </button>
+
+          <button type="button" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border bg-blue-600 text-white border-blue-600">
+            Logs
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 md:p-6 overflow-auto thin-scroll">
+      <div class="max-w-7xl mx-auto glass rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div>
+            <h2 class="text-xl font-black">Activity Logs</h2>
+            <p class="text-sm text-slate-500 mt-1">Track what Mara did in the system.</p>
+          </div>
+          <button onclick="loadLogs()" class="px-4 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+            <i class="fa-solid fa-rotate-right mr-2"></i>Refresh Logs
+          </button>
+        </div>
+
+        <div class="overflow-auto thin-scroll">
+          <div class="min-w-[1000px]">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+                  <th class="px-5 py-3 font-black">Timestamp</th>
+                  <th class="px-5 py-3 font-black">Actor</th>
+                  <th class="px-5 py-3 font-black">Action</th>
+                  <th class="px-5 py-3 font-black">Audit ID</th>
+                  <th class="px-5 py-3 font-black">Summary</th>
+                  <th class="px-5 py-3 font-black">Payload</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div>© 2026 Mara's Auditor</div>
+        <div>Logs and audit activity monitor</div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    let apiUrl = localStorage.getItem('maraAppUrl') || '';
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('maraTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    function applySavedTheme() {
+      const saved = localStorage.getItem('maraTheme');
+      if (saved === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    }
+
+    function goDashboard() {
+      window.location.href = 'index.html';
+    }
+
+    function goAI() {
+      window.location.href = 'AI.html';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function loadLogs() {
+      if (!apiUrl) {
+        alert('Please set your Apps Script URL first in the dashboard.');
+        return;
+      }
+
+      const tbody = document.getElementById('logsTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-5 py-10 text-center text-slate-500">Loading logs...</td>
+        </tr>
+      `;
+
+      try {
+        const res = await fetch(apiUrl + '?action=logs&t=' + Date.now(), { method: 'GET', cache: 'no-store' });
+        const text = await res.text();
+        const json = JSON.parse(text);
+
+        if (!json || json.status !== 'success') {
+          throw new Error(json?.message || 'Failed to load logs.');
+        }
+
+        const rows = Array.isArray(json.data) ? json.data : [];
+
+        if (!rows.length) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-5 py-10 text-center text-slate-500">No logs found.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = rows.map(row => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <td class="px-5 py-4">${escapeHtml(row.timestamp || '')}</td>
+            <td class="px-5 py-4 font-semibold">${escapeHtml(row.actor || '')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.action || '')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.audit_id || '-')}</td>
+            <td class="px-5 py-4">${escapeHtml(row.summary || '')}</td>
+            <td class="px-5 py-4 max-w-[420px] truncate" title="${escapeHtml(row.payload_json || '')}">
+              ${escapeHtml(row.payload_json || '')}
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-5 py-10 text-center text-red-500">${escapeHtml(error.message || 'Failed to load logs.')}</td>
+          </tr>
+        `;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applySavedTheme();
+      loadLogs();
+    });
+  </script>
+</body>
+</html>
