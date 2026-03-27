@@ -145,9 +145,13 @@
             Dashboard
           </button>
 
-          <button type="button" onclick="goToAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-            A.I Chat
-          </button>
+        <button type="button" onclick="goToAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+  A.I Chat
+</button>
+
+<button type="button" onclick="goToLogs()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+  Logs
+</button>
 
           <button type="button" onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
             <i class="fa-solid fa-gear text-slate-500"></i>
@@ -1579,6 +1583,10 @@ function renderPagination(totalRows) {
 
       initApp();
     });
+
+    function goToLogs() {
+  window.location.href = 'Logs.html';
+}
   </script>
 </body>
 </html>
