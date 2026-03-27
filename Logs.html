@@ -24,24 +24,40 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; }
+
     .glass {
       background: rgba(255,255,255,.88);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(226,232,240,.95);
       box-shadow: 0 12px 32px rgba(15,23,42,.06);
     }
+
     .dark .glass {
       background: rgba(15,23,42,.78);
       border-color: rgba(51,65,85,.95);
       box-shadow: 0 12px 32px rgba(2,6,23,.35);
     }
+
     .thin-scroll::-webkit-scrollbar {
       width: 10px;
       height: 10px;
     }
+
     .thin-scroll::-webkit-scrollbar-thumb {
       background: rgba(100,116,139,.35);
       border-radius: 999px;
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .payload-pre {
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -87,7 +103,7 @@
           <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <div>
               <h2 class="text-xl font-black">Activity Logs</h2>
-              <p class="text-sm text-slate-500 mt-1">Track logs history.</p>
+              <p class="text-sm text-slate-500 mt-1">Review system activity, inspect details, and trace changes clearly.</p>
             </div>
             <button onclick="loadLogs()" class="px-4 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
               <i class="fa-solid fa-rotate-right mr-2"></i>Refresh Logs
@@ -96,20 +112,20 @@
 
           <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
             <div class="md:col-span-5">
-              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Search</label>
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Search Logs</label>
               <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input
                   id="searchInput"
                   type="text"
-                  placeholder="Search timestamp, actor, action, audit ID, summary, payload..."
+                  placeholder="Search actor, action, audit ID, summary, or payload..."
                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div class="md:col-span-3">
-              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Filter by Action</label>
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Action Type</label>
               <select
                 id="actionFilter"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
@@ -119,7 +135,7 @@
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Rows per Page</label>
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Rows Per Page</label>
               <select
                 id="rowsPerPage"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
@@ -144,8 +160,8 @@
         </div>
 
         <div class="overflow-auto thin-scroll">
-          <div class="min-w-[1000px]">
-            <table class="w-full text-left text-sm whitespace-nowrap">
+          <div class="min-w-[1100px]">
+            <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                 <tr class="text-[11px] uppercase tracking-wider text-slate-500">
                   <th class="px-5 py-3 font-black">Timestamp</th>
@@ -153,7 +169,7 @@
                   <th class="px-5 py-3 font-black">Action</th>
                   <th class="px-5 py-3 font-black">Audit ID</th>
                   <th class="px-5 py-3 font-black">Summary</th>
-                  <th class="px-5 py-3 font-black">Payload</th>
+                  <th class="px-5 py-3 font-black text-center">Details</th>
                 </tr>
               </thead>
               <tbody id="logsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
@@ -193,6 +209,76 @@
     </footer>
   </div>
 
+  <!-- Modal -->
+  <div id="logModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-950/60" onclick="closeLogModal()"></div>
+
+    <div class="absolute inset-0 p-4 md:p-8 flex items-center justify-center">
+      <div class="w-full max-w-4xl max-h-[90vh] glass rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg md:text-xl font-black">Log Details</h3>
+            <p class="text-sm text-slate-500">Detailed activity record view</p>
+          </div>
+          <button onclick="closeLogModal()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-5 overflow-auto thin-scroll space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+              <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-1">Timestamp</div>
+              <div id="modalTimestamp" class="font-semibold break-words">-</div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+              <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-1">Actor</div>
+              <div id="modalActor" class="font-semibold break-words">-</div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+              <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-1">Action</div>
+              <div id="modalAction" class="font-semibold break-words">-</div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+              <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-1">Audit ID</div>
+              <div id="modalAuditId" class="font-semibold break-words">-</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+            <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Summary</div>
+            <div id="modalSummary" class="text-sm leading-6 text-slate-700 dark:text-slate-200">-</div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-4">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <div class="text-xs uppercase tracking-wide font-bold text-slate-500">Payload</div>
+                <div class="text-sm text-slate-500">Formatted activity data</div>
+              </div>
+              <button onclick="copyPayload()" class="px-3 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800">
+                <i class="fa-solid fa-copy mr-2"></i>Copy
+              </button>
+            </div>
+
+            <div id="modalPayloadFormatted" class="space-y-3 mb-4"></div>
+
+            <div class="rounded-2xl bg-slate-950 text-slate-100 p-4 overflow-auto thin-scroll">
+              <div class="text-xs uppercase tracking-wide text-slate-400 font-bold mb-2">Raw JSON</div>
+              <pre id="modalPayloadRaw" class="payload-pre text-xs leading-6"></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+          <button onclick="closeLogModal()" class="px-4 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let apiUrl = localStorage.getItem('maraAppUrl') || '';
 
@@ -201,6 +287,7 @@
     let currentPage = 1;
     let rowsPerPage = 10;
     let totalPages = 1;
+    let currentModalPayloadText = '';
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
@@ -234,6 +321,73 @@
         .replace(/'/g, '&#039;');
     }
 
+    function safeDisplay(value, fallback = '-') {
+      const str = String(value ?? '').trim();
+      return str ? str : fallback;
+    }
+
+    function prettyLabel(key) {
+      return String(key || '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+
+    function tryParseJson(text) {
+      if (typeof text !== 'string') return null;
+      const trimmed = text.trim();
+      if (!trimmed) return null;
+
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function formatJsonText(value) {
+      if (value == null || value === '') return '-';
+      if (typeof value === 'string') {
+        const parsed = tryParseJson(value);
+        if (parsed !== null) return JSON.stringify(parsed, null, 2);
+        return value;
+      }
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch (e) {
+        return String(value);
+      }
+    }
+
+    function summarizePayload(payload) {
+      if (!payload) return 'No payload details';
+      if (typeof payload !== 'object') return String(payload);
+
+      const importantKeys = [
+        'audit_id',
+        'agent_name',
+        'audit_date',
+        'action',
+        'field',
+        'old_value',
+        'new_value',
+        'user',
+        'result'
+      ];
+
+      const pieces = importantKeys
+        .filter(key => payload[key] !== undefined && payload[key] !== null && payload[key] !== '')
+        .map(key => `${prettyLabel(key)}: ${payload[key]}`);
+
+      if (pieces.length) return pieces.slice(0, 3).join(' • ');
+
+      const entries = Object.entries(payload).slice(0, 3).map(([k, v]) => {
+        if (typeof v === 'object') return `${prettyLabel(k)}: [object]`;
+        return `${prettyLabel(k)}: ${v}`;
+      });
+
+      return entries.length ? entries.join(' • ') : 'Payload available';
+    }
+
     function getRowSearchText(row) {
       return [
         row.timestamp,
@@ -250,12 +404,11 @@
       const currentValue = select.value;
 
       const actions = [...new Set(
-        rows
-          .map(r => String(r.action || '').trim())
-          .filter(Boolean)
+        rows.map(r => String(r.action || '').trim()).filter(Boolean)
       )].sort((a, b) => a.localeCompare(b));
 
-      select.innerHTML = `<option value="">All Actions</option>` +
+      select.innerHTML =
+        `<option value="">All Actions</option>` +
         actions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join('');
 
       if (actions.includes(currentValue)) {
@@ -298,29 +451,44 @@
       const endIndex = Math.min(startIndex + rowsPerPage, filteredLogs.length);
       const pageRows = filteredLogs.slice(startIndex, endIndex);
 
-      tbody.innerHTML = pageRows.map(row => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition align-top">
-          <td class="px-5 py-4">${escapeHtml(row.timestamp || '')}</td>
-          <td class="px-5 py-4 font-semibold">${escapeHtml(row.actor || '')}</td>
-          <td class="px-5 py-4">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800">
-              ${escapeHtml(row.action || '')}
-            </span>
-          </td>
-          <td class="px-5 py-4">${escapeHtml(row.audit_id || '-')}</td>
-          <td class="px-5 py-4 max-w-[320px] whitespace-normal break-words">${escapeHtml(row.summary || '')}</td>
-          <td class="px-5 py-4 max-w-[420px] truncate" title="${escapeHtml(row.payload_json || '')}">
-            ${escapeHtml(row.payload_json || '')}
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = pageRows.map((row, index) => {
+        const payloadParsed = tryParseJson(row.payload_json);
+        const shortSummary = safeDisplay(row.summary, summarizePayload(payloadParsed));
+        const globalIndex = startIndex + index;
+
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition align-top">
+            <td class="px-5 py-4 whitespace-nowrap">${escapeHtml(row.timestamp || '')}</td>
+            <td class="px-5 py-4 font-semibold whitespace-nowrap">${escapeHtml(row.actor || '')}</td>
+            <td class="px-5 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800">
+                ${escapeHtml(row.action || '')}
+              </span>
+            </td>
+            <td class="px-5 py-4 whitespace-nowrap">${escapeHtml(row.audit_id || '-')}</td>
+            <td class="px-5 py-4 max-w-[380px]">
+              <div class="line-clamp-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                ${escapeHtml(shortSummary)}
+              </div>
+            </td>
+            <td class="px-5 py-4 text-center whitespace-nowrap">
+              <button
+                onclick="openLogModalByIndex(${globalIndex})"
+                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+              >
+                <i class="fa-solid fa-eye"></i>
+                View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       updatePaginationInfo(startIndex + 1, endIndex, filteredLogs.length);
     }
 
     function updatePaginationInfo(start, end, total) {
-      const info = document.getElementById('paginationInfo');
-      info.textContent = `Showing ${start} to ${end} of ${total} entries`;
+      document.getElementById('paginationInfo').textContent = `Showing ${start} to ${end} of ${total} entries`;
     }
 
     function renderPagination() {
@@ -386,6 +554,99 @@
       applyFilters();
     }
 
+    function renderPayloadCards(payload) {
+      const container = document.getElementById('modalPayloadFormatted');
+
+      if (payload == null) {
+        container.innerHTML = `
+          <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-sm text-slate-500">
+            No structured payload data available.
+          </div>
+        `;
+        return;
+      }
+
+      if (typeof payload !== 'object' || Array.isArray(payload)) {
+        container.innerHTML = `
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-950/50">
+            <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Value</div>
+            <div class="text-sm break-words">${escapeHtml(String(payload))}</div>
+          </div>
+        `;
+        return;
+      }
+
+      const entries = Object.entries(payload);
+
+      if (!entries.length) {
+        container.innerHTML = `
+          <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-sm text-slate-500">
+            Payload is empty.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          ${entries.map(([key, value]) => `
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4">
+              <div class="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">${escapeHtml(prettyLabel(key))}</div>
+              <div class="text-sm leading-6 break-words">${renderPayloadValue(value)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderPayloadValue(value) {
+      if (value === null || value === undefined || value === '') {
+        return '<span class="text-slate-400">-</span>';
+      }
+
+      if (typeof value === 'object') {
+        return `<pre class="payload-pre text-xs leading-6">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+      }
+
+      return escapeHtml(String(value));
+    }
+
+    function openLogModalByIndex(index) {
+      const row = filteredLogs[index];
+      if (!row) return;
+
+      const parsedPayload = tryParseJson(row.payload_json);
+      const rawPayload = formatJsonText(row.payload_json);
+
+      document.getElementById('modalTimestamp').textContent = safeDisplay(row.timestamp);
+      document.getElementById('modalActor').textContent = safeDisplay(row.actor);
+      document.getElementById('modalAction').textContent = safeDisplay(row.action);
+      document.getElementById('modalAuditId').textContent = safeDisplay(row.audit_id);
+      document.getElementById('modalSummary').textContent = safeDisplay(row.summary, summarizePayload(parsedPayload));
+      document.getElementById('modalPayloadRaw').textContent = rawPayload;
+
+      currentModalPayloadText = rawPayload;
+      renderPayloadCards(parsedPayload);
+
+      const modal = document.getElementById('logModal');
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeLogModal() {
+      document.getElementById('logModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    async function copyPayload() {
+      try {
+        await navigator.clipboard.writeText(currentModalPayloadText || '');
+        alert('Payload copied.');
+      } catch (e) {
+        alert('Copy failed.');
+      }
+    }
+
     async function loadLogs() {
       if (!apiUrl) {
         alert('Please set your Apps Script URL first in the dashboard.');
@@ -400,7 +661,11 @@
       `;
 
       try {
-        const res = await fetch(apiUrl + '?action=logs&t=' + Date.now(), { method: 'GET', cache: 'no-store' });
+        const res = await fetch(apiUrl + '?action=logs&t=' + Date.now(), {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
         const text = await res.text();
         const json = JSON.parse(text);
 
@@ -422,6 +687,10 @@
         document.getElementById('pageNumbers').innerHTML = '';
       }
     }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLogModal();
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
       applySavedTheme();
