@@ -267,16 +267,19 @@
                 <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                   <tr class="text-[11px] uppercase tracking-wider text-slate-500">
 <th class="px-5 py-3 font-black">Property Field ID</th>
-                    <th class="px-5 py-3 font-black">Audit ID / Date</th>
-                    <th class="px-5 py-3 font-black">Agent</th>
-                    <th class="px-5 py-3 font-black">Channel</th>
-                    <th class="px-5 py-3 text-center font-black">Basic</th>
-                    <th class="px-5 py-3 text-center font-black">Locator</th>
-                    <th class="px-5 py-3 text-center font-black">Occ</th>
-                    <th class="px-5 py-3 text-center font-black">Floor</th>
-                    <th class="px-5 py-3 text-center font-black">Notation</th>
-                    <th class="px-5 py-3 text-center font-black">Total</th>
-                    <th class="px-5 py-3 text-right font-black">Actions</th>
+              <tr class="text-[11px] uppercase tracking-wider text-slate-500">
+  <th class="px-5 py-3 font-black">Audit ID</th>
+  <th class="px-5 py-3 font-black">Agent</th>
+  <th class="px-5 py-3 font-black">Channel</th>
+  <th class="px-5 py-3 font-black">Property Field ID</th>
+  <th class="px-5 py-3 text-center font-black">Basic</th>
+  <th class="px-5 py-3 text-center font-black">Locator</th>
+  <th class="px-5 py-3 text-center font-black">Occ</th>
+  <th class="px-5 py-3 text-center font-black">Floor</th>
+  <th class="px-5 py-3 text-center font-black">Notation</th>
+  <th class="px-5 py-3 text-center font-black">Total</th>
+  <th class="px-5 py-3 text-right font-black">Actions</th>
+</tr>
                   </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
@@ -1360,38 +1363,38 @@ property_field_id: (document.getElementById('property_field_id').value || '').tr
         const total = round2(toNumber(row.overall_score_100));
         const badge = getScoreBadge(total);
 
-        return `
-          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-            <td class="px-5 py-4">
-              <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
-              <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
-            </td>
-            <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
-            <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
-<td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
-            <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
-            <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
-            <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
-            <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
-            <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
-            <td class="px-5 py-4 text-center">
-              <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
-                ${formatNum(total)}%
-              </span>
-            </td>
-            <td class="px-5 py-4 text-right">
-              <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
-                <i class="fa-solid fa-file-pdf"></i>
-              </button>
-              <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-              <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        `;
+       return `
+  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+    <td class="px-5 py-4">
+      <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
+      <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
+    </td>
+    <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
+    <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
+    <td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
+    <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
+    <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
+    <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
+    <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
+    <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
+    <td class="px-5 py-4 text-center">
+      <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
+        ${formatNum(total)}%
+      </span>
+    </td>
+    <td class="px-5 py-4 text-right">
+      <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
+        <i class="fa-solid fa-file-pdf"></i>
+      </button>
+      <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+      <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </td>
+  </tr>
+`;
       }).join('');
 
       renderPagination(totalRows);
