@@ -2013,14 +2013,9 @@
       return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
-    document.addEventListener('click', function(e) {
-      const settingsModal = document.getElementById('settingsModal');
-      const agentModal = document.getElementById('agentModal');
-      const crudModal = document.getElementById('crudModal');
-      if (e.target === settingsModal) closeSettings();
-      if (e.target === agentModal) closeAgentModal();
-      if (e.target === crudModal) closeCrudModal();
-    });
+document.addEventListener('click', function(e) {
+  // Do nothing on backdrop click
+});
 
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
