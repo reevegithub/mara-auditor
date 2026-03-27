@@ -65,31 +65,82 @@
             <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
             <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
           </button>
-<button type="button" onclick="goDashboard()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-  Dashboard
-</button>
 
-<button type="button" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border bg-blue-600 text-white border-blue-600">
-  A.I Chat
-</button>
+          <button type="button" onclick="goDashboard()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Dashboard
+          </button>
 
-<button type="button" onclick="goLogs()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-  Logs
-</button>
+          <button type="button" onclick="goAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            A.I Chat
+          </button>
+
+          <button type="button" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border bg-blue-600 text-white border-blue-600">
+            Logs
+          </button>
         </div>
       </div>
     </header>
 
     <main class="flex-1 p-4 md:p-6 overflow-auto thin-scroll">
       <div class="max-w-7xl mx-auto glass rounded-3xl overflow-hidden">
-        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-          <div>
-            <h2 class="text-xl font-black">Activity Logs</h2>
-            <p class="text-sm text-slate-500 mt-1">Track Logs History.</p>
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-4">
+          <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-black">Activity Logs</h2>
+              <p class="text-sm text-slate-500 mt-1">Track logs history.</p>
+            </div>
+            <button onclick="loadLogs()" class="px-4 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+              <i class="fa-solid fa-rotate-right mr-2"></i>Refresh Logs
+            </button>
           </div>
-          <button onclick="loadLogs()" class="px-4 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-            <i class="fa-solid fa-rotate-right mr-2"></i>Refresh Logs
-          </button>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div class="md:col-span-5">
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Search</label>
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input
+                  id="searchInput"
+                  type="text"
+                  placeholder="Search timestamp, actor, action, audit ID, summary, payload..."
+                  class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Filter by Action</label>
+              <select
+                id="actionFilter"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Actions</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Rows per Page</label>
+              <select
+                id="rowsPerPage"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2 flex items-end">
+              <button
+                onclick="resetFilters()"
+                class="w-full px-4 py-3 rounded-xl font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <i class="fa-solid fa-filter-circle-xmark mr-2"></i>Reset
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="overflow-auto thin-scroll">
@@ -109,6 +160,28 @@
             </table>
           </div>
         </div>
+
+        <div class="p-4 md:p-5 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div id="paginationInfo" class="text-sm text-slate-500">
+            Showing 0 to 0 of 0 entries
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="firstPageBtn" onclick="goToPage(1)" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+            <button id="prevPageBtn" onclick="changePage(-1)" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
+            <div id="pageNumbers" class="flex items-center gap-2 flex-wrap"></div>
+            <button id="nextPageBtn" onclick="changePage(1)" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+            <button id="lastPageBtn" onclick="goToPage(totalPages)" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold">
+              <i class="fa-solid fa-angles-right"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -122,6 +195,12 @@
 
   <script>
     let apiUrl = localStorage.getItem('maraAppUrl') || '';
+
+    let allLogs = [];
+    let filteredLogs = [];
+    let currentPage = 1;
+    let rowsPerPage = 10;
+    let totalPages = 1;
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
@@ -142,6 +221,10 @@
       window.location.href = 'AI.html';
     }
 
+    function goLogs() {
+      window.location.href = 'Logs.html';
+    }
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -149,6 +232,158 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function getRowSearchText(row) {
+      return [
+        row.timestamp,
+        row.actor,
+        row.action,
+        row.audit_id,
+        row.summary,
+        row.payload_json
+      ].map(v => String(v ?? '').toLowerCase()).join(' ');
+    }
+
+    function populateActionFilter(rows) {
+      const select = document.getElementById('actionFilter');
+      const currentValue = select.value;
+
+      const actions = [...new Set(
+        rows
+          .map(r => String(r.action || '').trim())
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b));
+
+      select.innerHTML = `<option value="">All Actions</option>` +
+        actions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join('');
+
+      if (actions.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function applyFilters() {
+      const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
+      const actionValue = document.getElementById('actionFilter').value.trim();
+
+      filteredLogs = allLogs.filter(row => {
+        const matchesSearch = !searchValue || getRowSearchText(row).includes(searchValue);
+        const matchesAction = !actionValue || String(row.action || '').trim() === actionValue;
+        return matchesSearch && matchesAction;
+      });
+
+      rowsPerPage = parseInt(document.getElementById('rowsPerPage').value, 10) || 10;
+      totalPages = Math.max(1, Math.ceil(filteredLogs.length / rowsPerPage));
+      currentPage = Math.min(currentPage, totalPages);
+
+      renderTable();
+      renderPagination();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('logsTableBody');
+
+      if (!filteredLogs.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-5 py-10 text-center text-slate-500">No logs found.</td>
+          </tr>
+        `;
+        updatePaginationInfo(0, 0, 0);
+        return;
+      }
+
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const endIndex = Math.min(startIndex + rowsPerPage, filteredLogs.length);
+      const pageRows = filteredLogs.slice(startIndex, endIndex);
+
+      tbody.innerHTML = pageRows.map(row => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition align-top">
+          <td class="px-5 py-4">${escapeHtml(row.timestamp || '')}</td>
+          <td class="px-5 py-4 font-semibold">${escapeHtml(row.actor || '')}</td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800">
+              ${escapeHtml(row.action || '')}
+            </span>
+          </td>
+          <td class="px-5 py-4">${escapeHtml(row.audit_id || '-')}</td>
+          <td class="px-5 py-4 max-w-[320px] whitespace-normal break-words">${escapeHtml(row.summary || '')}</td>
+          <td class="px-5 py-4 max-w-[420px] truncate" title="${escapeHtml(row.payload_json || '')}">
+            ${escapeHtml(row.payload_json || '')}
+          </td>
+        </tr>
+      `).join('');
+
+      updatePaginationInfo(startIndex + 1, endIndex, filteredLogs.length);
+    }
+
+    function updatePaginationInfo(start, end, total) {
+      const info = document.getElementById('paginationInfo');
+      info.textContent = `Showing ${start} to ${end} of ${total} entries`;
+    }
+
+    function renderPagination() {
+      const pageNumbers = document.getElementById('pageNumbers');
+      const firstBtn = document.getElementById('firstPageBtn');
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+      const lastBtn = document.getElementById('lastPageBtn');
+
+      firstBtn.disabled = currentPage <= 1;
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      lastBtn.disabled = currentPage >= totalPages;
+
+      [firstBtn, prevBtn, nextBtn, lastBtn].forEach(btn => {
+        btn.classList.toggle('opacity-50', btn.disabled);
+        btn.classList.toggle('cursor-not-allowed', btn.disabled);
+      });
+
+      let pages = [];
+      const maxVisible = 5;
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+      if ((endPage - startPage + 1) < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      pageNumbers.innerHTML = pages.map(page => `
+        <button
+          onclick="goToPage(${page})"
+          class="px-3 py-2 rounded-xl text-sm font-bold border ${
+            page === currentPage
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'
+          }"
+        >
+          ${page}
+        </button>
+      `).join('');
+    }
+
+    function goToPage(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderTable();
+      renderPagination();
+    }
+
+    function changePage(step) {
+      goToPage(currentPage + step);
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('actionFilter').value = '';
+      document.getElementById('rowsPerPage').value = '10';
+      currentPage = 1;
+      applyFilters();
     }
 
     async function loadLogs() {
@@ -173,45 +408,41 @@
           throw new Error(json?.message || 'Failed to load logs.');
         }
 
-        const rows = Array.isArray(json.data) ? json.data : [];
-
-        if (!rows.length) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="px-5 py-10 text-center text-slate-500">No logs found.</td>
-            </tr>
-          `;
-          return;
-        }
-
-        tbody.innerHTML = rows.map(row => `
-          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-            <td class="px-5 py-4">${escapeHtml(row.timestamp || '')}</td>
-            <td class="px-5 py-4 font-semibold">${escapeHtml(row.actor || '')}</td>
-            <td class="px-5 py-4">${escapeHtml(row.action || '')}</td>
-            <td class="px-5 py-4">${escapeHtml(row.audit_id || '-')}</td>
-            <td class="px-5 py-4">${escapeHtml(row.summary || '')}</td>
-            <td class="px-5 py-4 max-w-[420px] truncate" title="${escapeHtml(row.payload_json || '')}">
-              ${escapeHtml(row.payload_json || '')}
-            </td>
-          </tr>
-        `).join('');
+        allLogs = Array.isArray(json.data) ? json.data : [];
+        populateActionFilter(allLogs);
+        currentPage = 1;
+        applyFilters();
       } catch (error) {
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="px-5 py-10 text-center text-red-500">${escapeHtml(error.message || 'Failed to load logs.')}</td>
           </tr>
         `;
+        document.getElementById('paginationInfo').textContent = 'Showing 0 to 0 of 0 entries';
+        document.getElementById('pageNumbers').innerHTML = '';
       }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       applySavedTheme();
+
+      document.getElementById('searchInput').addEventListener('input', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('actionFilter').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
+      document.getElementById('rowsPerPage').addEventListener('change', function() {
+        currentPage = 1;
+        applyFilters();
+      });
+
       loadLogs();
     });
-    function goLogs() {
-  window.location.href = 'Logs.html';
-}
   </script>
 </body>
 </html>
