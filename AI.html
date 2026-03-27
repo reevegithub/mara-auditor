@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mara's Auditor - A.I Chat</title>
+  <title>Auditor - A.I Chat</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
@@ -55,7 +55,7 @@
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
           <div class="min-w-0">
-            <h1 class="font-black text-lg md:text-xl truncate">Mara's Auditor</h1>
+            <h1 id="pageTitle" class="font-black text-lg md:text-xl truncate">Auditor</h1>
             <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">AI Assistant</p>
           </div>
         </div>
@@ -66,17 +66,17 @@
             <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
           </button>
 
-        <button type="button" onclick="goDashboard()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-  Dashboard
-</button>
+          <button type="button" onclick="goDashboard()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Dashboard
+          </button>
 
-<button type="button" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border bg-blue-600 text-white border-blue-600">
-  A.I Chat
-</button>
+          <button type="button" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border bg-blue-600 text-white border-blue-600">
+            A.I Chat
+          </button>
 
-<button type="button" onclick="goLogs()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-  Logs
-</button>
+          <button type="button" onclick="goLogs()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+            Logs
+          </button>
         </div>
       </div>
     </header>
@@ -94,7 +94,12 @@
 
         <div class="glass rounded-3xl p-4">
           <div class="flex flex-col md:flex-row gap-3">
-            <textarea id="aiPrompt" rows="3" placeholder="Example: Summarize the lowest scoring agent and show what actions Mara performed recently." class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
+            <textarea
+              id="aiPrompt"
+              rows="3"
+              placeholder="Example: Summarize the lowest scoring agent and show what actions the current actor performed recently."
+              class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
+            ></textarea>
             <button onclick="sendAiPrompt()" class="px-5 py-3 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 text-white md:self-end">
               <i class="fa-solid fa-paper-plane mr-2"></i>Ask AI
             </button>
@@ -105,28 +110,100 @@
 
     <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-        <div>© 2026 Mara's Auditor</div>
+        <div id="footerTitle">© 2026 Auditor</div>
         <div>AI-powered audit insights via Google Apps Script + Gemini</div>
       </div>
     </footer>
   </div>
 
   <script>
-    let apiUrl = localStorage.getItem('maraAppUrl') || '';
+    let apiUrl = localStorage.getItem('auditorAppUrl') || localStorage.getItem('maraAppUrl') || '';
+    let currentActorName = localStorage.getItem('auditorActorName') || 'Auditor';
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
-      localStorage.setItem('maraTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      localStorage.setItem('auditorTheme', theme);
+      localStorage.setItem('maraTheme', theme);
     }
 
     function applySavedTheme() {
-      const saved = localStorage.getItem('maraTheme');
+      const saved = localStorage.getItem('auditorTheme') || localStorage.getItem('maraTheme') || 'light';
       if (saved === 'dark') document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
     }
 
+    function getActorDisplayName() {
+      const actor = String(currentActorName || '').trim();
+      return actor || 'Auditor';
+    }
+
+    function getActorAiName() {
+      return `${getActorDisplayName()} AI`;
+    }
+
+    function applyActorBranding() {
+      const actor = getActorDisplayName();
+      const brandText = `${actor}'s Auditor`;
+
+      document.title = `${brandText} - A.I Chat`;
+
+      const pageTitle = document.getElementById('pageTitle');
+      if (pageTitle) pageTitle.textContent = brandText;
+
+      const footerTitle = document.getElementById('footerTitle');
+      if (footerTitle) footerTitle.textContent = `© 2026 ${brandText}`;
+
+      localStorage.setItem('auditorActorName', actor);
+    }
+
+    async function syncActorFromServer() {
+      if (!apiUrl) {
+        applyActorBranding();
+        return;
+      }
+
+      try {
+        const res = await fetch(apiUrl + '?t=' + Date.now(), {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
+        const text = await res.text();
+        let json;
+
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          applyActorBranding();
+          return;
+        }
+
+        if (json?.actor) {
+          currentActorName = json.actor;
+        }
+
+        applyActorBranding();
+      } catch (error) {
+        applyActorBranding();
+      }
+    }
+
     function goDashboard() {
       window.location.href = 'index.html';
+    }
+
+    function goLogs() {
+      window.location.href = 'Logs.html';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function addMsg(role, html) {
@@ -139,7 +216,7 @@
       wrap.innerHTML = `
         <div class="${isUser ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'} max-w-3xl rounded-2xl px-4 py-3 shadow-sm">
           <div class="text-[11px] font-black uppercase tracking-wider mb-1 ${isUser ? 'text-blue-100' : 'text-slate-500'}">
-            ${isUser ? 'You' : 'Mara AI'}
+            ${isUser ? 'You' : escapeHtml(getActorAiName())}
           </div>
           <div class="text-sm whitespace-pre-wrap">${html}</div>
         </div>
@@ -182,7 +259,12 @@
         }
 
         const box = document.getElementById('chatBox');
-        box.removeChild(box.lastElementChild);
+        if (box.lastElementChild) box.removeChild(box.lastElementChild);
+
+        if (json?.actor) {
+          currentActorName = json.actor;
+          applyActorBranding();
+        }
 
         if (!json || json.status !== 'success') {
           throw new Error(json?.message || 'AI request failed.');
@@ -195,20 +277,11 @@
         addMsg('assistant', escapeHtml(error.message || 'AI request failed.'));
       }
     }
-    function goLogs() {
-      window.location.href = 'Logs.html';
-    }
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       applySavedTheme();
+      applyActorBranding();
+      await syncActorFromServer();
       addMsg('assistant', 'Hello. Ask me anything about your audit records, top performers, low scores, patterns, or logs.');
     });
   </script>
