@@ -496,12 +496,14 @@
     ];
 
     let db = [];
-    let apiUrl = localStorage.getItem('maraAppUrl') || '';
-    let trendChart = null;
-    let agentChart = null;
-    let isSaving = false;
+ let db = [];
+let apiUrl = localStorage.getItem('maraAppUrl') || '';
+let trendChart = null;
+let agentChart = null;
+let isSaving = false;
 let currentPage = 1;
 let rowsPerPage = 10;
+let currentActorName = 'Mara';
     function initApp() {
       document.getElementById('appScriptUrl').value = apiUrl;
       renderAll();
@@ -973,6 +975,7 @@ function renderPagination(totalRows) {
         db.sort(sortRecords);
         renderAll();
         setSyncStatus('Synced', 'check', 'success');
+        currentActorName = json.actor || 'Mara';
       } catch (error) {
         console.error(error);
         alert(error.message || 'Connection error');
@@ -1223,154 +1226,176 @@ function renderTable() {
       });
     }
 
-    function buildPdf(record) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
+function buildPdf(record) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
 
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 8;
-      const tableX = margin;
-      const wLabel = 112;
-      const wScoreCols = 13;
-      const wScoreTotal = 23;
-      const rowH = 8;
-      const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-      const fillHeader = [214, 214, 214];
-      const fillScore = [235, 226, 190];
-      const border = [40, 40, 40];
+  const outerMargin = 10;
+  const wLabel = 112;
+  const wScoreCols = 13;
+  const wScoreTotal = 23;
+  const rowH = 8;
+  const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
 
-      doc.setDrawColor(...border);
-      doc.setTextColor(10, 10, 10);
+  // Center the whole form so left/right margins are equal
+  const tableX = (pageWidth - tableWidth) / 2;
 
-      function rect(x, y, w, h, fill = null) {
-        if (fill) {
-          doc.setFillColor(...fill);
-          doc.rect(x, y, w, h, 'FD');
-        } else {
-          doc.rect(x, y, w, h);
-        }
-      }
+  const fillHeader = [214, 214, 214];
+  const fillScore = [235, 226, 190];
+  const border = [40, 40, 40];
 
-      function text(str, x, y, opts = {}) {
-        const { size = 8, style = 'normal', align = 'left' } = opts;
-        doc.setFont('helvetica', style);
-        doc.setFontSize(size);
-        doc.text(String(str ?? ''), x, y, { align });
-      }
+  doc.setDrawColor(...border);
+  doc.setTextColor(10, 10, 10);
+  doc.setLineWidth(0.2);
 
-      function scoreMark(score, colIndex, startX, y) {
-        const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
-        if (rounded === colIndex) {
-          text('X', startX + (wScoreCols / 2), y + 5.3, { size: 8, style: 'bold', align: 'center' });
-        }
-      }
-
-      function drawSectionHeader(y, title, showScoreLabel = false) {
-        rect(tableX, y, wLabel, rowH, fillHeader);
-
-        for (let i = 0; i < 5; i++) {
-          rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH, fillHeader);
-        }
-
-        rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH, fillScore);
-
-        text(title, tableX + 2, y + 5.2, { size: 7.5, style: 'normal' });
-
-        for (let i = 1; i <= 5; i++) {
-          const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
-          text(i, x, y + 5.2, { size: 7, style: 'bold', align: 'center' });
-        }
-
-        if (showScoreLabel) {
-          text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
-            size: 7,
-            style: 'bold',
-            align: 'center'
-          });
-        }
-      }
-
-      function drawRow(y, label, score, scoreTotal, italic = false) {
-        rect(tableX, y, wLabel, rowH);
-        for (let i = 0; i < 5; i++) {
-          rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH);
-        }
-        rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH);
-
-        text(label, tableX + 2, y + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
-
-        for (let i = 1; i <= 5; i++) {
-          scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), y);
-        }
-
-        text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
-          size: 7,
-          align: 'center'
-        });
-      }
-
-      rect(margin, 10, tableWidth, 14);
-      text('MRI ApartmentData', margin + (tableWidth / 2), 17, { size: 14, style: 'bold', align: 'center' });
-      text('Audit Form', margin + (tableWidth / 2), 22, { size: 11, align: 'center' });
-
-      rect(margin, 24, tableWidth, 10);
-      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, margin + 2, 30, { size: 8, style: 'italic' });
-
-      rect(margin, 34, tableWidth, 10);
-      rect(margin, 34, 94, 10);
-      rect(margin + 94, 34, tableWidth - 94, 10);
-      text(`Agent: ${record.agent_name || '-'}`, margin + 2, 40, { size: 8, style: 'italic' });
-      text(`Email/AI: ${record.audit_channel || '-'}`, margin + 96, 40, { size: 8, style: 'italic' });
-
-      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', margin, 50, { size: 8 });
-
-      let y = 54;
-
-      drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
-      drawRow(y, 'Property Name:', record.property_name_score, '10'); y += rowH;
-      drawRow(y, 'Management Company:', record.mgmt_company_score, '10'); y += rowH;
-      drawRow(y, 'Apt Mgr/Regional Manager:', record.regional_mgr_score, '10'); y += rowH;
-      drawRow(y, 'Email Address:', record.email_score, '10'); y += rowH;
-      drawRow(y, 'Website:', record.website_score, '10'); y += rowH;
-      drawRow(y, 'Office Hours:', record.office_hours_score, '10'); y += rowH;
-      drawRow(y, 'Subtotal:', record.basic_raw, formatNum(record.basic_weighted), true); y += 10;
-
-      drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
-      drawRow(y, 'Commission:', record.commission_score, '10'); y += rowH;
-      drawRow(y, 'Note:', record.locator_note_score, '10'); y += rowH;
-      drawRow(y, 'Requirements:', record.requirements_score, '10'); y += rowH;
-      drawRow(y, 'Subtotal:', record.locator_raw, formatNum(record.locator_weighted), true); y += 10;
-
-      drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
-      drawRow(y, 'Occupancy:', record.occupancy_score, '5'); y += rowH;
-      drawRow(y, 'Special Coding:', record.special_coding_score, '5'); y += rowH;
-      drawRow(y, 'Subtotal:', record.occupancy_raw, formatNum(record.occupancy_weighted), true); y += 10;
-
-      drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
-      drawRow(y, 'Pricing:', record.pricing_score, '5'); y += rowH;
-      drawRow(y, 'Availability:', record.availability_score, '5'); y += rowH;
-      drawRow(y, 'Subtotal:', record.floorplan_raw, formatNum(record.floorplan_weighted), true); y += 10;
-
-      drawSectionHeader(y, 'Note:'); y += rowH;
-      drawRow(y, 'Notation', record.notation_score, '10'); y += rowH;
-
-      rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
-      rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
-      text('Score', tableX + wLabel + (wScoreCols * 5) - 8, y + 5.2, { size: 8, style: 'italic', align: 'right' });
-      text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, { size: 10, style: 'bold', align: 'center' });
-      y += 12;
-
-      text('Overall Rating: [Overall Rating out of 100]', margin, y, { size: 8 });
-      text(formatNum(record.overall_score_100), margin + 150, y, { size: 11, style: 'bold' });
-      y += 8;
-
-      const note = record.final_error_note || 'All notes and information match.';
-      const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
-      text(wrapped, margin, y, { size: 8 });
-
-      return doc;
+  function rect(x, y, w, h, fill = null) {
+    if (fill) {
+      doc.setFillColor(...fill);
+      doc.rect(x, y, w, h, 'FD');
+    } else {
+      doc.rect(x, y, w, h);
     }
+  }
+
+  function text(str, x, y, opts = {}) {
+    const { size = 8, style = 'normal', align = 'left' } = opts;
+    doc.setFont('helvetica', style);
+    doc.setFontSize(size);
+    doc.text(String(str ?? ''), x, y, { align });
+  }
+
+  function scoreMark(score, colIndex, startX, y) {
+    const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
+    if (rounded === colIndex) {
+      text('X', startX + (wScoreCols / 2), y + 5.3, { size: 8, style: 'bold', align: 'center' });
+    }
+  }
+
+  function drawSectionHeader(y, title, showScoreLabel = false) {
+    rect(tableX, y, wLabel, rowH, fillHeader);
+
+    for (let i = 0; i < 5; i++) {
+      rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH, fillHeader);
+    }
+
+    rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH, fillScore);
+
+    text(title, tableX + 2, y + 5.2, { size: 7.5, style: 'normal' });
+
+    for (let i = 1; i <= 5; i++) {
+      const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
+      text(i, x, y + 5.2, { size: 7, style: 'bold', align: 'center' });
+    }
+
+    if (showScoreLabel) {
+      text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+        size: 7,
+        style: 'bold',
+        align: 'center'
+      });
+    }
+  }
+
+  function drawRow(y, label, score, scoreTotal, italic = false) {
+    rect(tableX, y, wLabel, rowH);
+    for (let i = 0; i < 5; i++) {
+      rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH);
+    }
+    rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH);
+
+    text(label, tableX + 2, y + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
+
+    for (let i = 1; i <= 5; i++) {
+      scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), y);
+    }
+
+    text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+      size: 7,
+      align: 'center'
+    });
+  }
+
+  // Header box
+  rect(tableX, 10, tableWidth, 14);
+  text('MRI ApartmentData', tableX + (tableWidth / 2), 17, { size: 14, style: 'bold', align: 'center' });
+  text('Audit Form', tableX + (tableWidth / 2), 22, { size: 11, align: 'center' });
+
+  // Audit date row
+  rect(tableX, 24, tableWidth, 10);
+  text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, 30, { size: 8, style: 'italic' });
+
+  // Agent / channel row
+  rect(tableX, 34, tableWidth, 10);
+  rect(tableX, 34, 94, 10);
+  rect(tableX + 94, 34, tableWidth - 94, 10);
+  text(`Agent: ${record.agent_name || '-'}`, tableX + 2, 40, { size: 8, style: 'italic' });
+  text(`Email/AI: ${record.audit_channel || '-'}`, tableX + 96, 40, { size: 8, style: 'italic' });
+
+  text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, 50, { size: 8 });
+
+  let y = 54;
+
+  drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
+  drawRow(y, 'Property Name:', record.property_name_score, '10'); y += rowH;
+  drawRow(y, 'Management Company:', record.mgmt_company_score, '10'); y += rowH;
+  drawRow(y, 'Apt Mgr/Regional Manager:', record.regional_mgr_score, '10'); y += rowH;
+  drawRow(y, 'Email Address:', record.email_score, '10'); y += rowH;
+  drawRow(y, 'Website:', record.website_score, '10'); y += rowH;
+  drawRow(y, 'Office Hours:', record.office_hours_score, '10'); y += rowH;
+  drawRow(y, 'Subtotal:', record.basic_raw, formatNum(record.basic_weighted), true); y += 10;
+
+  drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
+  drawRow(y, 'Commission:', record.commission_score, '10'); y += rowH;
+  drawRow(y, 'Note:', record.locator_note_score, '10'); y += rowH;
+  drawRow(y, 'Requirements:', record.requirements_score, '10'); y += rowH;
+  drawRow(y, 'Subtotal:', record.locator_raw, formatNum(record.locator_weighted), true); y += 10;
+
+  drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
+  drawRow(y, 'Occupancy:', record.occupancy_score, '5'); y += rowH;
+  drawRow(y, 'Special Coding:', record.special_coding_score, '5'); y += rowH;
+  drawRow(y, 'Subtotal:', record.occupancy_raw, formatNum(record.occupancy_weighted), true); y += 10;
+
+  drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
+  drawRow(y, 'Pricing:', record.pricing_score, '5'); y += rowH;
+  drawRow(y, 'Availability:', record.availability_score, '5'); y += rowH;
+  drawRow(y, 'Subtotal:', record.floorplan_raw, formatNum(record.floorplan_weighted), true); y += 10;
+
+  drawSectionHeader(y, 'Note:'); y += rowH;
+  drawRow(y, 'Notation', record.notation_score, '10'); y += rowH;
+
+  rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
+  rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
+  text('Score', tableX + wLabel + (wScoreCols * 5) - 8, y + 5.2, { size: 8, style: 'italic', align: 'right' });
+  text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
+    size: 10,
+    style: 'bold',
+    align: 'center'
+  });
+  y += 12;
+
+  text('Overall Rating: [Overall Rating out of 100]', tableX, y, { size: 8 });
+  text(formatNum(record.overall_score_100), tableX + tableWidth - 18, y, { size: 11, style: 'bold', align: 'right' });
+  y += 8;
+
+  const note = record.final_error_note || 'All notes and information match.';
+  const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
+  text(wrapped, tableX, y, { size: 8 });
+  y += (wrapped.length * 4);
+
+  // Bottom signature / audited by
+  y += 10;
+  if (y > pageHeight - 20) {
+    doc.addPage();
+    y = 20;
+  }
+
+  text(`Audited By: ${currentActorName || 'Mara'}`, tableX, y, { size: 9, style: 'bold' });
+
+  return doc;
+}
 
     function openPdfInNewTab(id) {
       const record = db.find(r => String(r.audit_id) === String(id));
