@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <script>
+    
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -506,6 +507,75 @@ let rowsPerPage = 10;
         setSyncStatus('No API Linked', 'cloud', 'neutral');
       }
     }
+
+    function changeRowsPerPage() {
+  rowsPerPage = Number(document.getElementById('rowsPerPageSelect').value || 10);
+  currentPage = 1;
+  renderTable();
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderTable();
+}
+
+function renderPagination(totalRows) {
+  const pageInfo = document.getElementById('tablePageInfo');
+  const controls = document.getElementById('paginationControls');
+
+  if (!pageInfo || !controls) return;
+
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = totalRows === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1;
+  const end = Math.min(currentPage * rowsPerPage, totalRows);
+
+  pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} entries`;
+
+  let html = '';
+
+  html += `
+    <button type="button"
+      onclick="goToPage(${Math.max(1, currentPage - 1)})"
+      class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+      ${currentPage === 1 ? 'disabled' : ''}>
+      Prev
+    </button>
+  `;
+
+  const totalPagesToShow = Math.ceil(totalRows / rowsPerPage) || 1;
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPagesToShow, currentPage + 2);
+
+  if (currentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
+  if (currentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `
+      <button type="button"
+        onclick="goToPage(${i})"
+        class="px-3 py-2 rounded-xl border text-sm font-semibold ${
+          i === currentPage
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+        }">
+        ${i}
+      </button>
+    `;
+  }
+
+  html += `
+    <button type="button"
+      onclick="goToPage(${Math.min(totalPagesToShow, currentPage + 1)})"
+      class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
+      ${currentPage === totalPagesToShow ? 'disabled' : ''}>
+      Next
+    </button>
+  `;
+
+  controls.innerHTML = html;
+}
 
     function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
       const overlay = document.getElementById('loadingOverlay');
