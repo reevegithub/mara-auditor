@@ -1059,19 +1059,67 @@ function renderPagination(totalRows) {
     }
 
     function renderTable() {
-      const tbody = document.getElementById('tableBody');
-      const rows = getFilteredData();
+  const tbody = document.getElementById('tableBody');
+  const rows = getFilteredData();
 
-      if (!rows.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="10" class="px-5 py-10 text-center text-slate-500">
-              No audit records found.
-            </td>
-          </tr>
-        `;
-        return;
-      }
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="px-5 py-10 text-center text-slate-500">
+          No audit records found.
+        </td>
+      </tr>
+    `;
+    renderPagination(0);
+    return;
+  }
+
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
+
+  tbody.innerHTML = pagedRows.map(row => {
+    const total = round2(toNumber(row.overall_score_100));
+    const badge = getScoreBadge(total);
+
+    return `
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+        <td class="px-5 py-4">
+          <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
+          <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
+        </td>
+        <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
+        <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
+        <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
+        <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
+        <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
+        <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
+        <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
+        <td class="px-5 py-4 text-center">
+          <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
+            ${formatNum(total)}%
+          </span>
+        </td>
+        <td class="px-5 py-4 text-right">
+          <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
+            <i class="fa-solid fa-file-pdf"></i>
+          </button>
+          <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  renderPagination(totalRows);
+}
 
       tbody.innerHTML = rows.map(row => {
         const total = round2(toNumber(row.overall_score_100));
