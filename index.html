@@ -1371,6 +1371,10 @@ function startIdleAutoSync() {
     checkForRemoteUpdates();
   }, 3000);
 }
+  function markUserActivity() {
+    lastUserActivityAt = Date.now();
+  }
+
 
 function bindUserActivityListeners() {
   ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
