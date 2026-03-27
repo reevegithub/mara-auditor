@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Auditor</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +15,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -31,19 +34,26 @@
   </script>
 
   <style>
-    html, body { height: 100%; }
-    body { font-family: 'Inter', sans-serif; }
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
 
     .glass {
-      background: rgba(255,255,255,.88);
+      background: rgba(255, 255, 255, .88);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(226,232,240,.95);
-      box-shadow: 0 12px 32px rgba(15,23,42,.06);
+      border: 1px solid rgba(226, 232, 240, .95);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, .06);
     }
+
     .dark .glass {
-      background: rgba(15,23,42,.78);
-      border-color: rgba(51,65,85,.95);
-      box-shadow: 0 12px 32px rgba(2,6,23,.35);
+      background: rgba(15, 23, 42, .78);
+      border-color: rgba(51, 65, 85, .95);
+      box-shadow: 0 12px 32px rgba(2, 6, 23, .35);
     }
 
     .modal {
@@ -51,6 +61,7 @@
       pointer-events: none;
       transition: opacity .2s ease;
     }
+
     .modal.active {
       opacity: 1;
       pointer-events: auto;
@@ -60,15 +71,16 @@
       background: #2563eb;
       color: white;
       border-color: #2563eb;
-      box-shadow: 0 8px 20px rgba(37,99,235,.25);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, .25);
     }
 
     .thin-scroll::-webkit-scrollbar {
       width: 10px;
       height: 10px;
     }
+
     .thin-scroll::-webkit-scrollbar-thumb {
-      background: rgba(100,116,139,.35);
+      background: rgba(100, 116, 139, .35);
       border-radius: 999px;
     }
 
@@ -77,6 +89,7 @@
       -webkit-appearance: none;
       margin: 0;
     }
+
     .score-input {
       -moz-appearance: textfield;
     }
@@ -86,6 +99,7 @@
       pointer-events: none;
       transition: opacity .2s ease;
     }
+
     .loading-overlay.active {
       opacity: 1;
       pointer-events: auto;
@@ -94,12 +108,28 @@
     .pulse-dot {
       animation: pulseDot 1.2s infinite ease-in-out;
     }
-    .pulse-dot:nth-child(2) { animation-delay: .15s; }
-    .pulse-dot:nth-child(3) { animation-delay: .3s; }
+
+    .pulse-dot:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .pulse-dot:nth-child(3) {
+      animation-delay: .3s;
+    }
 
     @keyframes pulseDot {
-      0%, 80%, 100% { transform: scale(.8); opacity: .45; }
-      40% { transform: scale(1); opacity: 1; }
+
+      0%,
+      80%,
+      100% {
+        transform: scale(.8);
+        opacity: .45;
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .locked {
@@ -109,61 +139,298 @@
       filter: grayscale(.1);
     }
 
-.sync-live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #22c55e;
-  display: inline-block;
-  box-shadow: 0 0 0 rgba(34,197,94,.45);
-  animation: syncBlink 1.2s infinite ease-in-out;
+    .sync-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      display: inline-block;
+      box-shadow: 0 0 0 rgba(34, 197, 94, .45);
+      animation: syncBlink 1.2s infinite ease-in-out;
+    }
+
+    @keyframes syncBlink {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, .45);
+      }
+
+      50% {
+        opacity: .45;
+        transform: scale(.85);
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+      }
+    }
+
+    /* ===== Presence / Users avatars ===== */
+    .users-presence-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: 8px;
 }
 
-@keyframes syncBlink {
-  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,197,94,.45); }
-  50% { opacity: .45; transform: scale(.85); box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-}
+    .users-presence-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgb(100 116 139);
+      white-space: nowrap;
+    }
+
+    .users-presence-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      flex-wrap: wrap;
+    }
+
+    .presence-avatar {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      overflow: visible;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      border: 2px solid rgba(255, 255, 255, .95);
+      box-shadow:
+        0 6px 16px rgba(15, 23, 42, .12),
+        0 0 0 1px rgba(148, 163, 184, .18);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      cursor: default;
+    }
+
+    .presence-avatar:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 10px 24px rgba(15, 23, 42, .16),
+        0 0 0 1px rgba(148, 163, 184, .24);
+    }
+
+    .presence-avatar.online {
+      border-color: rgba(34, 197, 94, .95);
+      box-shadow:
+        0 8px 18px rgba(15, 23, 42, .14),
+        0 0 0 3px rgba(34, 197, 94, .18);
+    }
+
+    .presence-avatar.online::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      border: 2px solid rgba(34, 197, 94, .28);
+      animation: userRingPulse 1.6s infinite ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes userRingPulse {
+      0% {
+        transform: scale(.92);
+        opacity: .85;
+      }
+
+      70% {
+        transform: scale(1.12);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1.12);
+        opacity: 0;
+      }
+    }
+
+    .presence-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .presence-initials {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)),
+        linear-gradient(135deg, #dbeafe, #bfdbfe 45%, #c7d2fe);
+      color: #1e293b;
+    }
+
+    .dark .presence-initials {
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)),
+        linear-gradient(135deg, #334155, #1e293b 55%, #0f172a);
+      color: #e2e8f0;
+    }
+
+    .presence-status-dot {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 9999px;
+      border: 2px solid #fff;
+      background: #94a3b8;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, .06);
+    }
+
+    .dark .presence-status-dot {
+      border-color: #0f172a;
+    }
+
+    .presence-avatar.online .presence-status-dot {
+      background: #22c55e;
+      animation: presenceDotBlink 1.2s infinite ease-in-out;
+    }
+
+    @keyframes presenceDotBlink {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, .45);
+      }
+
+      50% {
+        transform: scale(.82);
+        opacity: .6;
+        box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
+      }
+    }
+
+    .presence-empty {
+      font-size: 12px;
+      color: rgb(100 116 139);
+      font-weight: 600;
+    }
+
+    .presence-me-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 9999px;
+      border: 1px solid rgb(226 232 240);
+      background: rgba(255, 255, 255, .95);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+    }
+
+    .dark .presence-me-chip {
+      border-color: rgb(51 65 85);
+      background: rgba(15, 23, 42, .92);
+    }
+
+    .presence-me-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .presence-me-name {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .presence-me-sub {
+      font-size: 10px;
+      color: rgb(100 116 139);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    @media (max-width: 1024px) {
+
+      .users-presence-label,
+      .presence-me-text {
+        display: none;
+      }
+    }
   </style>
 </head>
 
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
   <div class="min-h-screen flex flex-col">
-    <header class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+    <header
+      class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div class="flex items-center gap-3 min-w-0">
+        <div class="flex items-center gap-3 min-w-0 flex-wrap">
           <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
+
           <div class="min-w-0">
             <h1 id="appTitleText" class="font-black text-lg md:text-xl truncate">Auditor</h1>
             <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
           </div>
+
+          <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor">
+            <div id="myPresenceAvatar"></div>
+            <div class="presence-me-text">
+              <span id="myPresenceName" class="presence-me-name">Auditor</span>
+              <span class="presence-me-sub">Current User</span>
+            </div>
+          </div>
+
+          <div class="users-presence-wrap">
+            <div class="users-presence-label">Active Users</div>
+            <div id="usersPresenceList" class="users-presence-list"></div>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div id="syncStatus" class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+        <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+          <div id="syncStatus"
+            class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
             <i class="fa-solid fa-lock"></i>
             <span>Setup Required</span>
           </div>
 
-          <button type="button" onclick="toggleTheme()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <button type="button" onclick="toggleTheme()"
+            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
             <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
             <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
           </button>
 
-          <button id="btn-dash" type="button" onclick="switchTab('dash')" class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <button id="btn-dash" type="button" onclick="switchTab('dash')"
+            class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             Dashboard
           </button>
 
-          <button type="button" onclick="goToAI()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <button type="button" onclick="goToAI()"
+            class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
             A.I Chat
           </button>
 
-          <button type="button" onclick="goToLogs()" class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <button type="button" onclick="goToLogs()"
+            class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
             Logs
           </button>
 
-          <button type="button" onclick="openSettings()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <button type="button" onclick="openSettings()"
+            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
             <i class="fa-solid fa-gear text-slate-500"></i>
           </button>
         </div>
@@ -180,7 +447,8 @@
                 Enter your deployed Google Apps Script Web App URL before using the system.
               </p>
             </div>
-            <button type="button" onclick="openSettings()" class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+            <button type="button" onclick="openSettings()"
+              class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
               Configure Script URL
             </button>
           </div>
@@ -200,7 +468,8 @@
               <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
               <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
             </div>
-            <button type="button" onclick="openCrudModal()" class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
+            <button type="button" onclick="openCrudModal()"
+              class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
               <div class="h-full flex items-center justify-center gap-2">
                 <i class="fa-solid fa-plus"></i>
                 <span>NEW AUDIT</span>
@@ -235,18 +504,15 @@
                 <div class="flex flex-wrap gap-2">
                   <div class="relative w-full sm:w-72">
                     <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input
-                      id="searchInput"
-                      type="text"
-                      oninput="currentPage = 1; renderAll()"
+                    <input id="searchInput" type="text" oninput="currentPage = 1; renderAll()"
                       placeholder="Search by audit ID, agent, channel, property field ID, note..."
-                      class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-                    />
+                      class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
                   </div>
 
                   <div class="flex items-center gap-2">
                     <label class="text-xs font-bold text-slate-500">Rows</label>
-                    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+                    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()"
+                      class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
                       <option value="5">5</option>
                       <option value="10" selected>10</option>
                       <option value="25">25</option>
@@ -255,19 +521,23 @@
                     </select>
                   </div>
 
-                  <button type="button" onclick="fetchData()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <button type="button" onclick="fetchData()"
+                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
                     <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
                   </button>
 
-                  <button type="button" onclick="exportCsv()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <button type="button" onclick="exportCsv()"
+                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
                     <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
                   </button>
 
-                  <button type="button" onclick="exportListPdf()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <button type="button" onclick="exportListPdf()"
+                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
                     <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
                   </button>
 
-                  <button type="button" onclick="openCrudModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
+                  <button type="button" onclick="openCrudModal()"
+                    class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
                     <i class="fa-solid fa-plus mr-1"></i>Add Audit
                   </button>
                 </div>
@@ -275,21 +545,27 @@
 
               <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date From</label>
-                  <input id="filterDateFrom" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date
+                    From</label>
+                  <input id="filterDateFrom" type="date" onchange="currentPage=1; renderAll()"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date To</label>
-                  <input id="filterDateTo" type="date" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date
+                    To</label>
+                  <input id="filterDateTo" type="date" onchange="currentPage=1; renderAll()"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Agent</label>
-                  <select id="filterAgentName" onchange="currentPage=1; renderAll()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+                  <select id="filterAgentName" onchange="currentPage=1; renderAll()"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
                     <option value="">All Agents</option>
                   </select>
                 </div>
                 <div class="flex items-end">
-                  <button type="button" onclick="clearAuditFilters()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <button type="button" onclick="clearAuditFilters()"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
                     Clear Filters
                   </button>
                 </div>
@@ -299,7 +575,8 @@
             <div class="overflow-auto thin-scroll">
               <div class="min-w-[1180px]">
                 <table class="w-full text-left text-sm whitespace-nowrap">
-                  <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                  <thead
+                    class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                     <tr class="text-[11px] uppercase tracking-wider text-slate-500">
                       <th class="px-5 py-3 font-black">Audit ID</th>
                       <th class="px-5 py-3 font-black">Agent</th>
@@ -311,13 +588,14 @@
                       <th class="px-5 py-3 text-center font-black">Floor</th>
                       <th class="px-5 py-3 text-center font-black">Notation</th>
                       <th class="px-5 py-3 text-center font-black">Total</th>
-<th class="px-5 py-3 font-black">Auditor</th>
+                      <th class="px-5 py-3 font-black">Auditor</th>
                       <th class="px-5 py-3 text-right font-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                 </table>
-                <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div
+                  class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
                   <div id="tablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 entries</div>
                   <div id="paginationControls" class="flex items-center gap-2"></div>
                 </div>
@@ -326,27 +604,26 @@
           </div>
 
           <div class="glass rounded-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+            <div
+              class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
               <div>
                 <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Agents</h3>
-                <p class="text-xs text-slate-500 mt-1">Manage agents saved in the Agents sheet and use them in the audit form dropdown.</p>
+                <p class="text-xs text-slate-500 mt-1">Manage agents saved in the Agents sheet and use them in the audit
+                  form dropdown.</p>
               </div>
 
               <div class="flex flex-wrap gap-2">
                 <div class="relative w-full sm:w-72">
                   <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                  <input
-                    id="agentSearchInput"
-                    type="text"
-                    oninput="currentAgentPage = 1; renderAgentsTable()"
+                  <input id="agentSearchInput" type="text" oninput="currentAgentPage = 1; renderAgentsTable()"
                     placeholder="Search agent..."
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-                  />
+                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
                 </div>
 
                 <div class="flex items-center gap-2">
                   <label class="text-xs font-bold text-slate-500">Rows</label>
-                  <select id="agentRowsPerPageSelect" onchange="changeAgentRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+                  <select id="agentRowsPerPageSelect" onchange="changeAgentRowsPerPage()"
+                    class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
                     <option value="5">5</option>
                     <option value="10" selected>10</option>
                     <option value="25">25</option>
@@ -355,7 +632,8 @@
                   </select>
                 </div>
 
-                <button type="button" onclick="openAgentModal()" class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
+                <button type="button" onclick="openAgentModal()"
+                  class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
                   <i class="fa-solid fa-user-plus mr-1"></i>Add Agent
                 </button>
               </div>
@@ -364,7 +642,8 @@
             <div class="overflow-auto thin-scroll">
               <div class="min-w-[700px]">
                 <table class="w-full text-left text-sm whitespace-nowrap">
-                  <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                  <thead
+                    class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                     <tr class="text-[11px] uppercase tracking-wider text-slate-500">
                       <th class="px-5 py-3 font-black">Agent ID</th>
                       <th class="px-5 py-3 font-black">Agent Name</th>
@@ -374,7 +653,8 @@
                   </thead>
                   <tbody id="agentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                 </table>
-                <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div
+                  class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
                   <div id="agentsTablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 agents</div>
                   <div id="agentsPaginationControls" class="flex items-center gap-2"></div>
                 </div>
@@ -385,7 +665,8 @@
       </main>
     </div>
 
-    <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
+    <footer
+      class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <div id="footerBrand">© 2026 Auditor</div>
         <div>Audit tracking, reporting, and AI-assisted review</div>
@@ -395,45 +676,58 @@
 
   <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm p-2 sm:p-4 md:p-6">
     <div class="w-full max-w-6xl mx-auto h-full flex items-center justify-center">
-      <div class="w-full max-h-[96vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden">
-        <div class="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-start sm:items-center justify-between gap-3">
+      <div
+        class="w-full max-h-[96vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+        <div
+          class="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-start sm:items-center justify-between gap-3">
           <div class="min-w-0">
             <h2 id="modalTitle" class="text-xl font-black">Create Audit</h2>
             <p class="text-xs text-slate-500">One row per agent audit</p>
           </div>
-          <button type="button" onclick="closeCrudModal()" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0">
+          <button type="button" onclick="closeCrudModal()"
+            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
         <div class="flex-1 overflow-auto thin-scroll">
           <div class="p-4 md:p-6 pb-8">
-            <form id="auditForm" class="space-y-6" oninput="calculateScores()" onsubmit="event.preventDefault(); saveAudit();">
+            <form id="auditForm" class="space-y-6" oninput="calculateScores()"
+              onsubmit="event.preventDefault(); saveAudit();">
               <input type="hidden" id="audit_id" />
 
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Date</label>
-                  <input id="audit_date" type="date" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
+                    Date</label>
+                  <input id="audit_date" type="date" required
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
                 <div class="md:col-span-2">
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent Name</label>
-                  <select id="agent_name" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent
+                    Name</label>
+                  <select id="agent_name" required
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                     <option value="">Select agent</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit Channel</label>
-                  <input id="audit_channel" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
+                    Channel</label>
+                  <input id="audit_channel" type="text"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Field ID</label>
-                  <input id="property_field_id" type="text" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
+                    Field ID</label>
+                  <input id="property_field_id" type="text"
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
               </div>
 
               <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <section
+                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h3 class="font-black text-blue-600 dark:text-blue-400">Basic Info</h3>
                     <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
@@ -441,17 +735,45 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property Name</label><input id="property_name_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt Company</label><input id="mgmt_company_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Apartment Mgr</label><input id="apartment_mgr_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional Mgr</label><input id="regional_mgr_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label><input id="email_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label><input id="website_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office Hours</label><input id="office_hours_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
+                        Name</label><input id="property_name_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt
+                        Company</label><input id="mgmt_company_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Apartment
+                        Mgr</label><input id="apartment_mgr_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional
+                        Mgr</label><input id="regional_mgr_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label><input
+                        id="email_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label><input
+                        id="website_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office
+                        Hours</label><input id="office_hours_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
                   </div>
                 </section>
 
-                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <section
+                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h3 class="font-black text-blue-600 dark:text-blue-400">Locator Info</h3>
                     <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
@@ -459,15 +781,28 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label><input id="commission_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator Note</label><input id="locator_note_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label><input id="requirements_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label><input
+                        id="commission_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator
+                        Note</label><input id="locator_note_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label><input
+                        id="requirements_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
                   </div>
                 </section>
               </div>
 
               <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <section
+                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h3 class="font-black text-blue-600 dark:text-blue-400">Occupancy</h3>
                     <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
@@ -475,12 +810,21 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label><input id="occupancy_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special Coding</label><input id="special_coding_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label><input
+                        id="occupancy_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special
+                        Coding</label><input id="special_coding_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
                   </div>
                 </section>
 
-                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <section
+                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h3 class="font-black text-blue-600 dark:text-blue-400">Floorplan / Pricing</h3>
                     <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
@@ -488,12 +832,21 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label><input id="pricing_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label><input id="availability_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label><input
+                        id="pricing_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label><input
+                        id="availability_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
                   </div>
                 </section>
 
-                <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <section
+                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                     <h3 class="font-black text-blue-600 dark:text-blue-400">Notation</h3>
                     <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
@@ -501,25 +854,48 @@
                     </span>
                   </div>
                   <div class="grid grid-cols-1 gap-3">
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label><input id="notation_score" type="number" min="0" max="5" step="0.01" class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></div>
+                    <div><label
+                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label><input
+                        id="notation_score" type="number" min="0" max="5" step="0.01"
+                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
+                    </div>
                   </div>
                 </section>
               </div>
 
-              <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error / Note</label>
-                <textarea id="final_error_note" rows="4" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
+              <section
+                class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error /
+                  Note</label>
+                <textarea id="final_error_note" rows="4"
+                  class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
               </section>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p><div id="disp_basic_raw" class="text-2xl font-black">0.00</div></div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p><div id="disp_locator_raw" class="text-2xl font-black">0.00</div></div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p><div id="disp_occupancy_raw" class="text-2xl font-black">0.00</div></div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p><div id="disp_floorplan_raw" class="text-2xl font-black">0.00</div></div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4"><p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p><div id="disp_notation_raw" class="text-2xl font-black">0.00</div></div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p>
+                  <div id="disp_basic_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p>
+                  <div id="disp_locator_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p>
+                  <div id="disp_occupancy_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p>
+                  <div id="disp_floorplan_raw" class="text-2xl font-black">0.00</div>
+                </div>
+                <div class="rounded-2xl bg-slate-900 text-white p-4">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p>
+                  <div id="disp_notation_raw" class="text-2xl font-black">0.00</div>
+                </div>
               </div>
 
-              <div class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div
+                class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Raw</div>
                   <div id="disp_overall_raw" class="text-2xl font-black">0.00</div>
@@ -533,11 +909,14 @@
           </div>
         </div>
 
-        <div class="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
-          <button type="button" onclick="closeCrudModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+        <div
+          class="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
+          <button type="button" onclick="closeCrudModal()"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
             Cancel
           </button>
-          <button type="submit" form="auditForm" id="saveBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+          <button type="submit" form="auditForm" id="saveBtn"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
             <i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit
           </button>
         </div>
@@ -545,57 +924,61 @@
     </div>
   </div>
 
-  <div id="agentModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+  <div id="agentModal"
+    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
       <input type="hidden" id="agent_id" />
       <h2 id="agentModalTitle" class="text-xl font-black mb-2">Add Agent</h2>
-      <p class="text-sm text-slate-500 mb-4">Agents here will be saved in the Agents sheet and shown in the audit form dropdown.</p>
+      <p class="text-sm text-slate-500 mb-4">Agents here will be saved in the Agents sheet and shown in the audit form
+        dropdown.</p>
 
       <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Agent Name</label>
-      <input
-        id="agent_modal_name"
-        type="text"
-        placeholder="Enter agent name"
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-emerald-500 text-sm"
-      />
+      <input id="agent_modal_name" type="text" placeholder="Enter agent name"
+        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-emerald-500 text-sm" />
 
       <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-        <button type="button" onclick="closeAgentModal()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+        <button type="button" onclick="closeAgentModal()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
           Cancel
         </button>
-        <button type="button" onclick="saveAgent()" id="agentSaveBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
+        <button type="button" onclick="saveAgent()" id="agentSaveBtn"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
           Save Agent
         </button>
       </div>
     </div>
   </div>
 
-  <div id="settingsModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+  <div id="settingsModal"
+    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
       <h2 class="text-xl font-black mb-2">System Settings</h2>
-      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL. The system stays locked until this is saved and connected.</p>
+      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL. The system stays locked
+        until this is saved and connected.</p>
 
       <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Apps Script URL</label>
-      <input
-        id="appScriptUrl"
-        type="text"
-        placeholder="https://script.google.com/macros/s/........../exec"
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm"
-      />
+      <input id="appScriptUrl" type="text" placeholder="https://script.google.com/macros/s/........../exec"
+        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
 
       <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-        <button type="button" onclick="closeSettings()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+        <button type="button" onclick="closeSettings()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
           Close
         </button>
-        <button type="button" onclick="saveSettings()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+        <button type="button" onclick="saveSettings()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
           Save & Connect
         </button>
       </div>
     </div>
   </div>
 
-  <div id="loadingOverlay" class="loading-overlay fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6 text-center">
+  <div id="loadingOverlay"
+    class="loading-overlay fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6 text-center">
       <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg mb-4">
         <i id="loadingIcon" class="fa-solid fa-spinner fa-spin text-2xl"></i>
       </div>
@@ -610,145 +993,154 @@
   </div>
 
   <script>
-  const WEIGHTS = {
-    basic: 50,
-    locator: 20,
-    occupancy: 10,
-    floorplan: 10,
-    notation: 10
-  };
+    const WEIGHTS = {
+      basic: 50,
+      locator: 20,
+      occupancy: 10,
+      floorplan: 10,
+      notation: 10
+    };
 
-  const SCORE_FIELDS = [
-    'property_name_score',
-    'mgmt_company_score',
-    'apartment_mgr_score',
-    'regional_mgr_score',
-    'email_score',
-    'website_score',
-    'office_hours_score',
-    'commission_score',
-    'locator_note_score',
-    'requirements_score',
-    'occupancy_score',
-    'special_coding_score',
-    'pricing_score',
-    'availability_score',
-    'notation_score'
-  ];
+    const SCORE_FIELDS = [
+      'property_name_score',
+      'mgmt_company_score',
+      'apartment_mgr_score',
+      'regional_mgr_score',
+      'email_score',
+      'website_score',
+      'office_hours_score',
+      'commission_score',
+      'locator_note_score',
+      'requirements_score',
+      'occupancy_score',
+      'special_coding_score',
+      'pricing_score',
+      'availability_score',
+      'notation_score'
+    ];
 
-  let db = [];
-  let agentsDb = [];
-  let apiUrl = localStorage.getItem('auditorAppUrl') || '';
-  let trendChart = null;
-  let agentChart = null;
-  let isSaving = false;
-  let currentPage = 1;
-  let rowsPerPage = 10;
+    let db = [];
+    let agentsDb = [];
+    let usersDb = [];
 
-  let lastUserActivityAt = Date.now();
-  let idleSyncTimer = null;
-  let isFetchingData = false;
-  let isMutatingData = false;
-  let lastDataFingerprint = '';
+    let apiUrl = localStorage.getItem('auditorAppUrl') || '';
+    let trendChart = null;
+    let agentChart = null;
+    let currentPage = 1;
+    let rowsPerPage = 10;
+    let currentAgentPage = 1;
+    let agentRowsPerPage = 10;
 
-  let currentAgentPage = 1;
-  let agentRowsPerPage = 10;
+    let lastUserActivityAt = Date.now();
+    let idleSyncTimer = null;
+    let isFetchingData = false;
+    let isMutatingData = false;
+    let lastDataFingerprint = '';
 
-  let currentActorName = 'Auditor';
+    let currentActorName = 'Auditor';
+    let currentActorPhoto = '';
+    let heartbeatTimer = null;
+    let presenceRefreshTimer = null;
 
-  function getPossessiveActorTitle(actorName) {
-    const actor = String(actorName || '').trim();
-    if (!actor) return 'Auditor';
-    if (actor.toLowerCase().endsWith('s')) return `${actor}' Auditor`;
-    return `${actor}'s Auditor`;
-  }
-
-  function applyActorBranding() {
-    const brandedTitle = getPossessiveActorTitle(currentActorName);
-
-    document.title = brandedTitle;
-
-    const titleEl = document.getElementById('appTitleText');
-    if (titleEl) titleEl.textContent = brandedTitle;
-
-    const footerBrand = document.getElementById('footerBrand');
-    if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
-  }
-
-  function initApp() {
-    document.getElementById('appScriptUrl').value = apiUrl;
-    applyActorBranding();
-    applyLockState();
-
-    if (apiUrl) {
-      fetchData();
-    } else {
-      setSyncStatus('Setup Required', 'lock', 'error');
-      renderEmptyState();
+    function getPossessiveActorTitle(actorName) {
+      const actor = String(actorName || '').trim();
+      if (!actor) return 'Auditor';
+      if (actor.toLowerCase().endsWith('s')) return `${actor}' Auditor`;
+      return `${actor}'s Auditor`;
     }
-  }
 
-  function applyLockState() {
-    const hasApi = !!apiUrl;
-    const appContent = document.getElementById('appContent');
-    const setupBanner = document.getElementById('setupBanner');
+    function applyActorBranding() {
+      const brandedTitle = getPossessiveActorTitle(currentActorName);
 
-    appContent.classList.toggle('locked', !hasApi);
-    setupBanner.classList.toggle('hidden', hasApi);
-  }
+      document.title = brandedTitle;
 
-  function requireConfiguredApi() {
-    if (apiUrl) return true;
-    alert('Please enter your Google Apps Script URL first in System Settings.');
-    openSettings();
-    return false;
-  }
+      const titleEl = document.getElementById('appTitleText');
+      if (titleEl) titleEl.textContent = brandedTitle;
 
-  function renderEmptyState() {
-    db = [];
-    agentsDb = [];
-    renderAll();
-    applyActorBranding();
-  }
+      const footerBrand = document.getElementById('footerBrand');
+      if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
 
-  function changeRowsPerPage() {
-    rowsPerPage = Number(document.getElementById('rowsPerPageSelect').value || 10);
-    currentPage = 1;
-    renderTable();
-  }
+      const myName = document.getElementById('myPresenceName');
+      if (myName) myName.textContent = currentActorName || 'Auditor';
+    }
 
-  function changeAgentRowsPerPage() {
-    agentRowsPerPage = Number(document.getElementById('agentRowsPerPageSelect').value || 10);
-    currentAgentPage = 1;
-    renderAgentsTable();
-  }
+    function initApp() {
+      document.getElementById('appScriptUrl').value = apiUrl;
+      applyActorBranding();
+      applyLockState();
 
-  function goToPage(page) {
-    currentPage = page;
-    renderTable();
-  }
+      if (apiUrl) {
+        fetchData();
+        startHeartbeat();
+        startPresenceRefresh();
+      } else {
+        setSyncStatus('Setup Required', 'lock', 'error');
+        renderEmptyState();
+      }
+    }
 
-  function goToAgentPage(page) {
-    currentAgentPage = page;
-    renderAgentsTable();
-  }
+    function applyLockState() {
+      const hasApi = !!apiUrl;
+      const appContent = document.getElementById('appContent');
+      const setupBanner = document.getElementById('setupBanner');
 
-  function renderPagination(totalRows) {
-    const pageInfo = document.getElementById('tablePageInfo');
-    const controls = document.getElementById('paginationControls');
-    if (!pageInfo || !controls) return;
+      appContent.classList.toggle('locked', !hasApi);
+      setupBanner.classList.toggle('hidden', hasApi);
+    }
 
-    const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-    if (currentPage > totalPages) currentPage = totalPages;
+    function requireConfiguredApi() {
+      if (apiUrl) return true;
+      alert('Please enter your Google Apps Script URL first in System Settings.');
+      openSettings();
+      return false;
+    }
 
-    const start = totalRows === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1;
-    const end = Math.min(currentPage * rowsPerPage, totalRows);
+    function renderEmptyState() {
+      db = [];
+      agentsDb = [];
+      usersDb = [];
+      renderAll();
+      applyActorBranding();
+    }
 
-    pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} entries`;
+    function changeRowsPerPage() {
+      rowsPerPage = Number(document.getElementById('rowsPerPageSelect').value || 10);
+      currentPage = 1;
+      renderTable();
+    }
 
-    let html = '';
+    function changeAgentRowsPerPage() {
+      agentRowsPerPage = Number(document.getElementById('agentRowsPerPageSelect').value || 10);
+      currentAgentPage = 1;
+      renderAgentsTable();
+    }
 
-    html += `
+    function goToPage(page) {
+      currentPage = page;
+      renderTable();
+    }
+
+    function goToAgentPage(page) {
+      currentAgentPage = page;
+      renderAgentsTable();
+    }
+
+    function renderPagination(totalRows) {
+      const pageInfo = document.getElementById('tablePageInfo');
+      const controls = document.getElementById('paginationControls');
+      if (!pageInfo || !controls) return;
+
+      const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = totalRows === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1;
+      const end = Math.min(currentPage * rowsPerPage, totalRows);
+
+      pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} entries`;
+
+      let html = '';
+
+      html += `
       <button type="button"
         onclick="goToPage(${Math.max(1, currentPage - 1)})"
         class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -757,28 +1149,27 @@
       </button>
     `;
 
-    const totalPagesToShow = Math.ceil(totalRows / rowsPerPage) || 1;
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPagesToShow, currentPage + 2);
+      const totalPagesToShow = Math.ceil(totalRows / rowsPerPage) || 1;
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPagesToShow, currentPage + 2);
 
-    if (currentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
-    if (currentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
+      if (currentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
+      if (currentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
 
-    for (let i = startPage; i <= endPage; i++) {
-      html += `
+      for (let i = startPage; i <= endPage; i++) {
+        html += `
         <button type="button"
           onclick="goToPage(${i})"
-          class="px-3 py-2 rounded-xl border text-sm font-semibold ${
-            i === currentPage
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+          class="px-3 py-2 rounded-xl border text-sm font-semibold ${i === currentPage
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
           }">
           ${i}
         </button>
       `;
-    }
+      }
 
-    html += `
+      html += `
       <button type="button"
         onclick="goToPage(${Math.min(totalPagesToShow, currentPage + 1)})"
         class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -787,25 +1178,25 @@
       </button>
     `;
 
-    controls.innerHTML = html;
-  }
+      controls.innerHTML = html;
+    }
 
-  function renderAgentsPagination(totalRows) {
-    const pageInfo = document.getElementById('agentsTablePageInfo');
-    const controls = document.getElementById('agentsPaginationControls');
-    if (!pageInfo || !controls) return;
+    function renderAgentsPagination(totalRows) {
+      const pageInfo = document.getElementById('agentsTablePageInfo');
+      const controls = document.getElementById('agentsPaginationControls');
+      if (!pageInfo || !controls) return;
 
-    const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
-    if (currentAgentPage > totalPages) currentAgentPage = totalPages;
+      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
+      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
 
-    const start = totalRows === 0 ? 0 : ((currentAgentPage - 1) * agentRowsPerPage) + 1;
-    const end = Math.min(currentAgentPage * agentRowsPerPage, totalRows);
+      const start = totalRows === 0 ? 0 : ((currentAgentPage - 1) * agentRowsPerPage) + 1;
+      const end = Math.min(currentAgentPage * agentRowsPerPage, totalRows);
 
-    pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} agents`;
+      pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} agents`;
 
-    let html = '';
+      let html = '';
 
-    html += `
+      html += `
       <button type="button"
         onclick="goToAgentPage(${Math.max(1, currentAgentPage - 1)})"
         class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -814,28 +1205,27 @@
       </button>
     `;
 
-    const totalPagesToShow = Math.ceil(totalRows / agentRowsPerPage) || 1;
-    let startPage = Math.max(1, currentAgentPage - 2);
-    let endPage = Math.min(totalPagesToShow, currentAgentPage + 2);
+      const totalPagesToShow = Math.ceil(totalRows / agentRowsPerPage) || 1;
+      let startPage = Math.max(1, currentAgentPage - 2);
+      let endPage = Math.min(totalPagesToShow, currentAgentPage + 2);
 
-    if (currentAgentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
-    if (currentAgentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
+      if (currentAgentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
+      if (currentAgentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
 
-    for (let i = startPage; i <= endPage; i++) {
-      html += `
+      for (let i = startPage; i <= endPage; i++) {
+        html += `
         <button type="button"
           onclick="goToAgentPage(${i})"
-          class="px-3 py-2 rounded-xl border text-sm font-semibold ${
-            i === currentAgentPage
-              ? 'bg-emerald-600 text-white border-emerald-600'
-              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+          class="px-3 py-2 rounded-xl border text-sm font-semibold ${i === currentAgentPage
+            ? 'bg-emerald-600 text-white border-emerald-600'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
           }">
           ${i}
         </button>
       `;
-    }
+      }
 
-    html += `
+      html += `
       <button type="button"
         onclick="goToAgentPage(${Math.min(totalPagesToShow, currentAgentPage + 1)})"
         class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -844,799 +1234,961 @@
       </button>
     `;
 
-    controls.innerHTML = html;
-  }
-
-  function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
-    const overlay = document.getElementById('loadingOverlay');
-    const titleEl = document.getElementById('loadingTitle');
-    const textEl = document.getElementById('loadingText');
-    const iconEl = document.getElementById('loadingIcon');
-
-    titleEl.textContent = title;
-    textEl.textContent = text;
-    iconEl.className = `fa-solid fa-${icon}${spinning ? ' fa-spin' : ''} text-2xl`;
-    overlay.classList.add('active');
-  }
-
-  function hideLoading() {
-    document.getElementById('loadingOverlay').classList.remove('active');
-  }
-
-  function toggleTheme() {
-    document.documentElement.classList.toggle('dark');
-    localStorage.setItem('auditorTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    renderCharts();
-  }
-
-  function applySavedTheme() {
-    const saved = localStorage.getItem('auditorTheme');
-    if (saved === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }
-
-  function goToAI() {
-    if (!requireConfiguredApi()) return;
-    window.location.href = 'AI.html';
-  }
-
-  function goToLogs() {
-    if (!requireConfiguredApi()) return;
-    window.location.href = 'Logs.html';
-  }
-
-  function switchTab() {
-    document.getElementById('view-dash').classList.remove('hidden');
-    document.getElementById('btn-dash').classList.add('active');
-    renderCharts();
-  }
-
-  function openSettings() {
-    document.getElementById('appScriptUrl').value = apiUrl;
-    document.getElementById('settingsModal').classList.add('active');
-  }
-
-  function closeSettings() {
-    document.getElementById('settingsModal').classList.remove('active');
-  }
-
-  async function saveSettings() {
-    const url = (document.getElementById('appScriptUrl').value || '').trim();
-    if (!url) {
-      alert('Apps Script URL is required.');
-      return;
+      controls.innerHTML = html;
     }
 
-    apiUrl = url;
-    localStorage.setItem('auditorAppUrl', apiUrl);
-    closeSettings();
-    applyLockState();
-    await fetchData();
-  }
+    function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
+      const overlay = document.getElementById('loadingOverlay');
+      const titleEl = document.getElementById('loadingTitle');
+      const textEl = document.getElementById('loadingText');
+      const iconEl = document.getElementById('loadingIcon');
 
-  function openCrudModal(id = null) {
-    if (!requireConfiguredApi()) return;
+      titleEl.textContent = title;
+      textEl.textContent = text;
+      iconEl.className = `fa-solid fa-${icon}${spinning ? ' fa-spin' : ''} text-2xl`;
+      overlay.classList.add('active');
+    }
 
-    const form = document.getElementById('auditForm');
-    form.reset();
-    document.getElementById('audit_id').value = '';
-    document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
 
-    renderAgentDropdown();
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('auditorTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      renderCharts();
+    }
 
-    if (id) {
-      const record = db.find(r => String(r.audit_id) === String(id));
-      if (record) {
-        Object.keys(record).forEach(key => {
-          const el = document.getElementById(key);
-          if (!el) return;
-          if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
-          else el.value = record[key] ?? '';
-        });
+    function applySavedTheme() {
+      const saved = localStorage.getItem('auditorTheme');
+      if (saved === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    }
+
+    function goToAI() {
+      if (!requireConfiguredApi()) return;
+      window.location.href = 'AI.html';
+    }
+
+    function goToLogs() {
+      if (!requireConfiguredApi()) return;
+      window.location.href = 'Logs.html';
+    }
+
+    function switchTab() {
+      document.getElementById('view-dash').classList.remove('hidden');
+      document.getElementById('btn-dash').classList.add('active');
+      renderCharts();
+    }
+
+    function openSettings() {
+      document.getElementById('appScriptUrl').value = apiUrl;
+      document.getElementById('settingsModal').classList.add('active');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    async function saveSettings() {
+      const url = (document.getElementById('appScriptUrl').value || '').trim();
+      if (!url) {
+        alert('Apps Script URL is required.');
+        return;
       }
-    } else {
-      document.getElementById('audit_date').value = getTodayLocal();
+
+      apiUrl = url;
+      localStorage.setItem('auditorAppUrl', apiUrl);
+      closeSettings();
+      applyLockState();
+      await fetchData();
+      startHeartbeat();
+      startPresenceRefresh();
     }
 
-    calculateScores();
-    document.getElementById('crudModal').classList.add('active');
-  }
+    function openCrudModal(id = null) {
+      if (!requireConfiguredApi()) return;
 
-  function closeCrudModal() {
-    document.getElementById('crudModal').classList.remove('active');
-  }
+      const form = document.getElementById('auditForm');
+      form.reset();
+      document.getElementById('audit_id').value = '';
+      document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
 
-  function openAgentModal(id = null) {
-    if (!requireConfiguredApi()) return;
+      renderAgentDropdown();
 
-    document.getElementById('agent_id').value = '';
-    document.getElementById('agent_modal_name').value = '';
-    document.getElementById('agentModalTitle').textContent = id ? 'Edit Agent' : 'Add Agent';
-    document.getElementById('agentSaveBtn').innerHTML = id ? 'Update Agent' : 'Save Agent';
-
-    if (id) {
-      const agent = agentsDb.find(a => String(a.agent_id) === String(id));
-      if (agent) {
-        document.getElementById('agent_id').value = agent.agent_id || '';
-        document.getElementById('agent_modal_name').value = agent.agent_name || '';
+      if (id) {
+        const record = db.find(r => String(r.audit_id) === String(id));
+        if (record) {
+          Object.keys(record).forEach(key => {
+            const el = document.getElementById(key);
+            if (!el) return;
+            if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
+            else el.value = record[key] ?? '';
+          });
+        }
+      } else {
+        document.getElementById('audit_date').value = getTodayLocal();
       }
+
+      calculateScores();
+      document.getElementById('crudModal').classList.add('active');
     }
 
-    document.getElementById('agentModal').classList.add('active');
-  }
-
-  function closeAgentModal() {
-    document.getElementById('agentModal').classList.remove('active');
-  }
-
-  function normalizeDateForInput(value) {
-    if (!value) return '';
-    const s = String(value);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return '';
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  }
-
-  function getTodayLocal() {
-    const d = new Date();
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  }
-
-  function pad(n) {
-    return String(n).padStart(2, '0');
-  }
-
-  function toNumber(value) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, value));
-  }
-
-  function round2(n) {
-    return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-  }
-
-  function getScore(id) {
-    const el = document.getElementById(id);
-    if (!el) return 0;
-
-    let raw = String(el.value || '').trim();
-    if (raw === '') return 0;
-
-    let val = toNumber(raw);
-    val = clamp(val, 0, 5);
-    val = round2(val);
-
-    if (String(val) !== raw && raw !== '') el.value = val;
-    return val;
-  }
-
-  function scaleScore(raw, maxRaw, weightedMax) {
-    if (!maxRaw) return 0;
-    return round2((raw / maxRaw) * weightedMax);
-  }
-
-  function calculateScores() {
-    const basic_raw = round2(
-      getScore('property_name_score') +
-      getScore('mgmt_company_score') +
-      getScore('apartment_mgr_score') +
-      getScore('regional_mgr_score') +
-      getScore('email_score') +
-      getScore('website_score') +
-      getScore('office_hours_score')
-    );
-
-    const locator_raw = round2(
-      getScore('commission_score') +
-      getScore('locator_note_score') +
-      getScore('requirements_score')
-    );
-
-    const occupancy_raw = round2(
-      getScore('occupancy_score') +
-      getScore('special_coding_score')
-    );
-
-    const floorplan_raw = round2(
-      getScore('pricing_score') +
-      getScore('availability_score')
-    );
-
-    const notation_raw = round2(getScore('notation_score'));
-
-    const basic_weighted = scaleScore(basic_raw, 35, WEIGHTS.basic);
-    const locator_weighted = scaleScore(locator_raw, 15, WEIGHTS.locator);
-    const occupancy_weighted = scaleScore(occupancy_raw, 10, WEIGHTS.occupancy);
-    const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
-    const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
-
-    const overall_raw = round2(basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw);
-    const overall_score_100 = round2(basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted);
-
-    setText('disp_basic_raw', basic_raw.toFixed(2));
-    setText('disp_locator_raw', locator_raw.toFixed(2));
-    setText('disp_occupancy_raw', occupancy_raw.toFixed(2));
-    setText('disp_floorplan_raw', floorplan_raw.toFixed(2));
-    setText('disp_notation_raw', notation_raw.toFixed(2));
-
-    setText('disp_basic_weighted', basic_weighted.toFixed(2));
-    setText('disp_locator_weighted', locator_weighted.toFixed(2));
-    setText('disp_occupancy_weighted', occupancy_weighted.toFixed(2));
-    setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
-    setText('disp_notation_weighted', notation_weighted.toFixed(2));
-
-    setText('disp_overall_raw', overall_raw.toFixed(2));
-    setText('disp_overall_score', overall_score_100.toFixed(2));
-
-    return {
-      basic_raw,
-      basic_weighted,
-      locator_raw,
-      locator_weighted,
-      occupancy_raw,
-      occupancy_weighted,
-      floorplan_raw,
-      floorplan_weighted,
-      notation_raw,
-      notation_weighted,
-      overall_raw,
-      overall_score_100
-    };
-  }
-
-  function setText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  }
-
-  function buildPayload() {
-    const calc = calculateScores();
-
-    return {
-      audit_id: (document.getElementById('audit_id').value || '').trim(),
-      audit_date: (document.getElementById('audit_date').value || '').trim(),
-      agent_name: (document.getElementById('agent_name').value || '').trim(),
-      audit_channel: (document.getElementById('audit_channel').value || '').trim(),
-      property_field_id: (document.getElementById('property_field_id').value || '').trim(),
-      auditor: currentActorName,
-
-      property_name_score: getScore('property_name_score'),
-      mgmt_company_score: getScore('mgmt_company_score'),
-      apartment_mgr_score: getScore('apartment_mgr_score'),
-      regional_mgr_score: getScore('regional_mgr_score'),
-      email_score: getScore('email_score'),
-      website_score: getScore('website_score'),
-      office_hours_score: getScore('office_hours_score'),
-
-      commission_score: getScore('commission_score'),
-      locator_note_score: getScore('locator_note_score'),
-      requirements_score: getScore('requirements_score'),
-
-      occupancy_score: getScore('occupancy_score'),
-      special_coding_score: getScore('special_coding_score'),
-
-      pricing_score: getScore('pricing_score'),
-      availability_score: getScore('availability_score'),
-      notation_score: getScore('notation_score'),
-
-      final_error_note: (document.getElementById('final_error_note').value || '').trim(),
-      ...calc
-    };
-  }
-
-  function validatePayload(payload) {
-    if (!payload.audit_date) {
-      alert('Audit date is required.');
-      return false;
-    }
-    if (!payload.agent_name) {
-      alert('Agent name is required.');
-      return false;
-    }
-    return true;
-  }
-
-  async function apiPost(formObj) {
-    const body = new URLSearchParams();
-    Object.keys(formObj).forEach(key => {
-      body.set(key, formObj[key] == null ? '' : String(formObj[key]));
-    });
-
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: body.toString()
-    });
-
-    const text = await res.text();
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch (e) {
-      console.error('Raw server response:', text);
-      throw new Error('Invalid server response. Check Apps Script deployment.');
+    function closeCrudModal() {
+      document.getElementById('crudModal').classList.remove('active');
     }
 
-    if (!json || json.status !== 'success') {
-      throw new Error(json?.message || 'API request failed.');
+    function openAgentModal(id = null) {
+      if (!requireConfiguredApi()) return;
+
+      document.getElementById('agent_id').value = '';
+      document.getElementById('agent_modal_name').value = '';
+      document.getElementById('agentModalTitle').textContent = id ? 'Edit Agent' : 'Add Agent';
+      document.getElementById('agentSaveBtn').innerHTML = id ? 'Update Agent' : 'Save Agent';
+
+      if (id) {
+        const agent = agentsDb.find(a => String(a.agent_id) === String(id));
+        if (agent) {
+          document.getElementById('agent_id').value = agent.agent_id || '';
+          document.getElementById('agent_modal_name').value = agent.agent_name || '';
+        }
+      }
+
+      document.getElementById('agentModal').classList.add('active');
     }
 
-    return json;
-  }
-
-  async function saveAudit() {
-    if (!requireConfiguredApi()) return;
-
-    const payload = buildPayload();
-    if (!validatePayload(payload)) return;
-
-    const action = payload.audit_id ? 'update' : 'create';
-
-    try {
-      isMutatingData = true;
-      toggleSaveButton(true);
-      showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
-      setSyncStatus('Saving...', 'spinner', 'loading');
-
-      await apiPost({ action, ...payload });
-      await fetchData(false);
-
-      setSyncStatus('Synced', 'check', 'success');
-      closeCrudModal();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Error saving audit.');
-      setSyncStatus('Save failed', 'triangle-exclamation', 'error');
-    } finally {
-      isMutatingData = false;
-      toggleSaveButton(false);
-      hideLoading();
-    }
-  }
-
-  async function saveAgent() {
-    if (!requireConfiguredApi()) return;
-
-    const agentId = (document.getElementById('agent_id').value || '').trim();
-    const agentName = (document.getElementById('agent_modal_name').value || '').trim();
-
-    if (!agentName) {
-      alert('Agent name is required.');
-      return;
+    function closeAgentModal() {
+      document.getElementById('agentModal').classList.remove('active');
     }
 
-    try {
-      showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
-      await apiPost({
-        action: agentId ? 'update_agent' : 'create_agent',
-        agent_id: agentId,
-        agent_name: agentName
+    function normalizeDateForInput(value) {
+      if (!value) return '';
+      const s = String(value);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function getTodayLocal() {
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function round2(n) {
+      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    }
+
+    function getScore(id) {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+
+      let raw = String(el.value || '').trim();
+      if (raw === '') return 0;
+
+      let val = toNumber(raw);
+      val = clamp(val, 0, 5);
+      val = round2(val);
+
+      if (String(val) !== raw && raw !== '') el.value = val;
+      return val;
+    }
+
+    function scaleScore(raw, maxRaw, weightedMax) {
+      if (!maxRaw) return 0;
+      return round2((raw / maxRaw) * weightedMax);
+    }
+
+    function calculateScores() {
+      const basic_raw = round2(
+        getScore('property_name_score') +
+        getScore('mgmt_company_score') +
+        getScore('apartment_mgr_score') +
+        getScore('regional_mgr_score') +
+        getScore('email_score') +
+        getScore('website_score') +
+        getScore('office_hours_score')
+      );
+
+      const locator_raw = round2(
+        getScore('commission_score') +
+        getScore('locator_note_score') +
+        getScore('requirements_score')
+      );
+
+      const occupancy_raw = round2(
+        getScore('occupancy_score') +
+        getScore('special_coding_score')
+      );
+
+      const floorplan_raw = round2(
+        getScore('pricing_score') +
+        getScore('availability_score')
+      );
+
+      const notation_raw = round2(getScore('notation_score'));
+
+      const basic_weighted = scaleScore(basic_raw, 35, WEIGHTS.basic);
+      const locator_weighted = scaleScore(locator_raw, 15, WEIGHTS.locator);
+      const occupancy_weighted = scaleScore(occupancy_raw, 10, WEIGHTS.occupancy);
+      const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
+      const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
+
+      const overall_raw = round2(basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw);
+      const overall_score_100 = round2(basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted);
+
+      setText('disp_basic_raw', basic_raw.toFixed(2));
+      setText('disp_locator_raw', locator_raw.toFixed(2));
+      setText('disp_occupancy_raw', occupancy_raw.toFixed(2));
+      setText('disp_floorplan_raw', floorplan_raw.toFixed(2));
+      setText('disp_notation_raw', notation_raw.toFixed(2));
+
+      setText('disp_basic_weighted', basic_weighted.toFixed(2));
+      setText('disp_locator_weighted', locator_weighted.toFixed(2));
+      setText('disp_occupancy_weighted', occupancy_weighted.toFixed(2));
+      setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
+      setText('disp_notation_weighted', notation_weighted.toFixed(2));
+
+      setText('disp_overall_raw', overall_raw.toFixed(2));
+      setText('disp_overall_score', overall_score_100.toFixed(2));
+
+      return {
+        basic_raw,
+        basic_weighted,
+        locator_raw,
+        locator_weighted,
+        occupancy_raw,
+        occupancy_weighted,
+        floorplan_raw,
+        floorplan_weighted,
+        notation_raw,
+        notation_weighted,
+        overall_raw,
+        overall_score_100
+      };
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function buildPayload() {
+      const calc = calculateScores();
+
+      return {
+        audit_id: (document.getElementById('audit_id').value || '').trim(),
+        audit_date: (document.getElementById('audit_date').value || '').trim(),
+        agent_name: (document.getElementById('agent_name').value || '').trim(),
+        audit_channel: (document.getElementById('audit_channel').value || '').trim(),
+        property_field_id: (document.getElementById('property_field_id').value || '').trim(),
+        auditor: currentActorName,
+
+        property_name_score: getScore('property_name_score'),
+        mgmt_company_score: getScore('mgmt_company_score'),
+        apartment_mgr_score: getScore('apartment_mgr_score'),
+        regional_mgr_score: getScore('regional_mgr_score'),
+        email_score: getScore('email_score'),
+        website_score: getScore('website_score'),
+        office_hours_score: getScore('office_hours_score'),
+
+        commission_score: getScore('commission_score'),
+        locator_note_score: getScore('locator_note_score'),
+        requirements_score: getScore('requirements_score'),
+
+        occupancy_score: getScore('occupancy_score'),
+        special_coding_score: getScore('special_coding_score'),
+
+        pricing_score: getScore('pricing_score'),
+        availability_score: getScore('availability_score'),
+        notation_score: getScore('notation_score'),
+
+        final_error_note: (document.getElementById('final_error_note').value || '').trim(),
+        ...calc
+      };
+    }
+
+    function validatePayload(payload) {
+      if (!payload.audit_date) {
+        alert('Audit date is required.');
+        return false;
+      }
+      if (!payload.agent_name) {
+        alert('Agent name is required.');
+        return false;
+      }
+      return true;
+    }
+
+    async function apiPost(formObj) {
+      const body = new URLSearchParams();
+      Object.keys(formObj).forEach(key => {
+        body.set(key, formObj[key] == null ? '' : String(formObj[key]));
       });
-      await fetchData(false);
-      closeAgentModal();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Error saving agent.');
-    } finally {
-      hideLoading();
-    }
-  }
 
-  function toggleSaveButton(loading) {
-    const btn = document.getElementById('saveBtn');
-    if (!btn) return;
-    btn.disabled = loading;
-    btn.classList.toggle('opacity-70', loading);
-    btn.classList.toggle('cursor-not-allowed', loading);
-    btn.innerHTML = loading
-      ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
-      : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
-  }
-
-  async function deleteAudit(id) {
-    if (!requireConfiguredApi()) return;
-    if (!confirm('Delete this audit record?')) return;
-
-    try {
-      isMutatingData = true;
-      showLoading('Deleting Audit', 'Removing record and updating dashboard...');
-      setSyncStatus('Deleting...', 'spinner', 'loading');
-      await apiPost({ action: 'delete', audit_id: id });
-      await fetchData(false);
-      setSyncStatus('Deleted', 'check', 'success');
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Error deleting audit.');
-      setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-    } finally {
-      isMutatingData = false;
-      hideLoading();
-    }
-  }
-
-  async function deleteAgent(id) {
-    if (!requireConfiguredApi()) return;
-    if (!confirm('Delete this agent?')) return;
-
-    try {
-      isMutatingData = true;
-      showLoading('Deleting Agent', 'Removing agent...');
-      setSyncStatus('Deleting agent...', 'spinner', 'loading');
-      await apiPost({ action: 'delete_agent', agent_id: id });
-      await fetchData(false);
-      setSyncStatus('Agent deleted', 'check', 'success');
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Error deleting agent.');
-      setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-    } finally {
-      isMutatingData = false;
-      hideLoading();
-    }
-  }
-
-  function isAnyModalOpen() {
-    return ['crudModal', 'agentModal', 'settingsModal'].some(id =>
-      document.getElementById(id)?.classList.contains('active')
-    );
-  }
-
-  function canAutoSync() {
-    return !!apiUrl && !isAnyModalOpen() && !isFetchingData && !isMutatingData;
-  }
-
-  function createDataFingerprint(json) {
-    const audits = Array.isArray(json?.data) ? json.data : [];
-    const agents = Array.isArray(json?.agents) ? json.agents : [];
-    const actor = String(json?.actor || '');
-
-    const auditKey = audits.map(row => [
-      row.audit_id || '',
-      row.audit_date || '',
-      row.agent_name || '',
-      row.audit_channel || '',
-      row.property_field_id || '',
-      row.auditor || '',
-      row.overall_score_100 || '',
-      row.final_error_note || ''
-    ].join('|')).join('||');
-
-    const agentKey = agents.map(row => [
-      row.agent_id || '',
-      row.agent_name || '',
-      row.created_at || ''
-    ].join('|')).join('||');
-
-    return `${actor}###${auditKey}###${agentKey}`;
-  }
-
-  async function checkForRemoteUpdates() {
-    if (!canAutoSync()) return;
-
-    const idleMs = Date.now() - lastUserActivityAt;
-    if (idleMs < 5000) return;
-
-    try {
-      setSyncStatus('Checking updates...', 'spinner', 'loading');
-
-      const res = await fetch(apiUrl + '?t=' + Date.now(), {
-        method: 'GET',
-        cache: 'no-store'
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: body.toString()
       });
 
       const text = await res.text();
-
       let json;
       try {
         json = JSON.parse(text);
       } catch (e) {
-        console.error('Raw auto-sync response:', text);
-        setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-        return;
+        console.error('Raw server response:', text);
+        throw new Error('Invalid server response. Check Apps Script deployment.');
       }
 
       if (!json || json.status !== 'success') {
-        setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+        throw new Error(json?.message || 'API request failed.');
+      }
+
+      return json;
+    }
+
+    async function saveAudit() {
+      if (!requireConfiguredApi()) return;
+
+      const payload = buildPayload();
+      if (!validatePayload(payload)) return;
+
+      const action = payload.audit_id ? 'update' : 'create';
+
+      try {
+        isMutatingData = true;
+        toggleSaveButton(true);
+        showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
+        setSyncStatus('Saving...', 'spinner', 'loading');
+
+        await apiPost({ action, ...payload });
+        await fetchData(false);
+
+        setSyncStatus('Synced', 'check', 'success');
+        closeCrudModal();
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error saving audit.');
+        setSyncStatus('Save failed', 'triangle-exclamation', 'error');
+      } finally {
+        isMutatingData = false;
+        toggleSaveButton(false);
+        hideLoading();
+      }
+    }
+
+    async function saveAgent() {
+      if (!requireConfiguredApi()) return;
+
+      const agentId = (document.getElementById('agent_id').value || '').trim();
+      const agentName = (document.getElementById('agent_modal_name').value || '').trim();
+
+      if (!agentName) {
+        alert('Agent name is required.');
         return;
       }
 
-      const remoteFingerprint = createDataFingerprint(json);
+      try {
+        showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
+        await apiPost({
+          action: agentId ? 'update_agent' : 'create_agent',
+          agent_id: agentId,
+          agent_name: agentName
+        });
+        await fetchData(false);
+        closeAgentModal();
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error saving agent.');
+      } finally {
+        hideLoading();
+      }
+    }
 
-      if (lastDataFingerprint && remoteFingerprint !== lastDataFingerprint) {
+    function toggleSaveButton(loading) {
+      const btn = document.getElementById('saveBtn');
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.classList.toggle('opacity-70', loading);
+      btn.classList.toggle('cursor-not-allowed', loading);
+      btn.innerHTML = loading
+        ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
+        : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
+    }
+
+    async function deleteAudit(id) {
+      if (!requireConfiguredApi()) return;
+      if (!confirm('Delete this audit record?')) return;
+
+      try {
+        isMutatingData = true;
+        showLoading('Deleting Audit', 'Removing record and updating dashboard...');
+        setSyncStatus('Deleting...', 'spinner', 'loading');
+        await apiPost({ action: 'delete', audit_id: id, actor: currentActorName });
+        await fetchData(false);
+        setSyncStatus('Deleted', 'check', 'success');
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error deleting audit.');
+        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+      } finally {
+        isMutatingData = false;
+        hideLoading();
+      }
+    }
+
+    async function deleteAgent(id) {
+      if (!requireConfiguredApi()) return;
+      if (!confirm('Delete this agent?')) return;
+
+      try {
+        isMutatingData = true;
+        showLoading('Deleting Agent', 'Removing agent...');
+        setSyncStatus('Deleting agent...', 'spinner', 'loading');
+        await apiPost({ action: 'delete_agent', agent_id: id, actor: currentActorName });
+        await fetchData(false);
+        setSyncStatus('Agent deleted', 'check', 'success');
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Error deleting agent.');
+        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+      } finally {
+        isMutatingData = false;
+        hideLoading();
+      }
+    }
+
+    function isAnyModalOpen() {
+      return ['crudModal', 'agentModal', 'settingsModal'].some(id =>
+        document.getElementById(id)?.classList.contains('active')
+      );
+    }
+
+    function canAutoSync() {
+      return !!apiUrl && !isAnyModalOpen() && !isFetchingData && !isMutatingData;
+    }
+
+    function createDataFingerprint(json) {
+      const audits = Array.isArray(json?.data) ? json.data : [];
+      const agents = Array.isArray(json?.agents) ? json.agents : [];
+      const users = Array.isArray(json?.users) ? json.users : [];
+      const actor = String(json?.actor || '');
+
+      const auditKey = audits.map(row => [
+        row.audit_id || '',
+        row.audit_date || '',
+        row.agent_name || '',
+        row.audit_channel || '',
+        row.property_field_id || '',
+        row.auditor || '',
+        row.overall_score_100 || '',
+        row.final_error_note || ''
+      ].join('|')).join('||');
+
+      const agentKey = agents.map(row => [
+        row.agent_id || '',
+        row.agent_name || '',
+        row.created_at || ''
+      ].join('|')).join('||');
+
+      const userKey = users.map(row => [
+        row.user_name || '',
+        row.photo_url || '',
+        row.last_seen || ''
+      ].join('|')).join('||');
+
+      return `${actor}###${auditKey}###${agentKey}###${userKey}`;
+    }
+
+    async function checkForRemoteUpdates() {
+      if (!canAutoSync()) return;
+
+      const idleMs = Date.now() - lastUserActivityAt;
+      if (idleMs < 5000) return;
+
+      try {
+        setSyncStatus('Checking updates...', 'spinner', 'loading');
+
+        const res = await fetch(apiUrl + '?t=' + Date.now(), {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
+        const text = await res.text();
+
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          console.error('Raw auto-sync response:', text);
+          setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+          return;
+        }
+
+        if (!json || json.status !== 'success') {
+          setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+          return;
+        }
+
+        const remoteFingerprint = createDataFingerprint(json);
+
+        if (lastDataFingerprint && remoteFingerprint !== lastDataFingerprint) {
+          db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
+          agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
+          usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
+          db.sort(sortRecords);
+          currentActorName = json.actor || 'Auditor';
+          currentActorPhoto = json.actor_photo || '';
+          lastDataFingerprint = remoteFingerprint;
+
+          applyActorBranding();
+          renderAll();
+          applyLockState();
+          setSyncStatus('New data synced', 'check', 'success');
+          return;
+        }
+
+        setSyncStatus('Synced', 'check', 'success');
+      } catch (error) {
+        console.error(error);
+        setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+      }
+    }
+
+    function startIdleAutoSync() {
+      if (idleSyncTimer) clearInterval(idleSyncTimer);
+
+      idleSyncTimer = setInterval(() => {
+        checkForRemoteUpdates();
+      }, 3000);
+    }
+
+    function markUserActivity() {
+      lastUserActivityAt = Date.now();
+    }
+
+    function bindUserActivityListeners() {
+      ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
+        document.addEventListener(evt, markUserActivity, { passive: true });
+      });
+    }
+
+    function normalizeUser(user) {
+      return {
+        user_name: String(user?.user_name || '').trim(),
+        photo_url: String(user?.photo_url || '').trim(),
+        last_seen: String(user?.last_seen || '').trim()
+      };
+    }
+
+    function parseServerDateTime(value) {
+      const s = String(value || '').trim();
+      if (!s) return 0;
+
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)) {
+        const [datePart, timePart] = s.split(' ');
+        const [y, m, d] = datePart.split('-').map(Number);
+        const [hh, mm, ss] = timePart.split(':').map(Number);
+        return new Date(y, m - 1, d, hh, mm, ss).getTime();
+      }
+
+      const ms = new Date(s).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    }
+
+    function isUserOnline(user) {
+      const lastSeenMs = parseServerDateTime(user?.last_seen);
+      if (!lastSeenMs) return false;
+      return (Date.now() - lastSeenMs) <= 60000;
+    }
+
+    function getUserInitials(name) {
+      const cleaned = String(name || '').trim();
+      if (!cleaned) return 'AU';
+
+      const parts = cleaned.split(/\s+/).filter(Boolean);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function buildAvatarHtml(user, hideName = false) {
+      const online = isUserOnline(user);
+      const title = `${user.user_name || 'User'}${online ? ' • Online' : ' • Offline'}`;
+      const initials = getUserInitials(user.user_name);
+      const hasPhoto = !!user.photo_url;
+
+      return `
+      <div class="presence-avatar ${online ? 'online' : ''}" title="${escapeHtml(title)}">
+        ${hasPhoto ? `
+          <img
+            src="${escapeHtml(user.photo_url)}"
+            alt="${escapeHtml(user.user_name || 'User')}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+          >
+          <span class="presence-initials" style="display:none;">${escapeHtml(initials)}</span>
+        ` : `
+          <span class="presence-initials">${escapeHtml(initials)}</span>
+        `}
+        <span class="presence-status-dot"></span>
+      </div>
+    `;
+    }
+
+    function renderMyPresence() {
+      const chip = document.getElementById('myPresenceChip');
+      const avatarWrap = document.getElementById('myPresenceAvatar');
+      const nameEl = document.getElementById('myPresenceName');
+
+      if (!chip || !avatarWrap || !nameEl) return;
+
+      const me = {
+        user_name: currentActorName,
+        photo_url: currentActorPhoto,
+        last_seen: new Date().toISOString()
+      };
+
+      chip.classList.remove('hidden');
+      avatarWrap.innerHTML = buildAvatarHtml(me);
+      nameEl.textContent = currentActorName || 'Auditor';
+    }
+
+    function renderUsersPresence() {
+      const list = document.getElementById('usersPresenceList');
+      if (!list) return;
+
+      renderMyPresence();
+
+      const others = [...usersDb]
+        .filter(u => String(u.user_name || '').trim())
+        .filter(u => String(u.user_name || '').trim().toLowerCase() !== String(currentActorName || '').trim().toLowerCase())
+        .sort((a, b) => {
+          const aOnline = isUserOnline(a) ? 1 : 0;
+          const bOnline = isUserOnline(b) ? 1 : 0;
+          if (aOnline !== bOnline) return bOnline - aOnline;
+          return String(a.user_name || '').localeCompare(String(b.user_name || ''));
+        });
+
+      if (!others.length) {
+        list.innerHTML = `<div class="presence-empty">No other users</div>`;
+        return;
+      }
+
+      list.innerHTML = others.map(user => buildAvatarHtml(user)).join('');
+    }
+
+    async function sendHeartbeat(force = false) {
+      if (!apiUrl || isFetchingData || isMutatingData) return;
+      if (document.hidden && !force) return;
+
+      try {
+        const json = await apiPost({
+          action: 'heartbeat',
+          actor: currentActorName,
+          photo_url: currentActorPhoto
+        });
+
+        if (Array.isArray(json.users)) {
+          usersDb = json.users.map(normalizeUser);
+          if (json.actor) currentActorName = json.actor;
+          if (json.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
+          applyActorBranding();
+          renderUsersPresence();
+        }
+      } catch (error) {
+        console.error('Heartbeat failed:', error);
+      }
+    }
+
+    function startHeartbeat() {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      if (!apiUrl) return;
+
+      sendHeartbeat(true);
+
+      heartbeatTimer = setInterval(() => {
+        sendHeartbeat(false);
+      }, 15000);
+    }
+
+    function startPresenceRefresh() {
+      if (presenceRefreshTimer) clearInterval(presenceRefreshTimer);
+
+      presenceRefreshTimer = setInterval(() => {
+        renderUsersPresence();
+      }, 5000);
+    }
+
+    async function fetchData(showOverlay = true) {
+      if (!apiUrl) {
+        setSyncStatus('Setup Required', 'lock', 'error');
+        renderEmptyState();
+        return;
+      }
+
+      if (isFetchingData) return;
+      isFetchingData = true;
+
+      try {
+        if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and users...');
+        setSyncStatus('Loading...', 'spinner', 'loading');
+
+        const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
+        const text = await res.text();
+
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          console.error('Raw GET response:', text);
+          throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
+        }
+
+        if (!json || json.status !== 'success') {
+          throw new Error(json?.message || 'Failed to load data.');
+        }
+
         db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
         agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
+        usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
         db.sort(sortRecords);
         currentActorName = json.actor || 'Auditor';
-        lastDataFingerprint = remoteFingerprint;
+        currentActorPhoto = json.actor_photo || '';
+        lastDataFingerprint = createDataFingerprint(json);
 
         applyActorBranding();
         renderAll();
         applyLockState();
-        setSyncStatus('New data synced', 'check', 'success');
+        setSyncStatus('Synced', 'check', 'success');
+
+        sendHeartbeat(true);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Connection error');
+        setSyncStatus('Connection error', 'triangle-exclamation', 'error');
+      } finally {
+        isFetchingData = false;
+        if (showOverlay) hideLoading();
+      }
+    }
+
+    function normalizeRecord(record) {
+      const obj = { ...record };
+
+      obj.audit_id = String(obj.audit_id || '').trim();
+      obj.audit_date = String(obj.audit_date || '').trim();
+      obj.agent_name = String(obj.agent_name || '').trim();
+      obj.audit_channel = String(obj.audit_channel || '').trim();
+      obj.property_field_id = String(obj.property_field_id || '').trim();
+      obj.auditor = String(obj.auditor || '').trim();
+      obj.final_error_note = String(obj.final_error_note || '').trim();
+
+      SCORE_FIELDS.forEach(field => {
+        obj[field] = round2(toNumber(obj[field]));
+      });
+
+      [
+        'basic_raw', 'basic_weighted',
+        'locator_raw', 'locator_weighted',
+        'occupancy_raw', 'occupancy_weighted',
+        'floorplan_raw', 'floorplan_weighted',
+        'notation_raw', 'notation_weighted',
+        'overall_raw', 'overall_score_100'
+      ].forEach(field => {
+        obj[field] = round2(toNumber(obj[field]));
+      });
+
+      return obj;
+    }
+
+    function sortRecords(a, b) {
+      const da = String(a.audit_date || '');
+      const dbb = String(b.audit_date || '');
+      if (da !== dbb) return dbb.localeCompare(da);
+      return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
+    }
+
+    function setSyncStatus(text, icon, state) {
+      const el = document.getElementById('syncStatus');
+      if (!el) return;
+
+      const colorMap = {
+        neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
+        error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
+        loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
+      };
+
+      el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
+
+      if (state === 'success') {
+        el.innerHTML = `<span class="sync-live-dot"></span><span>${escapeHtml(text)}</span>`;
         return;
       }
 
-      setSyncStatus('Synced', 'check', 'success');
-    } catch (error) {
-      console.error(error);
-      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-    }
-  }
-
-  function startIdleAutoSync() {
-    if (idleSyncTimer) clearInterval(idleSyncTimer);
-
-    idleSyncTimer = setInterval(() => {
-      checkForRemoteUpdates();
-    }, 3000);
-  }
-
-  function markUserActivity() {
-    lastUserActivityAt = Date.now();
-  }
-
-  function bindUserActivityListeners() {
-    ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
-      document.addEventListener(evt, markUserActivity, { passive: true });
-    });
-  }
-
-  async function fetchData(showOverlay = true) {
-    if (!apiUrl) {
-      setSyncStatus('Setup Required', 'lock', 'error');
-      renderEmptyState();
-      return;
+      el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
     }
 
-    if (isFetchingData) return;
-    isFetchingData = true;
-
-    try {
-      if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and logs...');
-      setSyncStatus('Loading...', 'spinner', 'loading');
-
-      const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
-      const text = await res.text();
-
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (e) {
-        console.error('Raw GET response:', text);
-        throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
-      }
-
-      if (!json || json.status !== 'success') {
-        throw new Error(json?.message || 'Failed to load data.');
-      }
-
-      db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
-      agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
-      db.sort(sortRecords);
-      currentActorName = json.actor || 'Auditor';
-      lastDataFingerprint = createDataFingerprint(json);
-
-      applyActorBranding();
+    function clearAuditFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterDateFrom').value = '';
+      document.getElementById('filterDateTo').value = '';
+      document.getElementById('filterAgentName').value = '';
+      currentPage = 1;
       renderAll();
-      applyLockState();
-      setSyncStatus('Synced', 'check', 'success');
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Connection error');
-      setSyncStatus('Connection error', 'triangle-exclamation', 'error');
-    } finally {
-      isFetchingData = false;
-      if (showOverlay) hideLoading();
-    }
-  }
-
-  function normalizeRecord(record) {
-    const obj = { ...record };
-
-    obj.audit_id = String(obj.audit_id || '').trim();
-    obj.audit_date = String(obj.audit_date || '').trim();
-    obj.agent_name = String(obj.agent_name || '').trim();
-    obj.audit_channel = String(obj.audit_channel || '').trim();
-    obj.property_field_id = String(obj.property_field_id || '').trim();
-    obj.auditor = String(obj.auditor || '').trim();
-    obj.final_error_note = String(obj.final_error_note || '').trim();
-
-    SCORE_FIELDS.forEach(field => {
-      obj[field] = round2(toNumber(obj[field]));
-    });
-
-    [
-      'basic_raw', 'basic_weighted',
-      'locator_raw', 'locator_weighted',
-      'occupancy_raw', 'occupancy_weighted',
-      'floorplan_raw', 'floorplan_weighted',
-      'notation_raw', 'notation_weighted',
-      'overall_raw', 'overall_score_100'
-    ].forEach(field => {
-      obj[field] = round2(toNumber(obj[field]));
-    });
-
-    return obj;
-  }
-
-  function sortRecords(a, b) {
-    const da = String(a.audit_date || '');
-    const dbb = String(b.audit_date || '');
-    if (da !== dbb) return dbb.localeCompare(da);
-    return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
-  }
-
-  function setSyncStatus(text, icon, state) {
-    const el = document.getElementById('syncStatus');
-    if (!el) return;
-
-    const colorMap = {
-      neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-      success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
-      error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
-      loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
-    };
-
-    el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
-
-    if (state === 'success') {
-      el.innerHTML = `<span class="sync-live-dot"></span><span>${escapeHtml(text)}</span>`;
-      return;
     }
 
-    el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
-  }
+    function getFilteredData() {
+      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const dateFrom = (document.getElementById('filterDateFrom')?.value || '').trim();
+      const dateTo = (document.getElementById('filterDateTo')?.value || '').trim();
+      const agentFilter = (document.getElementById('filterAgentName')?.value || '').trim().toLowerCase();
 
-  function clearAuditFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('filterDateFrom').value = '';
-    document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterAgentName').value = '';
-    currentPage = 1;
-    renderAll();
-  }
+      return db.filter(row => {
+        const auditDate = normalizeDateForInput(row.audit_date);
+        const rowAgent = String(row.agent_name || '').trim().toLowerCase();
 
-  function getFilteredData() {
-    const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-    const dateFrom = (document.getElementById('filterDateFrom')?.value || '').trim();
-    const dateTo = (document.getElementById('filterDateTo')?.value || '').trim();
-    const agentFilter = (document.getElementById('filterAgentName')?.value || '').trim().toLowerCase();
+        const matchesSearch = !q || [
+          row.audit_id,
+          row.audit_date,
+          row.agent_name,
+          row.audit_channel,
+          row.final_error_note,
+          row.property_field_id,
+          row.auditor
+        ].some(v => String(v || '').toLowerCase().includes(q));
 
-    return db.filter(row => {
-      const auditDate = normalizeDateForInput(row.audit_date);
-      const rowAgent = String(row.agent_name || '').trim().toLowerCase();
+        const matchesDateFrom = !dateFrom || (auditDate && auditDate >= dateFrom);
+        const matchesDateTo = !dateTo || (auditDate && auditDate <= dateTo);
+        const matchesAgent = !agentFilter || rowAgent === agentFilter;
 
-      const matchesSearch = !q || [
-        row.audit_id,
-        row.audit_date,
-        row.agent_name,
-        row.audit_channel,
-        row.final_error_note,
-        row.property_field_id,
-        row.auditor
-      ].some(v => String(v || '').toLowerCase().includes(q));
-
-      const matchesDateFrom = !dateFrom || (auditDate && auditDate >= dateFrom);
-      const matchesDateTo = !dateTo || (auditDate && auditDate <= dateTo);
-      const matchesAgent = !agentFilter || rowAgent === agentFilter;
-
-      return matchesSearch && matchesDateFrom && matchesDateTo && matchesAgent;
-    });
-  }
-
-  function getFilteredAgents() {
-    const q = (document.getElementById('agentSearchInput')?.value || '').trim().toLowerCase();
-    if (!q) return [...agentsDb];
-    return agentsDb.filter(a =>
-      String(a.agent_id || '').toLowerCase().includes(q) ||
-      String(a.agent_name || '').toLowerCase().includes(q)
-    );
-  }
-
-  function renderAll() {
-    renderTable();
-    renderAgentsTable();
-    renderKPIs();
-    renderCharts();
-    renderAgentDropdown();
-    renderAuditFilterAgentDropdown();
-  }
-
-  function renderKPIs() {
-    const total = db.length;
-    const avg = total ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total) : 0;
-    const agents = agentsDb.length;
-
-    setText('kpi-total', total);
-    setText('kpi-avg', `${avg.toFixed(2)}%`);
-    setText('kpi-agents', agents);
-  }
-
-  function renderAgentDropdown() {
-    const select = document.getElementById('agent_name');
-    if (!select) return;
-
-    const currentValue = select.value;
-    let html = `<option value="">Select agent</option>`;
-
-    const sortedAgents = [...agentsDb].sort((a, b) =>
-      String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
-    );
-
-    html += sortedAgents.map(agent =>
-      `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
-    ).join('');
-
-    select.innerHTML = html;
-
-    if ([...select.options].some(opt => opt.value === currentValue)) {
-      select.value = currentValue;
+        return matchesSearch && matchesDateFrom && matchesDateTo && matchesAgent;
+      });
     }
-  }
 
-  function renderAuditFilterAgentDropdown() {
-    const select = document.getElementById('filterAgentName');
-    if (!select) return;
-
-    const currentValue = select.value;
-    let html = `<option value="">All Agents</option>`;
-
-    const sortedAgents = [...agentsDb].sort((a, b) =>
-      String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
-    );
-
-    html += sortedAgents.map(agent =>
-      `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
-    ).join('');
-
-    select.innerHTML = html;
-
-    if ([...select.options].some(opt => opt.value === currentValue)) {
-      select.value = currentValue;
+    function getFilteredAgents() {
+      const q = (document.getElementById('agentSearchInput')?.value || '').trim().toLowerCase();
+      if (!q) return [...agentsDb];
+      return agentsDb.filter(a =>
+        String(a.agent_id || '').toLowerCase().includes(q) ||
+        String(a.agent_name || '').toLowerCase().includes(q)
+      );
     }
-  }
 
-  function getScoreBadge(score) {
-    if (score >= 90) return 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400';
-    if (score >= 75) return 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400';
-    if (score >= 60) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400';
-    return 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400';
-  }
+    function renderAll() {
+      renderTable();
+      renderAgentsTable();
+      renderKPIs();
+      renderCharts();
+      renderAgentDropdown();
+      renderAuditFilterAgentDropdown();
+      renderUsersPresence();
+    }
 
-  function renderTable() {
-    const tbody = document.getElementById('tableBody');
-    const rows = getFilteredData();
+    function renderKPIs() {
+      const total = db.length;
+      const avg = total ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total) : 0;
+      const agents = agentsDb.length;
 
-    if (!rows.length) {
-      tbody.innerHTML = `
+      setText('kpi-total', total);
+      setText('kpi-avg', `${avg.toFixed(2)}%`);
+      setText('kpi-agents', agents);
+    }
+
+    function renderAgentDropdown() {
+      const select = document.getElementById('agent_name');
+      if (!select) return;
+
+      const currentValue = select.value;
+      let html = `<option value="">Select agent</option>`;
+
+      const sortedAgents = [...agentsDb].sort((a, b) =>
+        String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
+      );
+
+      html += sortedAgents.map(agent =>
+        `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
+      ).join('');
+
+      select.innerHTML = html;
+
+      if ([...select.options].some(opt => opt.value === currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function renderAuditFilterAgentDropdown() {
+      const select = document.getElementById('filterAgentName');
+      if (!select) return;
+
+      const currentValue = select.value;
+      let html = `<option value="">All Agents</option>`;
+
+      const sortedAgents = [...agentsDb].sort((a, b) =>
+        String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
+      );
+
+      html += sortedAgents.map(agent =>
+        `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
+      ).join('');
+
+      select.innerHTML = html;
+
+      if ([...select.options].some(opt => opt.value === currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function getScoreBadge(score) {
+      if (score >= 90) return 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400';
+      if (score >= 75) return 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400';
+      if (score >= 60) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400';
+      return 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const rows = getFilteredData();
+
+      if (!rows.length) {
+        tbody.innerHTML = `
         <tr>
           <td colspan="12" class="px-5 py-10 text-center text-slate-500">
             No audit records found.
           </td>
         </tr>
       `;
-      renderPagination(0);
-      return;
-    }
+        renderPagination(0);
+        return;
+      }
 
-    const totalRows = rows.length;
-    const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+      const totalRows = rows.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
 
-    if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage > totalPages) currentPage = totalPages;
 
-    const startIndex = (currentPage - 1) * rowsPerPage;
-    const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
 
-    tbody.innerHTML = pagedRows.map(row => {
-      const total = round2(toNumber(row.overall_score_100));
-      const badge = getScoreBadge(total);
+      tbody.innerHTML = pagedRows.map(row => {
+        const total = round2(toNumber(row.overall_score_100));
+        const badge = getScoreBadge(total);
 
-      return `
+        return `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
           <td class="px-5 py-4">
             <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
@@ -1669,36 +2221,36 @@
           </td>
         </tr>
       `;
-    }).join('');
+      }).join('');
 
-    renderPagination(totalRows);
-  }
+      renderPagination(totalRows);
+    }
 
-  function renderAgentsTable() {
-    const tbody = document.getElementById('agentsTableBody');
-    const rows = getFilteredAgents();
+    function renderAgentsTable() {
+      const tbody = document.getElementById('agentsTableBody');
+      const rows = getFilteredAgents();
 
-    if (!rows.length) {
-      tbody.innerHTML = `
+      if (!rows.length) {
+        tbody.innerHTML = `
         <tr>
           <td colspan="4" class="px-5 py-10 text-center text-slate-500">
             No agents found.
           </td>
         </tr>
       `;
-      renderAgentsPagination(0);
-      return;
-    }
+        renderAgentsPagination(0);
+        return;
+      }
 
-    const totalRows = rows.length;
-    const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
+      const totalRows = rows.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
 
-    if (currentAgentPage > totalPages) currentAgentPage = totalPages;
+      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
 
-    const startIndex = (currentAgentPage - 1) * agentRowsPerPage;
-    const pagedRows = rows.slice(startIndex, startIndex + agentRowsPerPage);
+      const startIndex = (currentAgentPage - 1) * agentRowsPerPage;
+      const pagedRows = rows.slice(startIndex, startIndex + agentRowsPerPage);
 
-    tbody.innerHTML = pagedRows.map(agent => `
+      tbody.innerHTML = pagedRows.map(agent => `
       <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
         <td class="px-5 py-4 font-semibold text-emerald-600 dark:text-emerald-400">${escapeHtml(agent.agent_id || '')}</td>
         <td class="px-5 py-4 font-semibold">${escapeHtml(agent.agent_name || '-')}</td>
@@ -1714,473 +2266,484 @@
       </tr>
     `).join('');
 
-    renderAgentsPagination(totalRows);
-  }
-
-  function formatDisplayDate(value) {
-    if (!value) return '-';
-    const s = String(value);
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-      const [y, m, d] = s.split('-').map(Number);
-      const dt = new Date(y, m - 1, d);
-      return dt.toLocaleDateString();
-    }
-    const dt = new Date(s);
-    return isNaN(dt.getTime()) ? s : dt.toLocaleDateString();
-  }
-
-  function formatNum(value) {
-    return round2(toNumber(value)).toFixed(2);
-  }
-
-  function renderCharts() {
-    const trendCanvas = document.getElementById('trendChart');
-    const agentCanvas = document.getElementById('agentChart');
-    if (!trendCanvas || !agentCanvas) return;
-
-    const isDark = document.documentElement.classList.contains('dark');
-    const tickColor = isDark ? '#94a3b8' : '#475569';
-    const gridColor = isDark ? 'rgba(148,163,184,.12)' : 'rgba(71,85,105,.12)';
-
-    if (trendChart) trendChart.destroy();
-    if (agentChart) agentChart.destroy();
-    if (!db.length) return;
-
-    const trendRows = [...db]
-      .sort((a, b) => String(a.audit_date).localeCompare(String(b.audit_date)))
-      .slice(-12);
-
-    trendChart = new Chart(trendCanvas.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: trendRows.map(r => formatDisplayDate(r.audit_date)),
-        datasets: [{
-          label: 'Overall Score',
-          data: trendRows.map(r => toNumber(r.overall_score_100)),
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37,99,235,.10)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
-          x: { ticks: { color: tickColor }, grid: { color: gridColor } }
-        }
-      }
-    });
-
-    const agentMap = {};
-    db.forEach(row => {
-      const name = String(row.agent_name || 'Unknown').trim() || 'Unknown';
-      if (!agentMap[name]) agentMap[name] = { total: 0, count: 0 };
-      agentMap[name].total += toNumber(row.overall_score_100);
-      agentMap[name].count += 1;
-    });
-
-    const agentRows = Object.keys(agentMap).map(name => ({
-      name,
-      avg: round2(agentMap[name].total / agentMap[name].count)
-    })).sort((a, b) => b.avg - a.avg);
-
-    agentChart = new Chart(agentCanvas.getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: agentRows.map(r => r.name),
-        datasets: [{
-          label: 'Average Score',
-          data: agentRows.map(r => r.avg),
-          backgroundColor: '#7c3aed',
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
-          x: { ticks: { color: tickColor }, grid: { display: false } }
-        }
-      }
-    });
-  }
-
-  function itemScoreTotal(score, multiplier) {
-    return formatNum(round2(toNumber(score) * multiplier));
-  }
-
-  function buildPdf(record) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-
-    const outerMargin = 8;
-    const footerReserve = 5;
-    const footerY = pageHeight - 4.2;
-
-    const wLabel = 112;
-    const wScoreCols = 13;
-    const wScoreTotal = 23;
-    const rowH = 6.8;
-    const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
-    const tableX = (pageWidth - tableWidth) / 2;
-
-    const fillHeader = [214, 214, 214];
-    const fillScore = [235, 226, 190];
-    const border = [40, 40, 40];
-    const footerGray = [140, 140, 140];
-
-    doc.setDrawColor(...border);
-    doc.setTextColor(10, 10, 10);
-    doc.setLineWidth(0.2);
-
-function drawFooter() {
-  const pages = doc.internal.getNumberOfPages();
-  const footerAuditor = String(record.auditor || currentActorName || 'Auditor').trim();
-
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(...footerGray);
-
-    doc.text(`Audited By: ${footerAuditor}`, tableX, footerY);
-    doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
-  }
-
-  doc.setTextColor(10, 10, 10);
-}
-
-    function rect(x, y, w, h, fill = null) {
-      if (fill) {
-        doc.setFillColor(...fill);
-        doc.rect(x, y, w, h, 'FD');
-      } else {
-        doc.rect(x, y, w, h);
-      }
+      renderAgentsPagination(totalRows);
     }
 
-    function text(str, x, y, opts = {}) {
-      const { size = 8, style = 'normal', align = 'left', color = [10, 10, 10] } = opts;
-      doc.setFont('helvetica', style);
-      doc.setFontSize(size);
-      doc.setTextColor(...color);
+    function formatDisplayDate(value) {
+      if (!value) return '-';
+      const s = String(value);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        return dt.toLocaleDateString();
+      }
+      const dt = new Date(s);
+      return isNaN(dt.getTime()) ? s : dt.toLocaleDateString();
+    }
 
-      if (Array.isArray(str)) doc.text(str, x, y, { align });
-      else doc.text(String(str ?? ''), x, y, { align });
+    function formatNum(value) {
+      return round2(toNumber(value)).toFixed(2);
+    }
 
+    function renderCharts() {
+      const trendCanvas = document.getElementById('trendChart');
+      const agentCanvas = document.getElementById('agentChart');
+      if (!trendCanvas || !agentCanvas) return;
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const tickColor = isDark ? '#94a3b8' : '#475569';
+      const gridColor = isDark ? 'rgba(148,163,184,.12)' : 'rgba(71,85,105,.12)';
+
+      if (trendChart) trendChart.destroy();
+      if (agentChart) agentChart.destroy();
+      if (!db.length) return;
+
+      const trendRows = [...db]
+        .sort((a, b) => String(a.audit_date).localeCompare(String(b.audit_date)))
+        .slice(-12);
+
+      trendChart = new Chart(trendCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: trendRows.map(r => formatDisplayDate(r.audit_date)),
+          datasets: [{
+            label: 'Overall Score',
+            data: trendRows.map(r => toNumber(r.overall_score_100)),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,.10)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { color: tickColor }, grid: { color: gridColor } }
+          }
+        }
+      });
+
+      const agentMap = {};
+      db.forEach(row => {
+        const name = String(row.agent_name || 'Unknown').trim() || 'Unknown';
+        if (!agentMap[name]) agentMap[name] = { total: 0, count: 0 };
+        agentMap[name].total += toNumber(row.overall_score_100);
+        agentMap[name].count += 1;
+      });
+
+      const agentRows = Object.keys(agentMap).map(name => ({
+        name,
+        avg: round2(agentMap[name].total / agentMap[name].count)
+      })).sort((a, b) => b.avg - a.avg);
+
+      agentChart = new Chart(agentCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: agentRows.map(r => r.name),
+          datasets: [{
+            label: 'Average Score',
+            data: agentRows.map(r => r.avg),
+            backgroundColor: '#7c3aed',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
+            x: { ticks: { color: tickColor }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function itemScoreTotal(score, multiplier) {
+      return formatNum(round2(toNumber(score) * multiplier));
+    }
+
+    function buildPdf(record) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const outerMargin = 8;
+      const footerReserve = 5;
+      const footerY = pageHeight - 4.2;
+
+      const wLabel = 112;
+      const wScoreCols = 13;
+      const wScoreTotal = 23;
+      const rowH = 6.8;
+      const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
+      const tableX = (pageWidth - tableWidth) / 2;
+
+      const fillHeader = [214, 214, 214];
+      const fillScore = [235, 226, 190];
+      const border = [40, 40, 40];
+      const footerGray = [140, 140, 140];
+
+      doc.setDrawColor(...border);
       doc.setTextColor(10, 10, 10);
-    }
+      doc.setLineWidth(0.2);
 
-    function scoreMark(score, colIndex, startX, y) {
-      const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
-      if (rounded === colIndex) {
-        text('X', startX + (wScoreCols / 2), y + 5.3, {
-          size: 8,
-          style: 'bold',
-          align: 'center'
-        });
-      }
-    }
+      function drawFooter() {
+        const pages = doc.internal.getNumberOfPages();
+        const footerAuditor = String(record.auditor || currentActorName || 'Auditor').trim();
 
-    function ensureSpace(heightNeeded) {
-      if (y + heightNeeded > pageHeight - outerMargin - footerReserve) {
-        doc.addPage();
-        y = 14;
-      }
-    }
+        for (let i = 1; i <= pages; i++) {
+          doc.setPage(i);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(...footerGray);
 
-    function drawSectionHeader(yPos, title, showScoreLabel = false) {
-      rect(tableX, yPos, wLabel, rowH, fillHeader);
-      for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
-      rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH, fillScore);
+          doc.text(`Audited By: ${footerAuditor}`, tableX, footerY);
+          doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
+        }
 
-      text(title, tableX + 2, yPos + 5.2, { size: 7.5, style: 'normal' });
-
-      for (let i = 1; i <= 5; i++) {
-        const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
-        text(i, x, yPos + 5.2, { size: 7, style: 'bold', align: 'center' });
+        doc.setTextColor(10, 10, 10);
       }
 
-      if (showScoreLabel) {
-        text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
+      function rect(x, y, w, h, fill = null) {
+        if (fill) {
+          doc.setFillColor(...fill);
+          doc.rect(x, y, w, h, 'FD');
+        } else {
+          doc.rect(x, y, w, h);
+        }
+      }
+
+      function text(str, x, y, opts = {}) {
+        const { size = 8, style = 'normal', align = 'left', color = [10, 10, 10] } = opts;
+        doc.setFont('helvetica', style);
+        doc.setFontSize(size);
+        doc.setTextColor(...color);
+
+        if (Array.isArray(str)) doc.text(str, x, y, { align });
+        else doc.text(String(str ?? ''), x, y, { align });
+
+        doc.setTextColor(10, 10, 10);
+      }
+
+      function scoreMark(score, colIndex, startX, y) {
+        const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
+        if (rounded === colIndex) {
+          text('X', startX + (wScoreCols / 2), y + 5.3, {
+            size: 8,
+            style: 'bold',
+            align: 'center'
+          });
+        }
+      }
+
+      function ensureSpace(heightNeeded) {
+        if (y + heightNeeded > pageHeight - outerMargin - footerReserve) {
+          doc.addPage();
+          y = 14;
+        }
+      }
+
+      function drawSectionHeader(yPos, title, showScoreLabel = false) {
+        rect(tableX, yPos, wLabel, rowH, fillHeader);
+        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
+        rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH, fillScore);
+
+        text(title, tableX + 2, yPos + 5.2, { size: 7.5, style: 'normal' });
+
+        for (let i = 1; i <= 5; i++) {
+          const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
+          text(i, x, yPos + 5.2, { size: 7, style: 'bold', align: 'center' });
+        }
+
+        if (showScoreLabel) {
+          text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
+            size: 7,
+            style: 'bold',
+            align: 'center'
+          });
+        }
+      }
+
+      function drawRow(yPos, label, score, scoreTotal, italic = false) {
+        rect(tableX, yPos, wLabel, rowH);
+        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
+        rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH);
+
+        text(label, tableX + 2, yPos + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
+
+        for (let i = 1; i <= 5; i++) {
+          scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), yPos);
+        }
+
+        text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
           size: 7,
-          style: 'bold',
           align: 'center'
         });
       }
-    }
 
-    function drawRow(yPos, label, score, scoreTotal, italic = false) {
-      rect(tableX, yPos, wLabel, rowH);
-      for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
-      rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH);
+      let y = 10;
 
-      text(label, tableX + 2, yPos + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
+      rect(tableX, y, tableWidth, 14);
+      text('MRI Apartment Data', tableX + (tableWidth / 2), y + 7, { size: 10, style: 'bold', align: 'center' });
+      text('Audit Form', tableX + (tableWidth / 2), y + 11.5, { size: 8, align: 'center' });
+      y += 14;
 
-      for (let i = 1; i <= 5; i++) {
-        scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), yPos);
-      }
+      rect(tableX, y, tableWidth, 10);
+      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
+      y += 10;
 
-      text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
-        size: 7,
+      rect(tableX, y, tableWidth, 10);
+      rect(tableX, y, 94, 10);
+      rect(tableX + 94, y, tableWidth - 94, 10);
+      text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
+      text(`Channel: ${record.audit_channel || '-'}`, tableX + 96, y + 6, { size: 7, style: 'italic' });
+      y += 10;
+
+      rect(tableX, y, tableWidth, 10);
+      text(`Property Field ID: ${record.property_field_id || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
+      y += 13;
+
+      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, { size: 7 });
+      y += 4;
+
+      ensureSpace(8 * rowH + 10);
+      drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
+      drawRow(y, 'Property Name:', record.property_name_score, itemScoreTotal(record.property_name_score, 2)); y += rowH;
+      drawRow(y, 'Management Company:', record.mgmt_company_score, itemScoreTotal(record.mgmt_company_score, 2)); y += rowH;
+      drawRow(y, 'Apartment Manager:', record.apartment_mgr_score, itemScoreTotal(record.apartment_mgr_score, 2)); y += rowH;
+      drawRow(y, 'Regional Manager:', record.regional_mgr_score, itemScoreTotal(record.regional_mgr_score, 2)); y += rowH;
+      drawRow(y, 'Email Address:', record.email_score, itemScoreTotal(record.email_score, 2)); y += rowH;
+      drawRow(y, 'Website:', record.website_score, itemScoreTotal(record.website_score, 2)); y += rowH;
+      drawRow(y, 'Office Hours:', record.office_hours_score, itemScoreTotal(record.office_hours_score, 2)); y += rowH;
+      drawRow(y, 'Subtotal:', record.basic_raw / 7, formatNum(record.basic_weighted), true); y += 10;
+
+      ensureSpace(4 * rowH + 10);
+      drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
+      drawRow(y, 'Commission:', record.commission_score, itemScoreTotal(record.commission_score, 2)); y += rowH;
+      drawRow(y, 'Note:', record.locator_note_score, itemScoreTotal(record.locator_note_score, 2)); y += rowH;
+      drawRow(y, 'Requirements:', record.requirements_score, itemScoreTotal(record.requirements_score, 2)); y += rowH;
+      drawRow(y, 'Subtotal:', record.locator_raw / 3, formatNum(record.locator_weighted), true); y += 10;
+
+      ensureSpace(3 * rowH + 10);
+      drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
+      drawRow(y, 'Occupancy:', record.occupancy_score, itemScoreTotal(record.occupancy_score, 1)); y += rowH;
+      drawRow(y, 'Special Coding:', record.special_coding_score, itemScoreTotal(record.special_coding_score, 1)); y += rowH;
+      drawRow(y, 'Subtotal:', record.occupancy_raw / 2, formatNum(record.occupancy_weighted), true); y += 10;
+
+      ensureSpace(3 * rowH + 10);
+      drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
+      drawRow(y, 'Pricing:', record.pricing_score, itemScoreTotal(record.pricing_score, 1)); y += rowH;
+      drawRow(y, 'Availability:', record.availability_score, itemScoreTotal(record.availability_score, 1)); y += rowH;
+      drawRow(y, 'Subtotal:', record.floorplan_raw / 2, formatNum(record.floorplan_weighted), true); y += 10;
+
+      ensureSpace(2 * rowH + 14);
+      drawSectionHeader(y, 'Note:'); y += rowH;
+      drawRow(y, 'Notation', record.notation_score, itemScoreTotal(record.notation_score, 2)); y += rowH;
+
+      ensureSpace(rowH + 8);
+      rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
+      rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
+
+      text('Overall Rating: [Overall Rating out of 100]', tableX + 2, y + 5.2, {
+        size: 7.5,
+        style: 'italic'
+      });
+
+      text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
+        size: 10,
+        style: 'bold',
         align: 'center'
       });
+      y += 11;
+
+      const note = record.final_error_note || 'No note provided.';
+      const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
+
+      ensureSpace(wrapped.length * 4 + 2);
+      text(wrapped, tableX, y, { size: 7.5 });
+      y += (wrapped.length * 4);
+
+      drawFooter();
+      return doc;
     }
 
-    let y = 10;
+    function openPdfInNewTab(id) {
+      if (!requireConfiguredApi()) return;
 
-    rect(tableX, y, tableWidth, 14);
-    text('MRI Apartment Data', tableX + (tableWidth / 2), y + 7, { size: 10, style: 'bold', align: 'center' });
-    text('Audit Form', tableX + (tableWidth / 2), y + 11.5, { size: 8, align: 'center' });
-    y += 14;
+      const record = db.find(r => String(r.audit_id) === String(id));
+      if (!record) {
+        alert('Record not found.');
+        return;
+      }
 
-    rect(tableX, y, tableWidth, 10);
-    text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-    y += 10;
+      showLoading('Generating PDF', 'Preparing professional score sheet...');
+      try {
+        const doc = buildPdf(record);
+        const blob = doc.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      } finally {
+        hideLoading();
+      }
+    }
 
-    rect(tableX, y, tableWidth, 10);
-    rect(tableX, y, 94, 10);
-    rect(tableX + 94, y, tableWidth - 94, 10);
-    text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-    text(`Channel: ${record.audit_channel || '-'}`, tableX + 96, y + 6, { size: 7, style: 'italic' });
-    y += 10;
+    function exportCsv() {
+      if (!requireConfiguredApi()) return;
 
-    rect(tableX, y, tableWidth, 10);
-    text(`Property Field ID: ${record.property_field_id || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-    y += 13;
+      const rows = getFilteredData();
+      if (!rows.length) {
+        alert('No records to export.');
+        return;
+      }
 
-    text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, { size: 7 });
-    y += 4;
+      showLoading('Exporting CSV', 'Building export file...');
+      try {
+        const headers = [
+          'audit_id',
+          'audit_date',
+          'agent_name',
+          'audit_channel',
+          'property_field_id',
+          'auditor',
+          'basic_weighted',
+          'locator_weighted',
+          'occupancy_weighted',
+          'floorplan_weighted',
+          'notation_weighted',
+          'overall_score_100',
+          'final_error_note'
+        ];
 
-    ensureSpace(8 * rowH + 10);
-    drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
-    drawRow(y, 'Property Name:', record.property_name_score, itemScoreTotal(record.property_name_score, 2)); y += rowH;
-    drawRow(y, 'Management Company:', record.mgmt_company_score, itemScoreTotal(record.mgmt_company_score, 2)); y += rowH;
-    drawRow(y, 'Apartment Manager:', record.apartment_mgr_score, itemScoreTotal(record.apartment_mgr_score, 2)); y += rowH;
-    drawRow(y, 'Regional Manager:', record.regional_mgr_score, itemScoreTotal(record.regional_mgr_score, 2)); y += rowH;
-    drawRow(y, 'Email Address:', record.email_score, itemScoreTotal(record.email_score, 2)); y += rowH;
-    drawRow(y, 'Website:', record.website_score, itemScoreTotal(record.website_score, 2)); y += rowH;
-    drawRow(y, 'Office Hours:', record.office_hours_score, itemScoreTotal(record.office_hours_score, 2)); y += rowH;
-    drawRow(y, 'Subtotal:', record.basic_raw / 7, formatNum(record.basic_weighted), true); y += 10;
+        const csv = [
+          headers.join(','),
+          ...rows.map(row => headers.map(h => csvEscape(row[h])).join(','))
+        ].join('\n');
 
-    ensureSpace(4 * rowH + 10);
-    drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
-    drawRow(y, 'Commission:', record.commission_score, itemScoreTotal(record.commission_score, 2)); y += rowH;
-    drawRow(y, 'Note:', record.locator_note_score, itemScoreTotal(record.locator_note_score, 2)); y += rowH;
-    drawRow(y, 'Requirements:', record.requirements_score, itemScoreTotal(record.requirements_score, 2)); y += rowH;
-    drawRow(y, 'Subtotal:', record.locator_raw / 3, formatNum(record.locator_weighted), true); y += 10;
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'auditor_audits.csv');
+      } finally {
+        hideLoading();
+      }
+    }
 
-    ensureSpace(3 * rowH + 10);
-    drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
-    drawRow(y, 'Occupancy:', record.occupancy_score, itemScoreTotal(record.occupancy_score, 1)); y += rowH;
-    drawRow(y, 'Special Coding:', record.special_coding_score, itemScoreTotal(record.special_coding_score, 1)); y += rowH;
-    drawRow(y, 'Subtotal:', record.occupancy_raw / 2, formatNum(record.occupancy_weighted), true); y += 10;
+    function exportListPdf() {
+      if (!requireConfiguredApi()) return;
 
-    ensureSpace(3 * rowH + 10);
-    drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
-    drawRow(y, 'Pricing:', record.pricing_score, itemScoreTotal(record.pricing_score, 1)); y += rowH;
-    drawRow(y, 'Availability:', record.availability_score, itemScoreTotal(record.availability_score, 1)); y += rowH;
-    drawRow(y, 'Subtotal:', record.floorplan_raw / 2, formatNum(record.floorplan_weighted), true); y += 10;
+      const rows = getFilteredData();
+      if (!rows.length) {
+        alert('No records to export.');
+        return;
+      }
 
-    ensureSpace(2 * rowH + 14);
-    drawSectionHeader(y, 'Note:'); y += rowH;
-    drawRow(y, 'Notation', record.notation_score, itemScoreTotal(record.notation_score, 2)); y += rowH;
+      showLoading('Exporting PDF', 'Preparing summary report...');
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
 
-    ensureSpace(rowH + 8);
-    rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
-    rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text(`${getPossessiveActorTitle(currentActorName)} - Audit Summary`, 14, 14);
 
-    text('Overall Rating: [Overall Rating out of 100]', tableX + 2, y + 5.2, {
-      size: 7.5,
-      style: 'italic'
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
+
+        doc.autoTable({
+          startY: 26,
+          head: [[
+            'Audit ID', 'Date', 'Agent', 'Channel', 'Property Field ID',
+            'Basic', 'Locator', 'Occ', 'Floor', 'Notation', 'Total'
+          ]],
+          body: rows.map(r => [
+            r.audit_id || '',
+            formatDisplayDate(r.audit_date),
+            r.agent_name || '',
+            r.audit_channel || '',
+            r.property_field_id || '',
+            formatNum(r.basic_weighted),
+            formatNum(r.locator_weighted),
+            formatNum(r.occupancy_weighted),
+            formatNum(r.floorplan_weighted),
+            formatNum(r.notation_weighted),
+            formatNum(r.overall_score_100) + '%'
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [37, 99, 235] },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+
+        const blob = doc.output('blob');
+        downloadBlob(blob, 'auditor_audits_summary.pdf');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
+    function csvEscape(value) {
+      const s = String(value ?? '');
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(value) {
+      return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    document.addEventListener('click', function () {
+      // Do nothing on backdrop click
     });
 
-    text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
-      size: 10,
-      style: 'bold',
-      align: 'center'
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeCrudModal();
+        closeSettings();
+        closeAgentModal();
+      }
     });
-    y += 11;
 
-    const note = record.final_error_note || 'No note provided.';
-    const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) {
+        sendHeartbeat(true);
+      }
+    });
 
-    ensureSpace(wrapped.length * 4 + 2);
-    text(wrapped, tableX, y, { size: 7.5 });
-    y += (wrapped.length * 4);
+    window.addEventListener('beforeunload', function () {
+      // no-op, last heartbeat will expire naturally after 60s
+    });
 
-    drawFooter();
-    return doc;
-  }
-
-  function openPdfInNewTab(id) {
-    if (!requireConfiguredApi()) return;
-
-    const record = db.find(r => String(r.audit_id) === String(id));
-    if (!record) {
-      alert('Record not found.');
-      return;
-    }
-
-    showLoading('Generating PDF', 'Preparing professional score sheet...');
-    try {
-      const doc = buildPdf(record);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-    } finally {
-      hideLoading();
-    }
-  }
-
-  function exportCsv() {
-    if (!requireConfiguredApi()) return;
-
-    const rows = getFilteredData();
-    if (!rows.length) {
-      alert('No records to export.');
-      return;
-    }
-
-    showLoading('Exporting CSV', 'Building export file...');
-    try {
-      const headers = [
-        'audit_id',
-        'audit_date',
-        'agent_name',
-        'audit_channel',
-        'property_field_id',
-        'auditor',
-        'basic_weighted',
-        'locator_weighted',
-        'occupancy_weighted',
-        'floorplan_weighted',
-        'notation_weighted',
-        'overall_score_100',
-        'final_error_note'
-      ];
-
-      const csv = [
-        headers.join(','),
-        ...rows.map(row => headers.map(h => csvEscape(row[h])).join(','))
-      ].join('\n');
-
-      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'auditor_audits.csv');
-    } finally {
-      hideLoading();
-    }
-  }
-
-  function exportListPdf() {
-    if (!requireConfiguredApi()) return;
-
-    const rows = getFilteredData();
-    if (!rows.length) {
-      alert('No records to export.');
-      return;
-    }
-
-    showLoading('Exporting PDF', 'Preparing summary report...');
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('l', 'mm', 'a4');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text(`${getPossessiveActorTitle(currentActorName)} - Audit Summary`, 14, 14);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
-
-      doc.autoTable({
-        startY: 26,
-        head: [[
-          'Audit ID', 'Date', 'Agent', 'Channel', 'Property Field ID',
-          'Basic', 'Locator', 'Occ', 'Floor', 'Notation', 'Total'
-        ]],
-        body: rows.map(r => [
-          r.audit_id || '',
-          formatDisplayDate(r.audit_date),
-          r.agent_name || '',
-          r.audit_channel || '',
-          r.property_field_id || '',
-          formatNum(r.basic_weighted),
-          formatNum(r.locator_weighted),
-          formatNum(r.occupancy_weighted),
-          formatNum(r.floorplan_weighted),
-          formatNum(r.notation_weighted),
-          formatNum(r.overall_score_100) + '%'
-        ]),
-        theme: 'grid',
-        headStyles: { fillColor: [37, 99, 235] },
-        styles: { fontSize: 8, cellPadding: 2.5 }
-      });
-
-      const blob = doc.output('blob');
-      downloadBlob(blob, 'auditor_audits_summary.pdf');
-    } finally {
-      hideLoading();
-    }
-  }
-
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  function csvEscape(value) {
-    const s = String(value ?? '');
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function escapeJs(value) {
-    return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  }
-
-  document.addEventListener('click', function(e) {
-    // Do nothing on backdrop click
-  });
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeCrudModal();
-      closeSettings();
-      closeAgentModal();
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-    applySavedTheme();
-    initApp();
-    bindUserActivityListeners();
-    startIdleAutoSync();
-    markUserActivity();
-  });
-</script>
+    document.addEventListener('DOMContentLoaded', function () {
+      applySavedTheme();
+      initApp();
+      bindUserActivityListeners();
+      startIdleAutoSync();
+      markUserActivity();
+    });
+  </script>
 </body>
+
 </html>
