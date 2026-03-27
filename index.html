@@ -1234,23 +1234,54 @@ function buildPdf(record) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  const outerMargin = 10;
+  const outerMargin = 8;
+  const footerReserve = 5;
+ const footerY = pageHeight - 4.2;
+
   const wLabel = 112;
   const wScoreCols = 13;
   const wScoreTotal = 23;
-  const rowH = 8;
+  const rowH = 6.8; // slightly smaller rows
   const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
 
-  // Center the whole form so left/right margins are equal
+  // centered form
   const tableX = (pageWidth - tableWidth) / 2;
 
   const fillHeader = [214, 214, 214];
   const fillScore = [235, 226, 190];
   const border = [40, 40, 40];
+  const footerGray = [140, 140, 140];
 
   doc.setDrawColor(...border);
   doc.setTextColor(10, 10, 10);
   doc.setLineWidth(0.2);
+
+  function drawFooter() {
+    const pages = doc.internal.getNumberOfPages();
+
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(...footerGray);
+
+      doc.text(
+        `Audited By: ${currentActorName || 'Mara'}`,
+        tableX,
+        footerY
+      );
+
+      doc.text(
+        `Page ${i} of ${pages}`,
+        tableX + tableWidth,
+        footerY,
+        { align: 'right' }
+      );
+    }
+
+    doc.setTextColor(10, 10, 10);
+  }
 
   function rect(x, y, w, h, fill = null) {
     if (fill) {
@@ -1261,38 +1292,57 @@ function buildPdf(record) {
     }
   }
 
-  function text(str, x, y, opts = {}) {
-    const { size = 8, style = 'normal', align = 'left' } = opts;
-    doc.setFont('helvetica', style);
-    doc.setFontSize(size);
+function text(str, x, y, opts = {}) {
+  const { size = 8, style = 'normal', align = 'left', color = [10, 10, 10] } = opts;
+  doc.setFont('helvetica', style);
+  doc.setFontSize(size);
+  doc.setTextColor(...color);
+
+  if (Array.isArray(str)) {
+    doc.text(str, x, y, { align });
+  } else {
     doc.text(String(str ?? ''), x, y, { align });
   }
+
+  doc.setTextColor(10, 10, 10);
+}
 
   function scoreMark(score, colIndex, startX, y) {
     const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
     if (rounded === colIndex) {
-      text('X', startX + (wScoreCols / 2), y + 5.3, { size: 8, style: 'bold', align: 'center' });
+      text('X', startX + (wScoreCols / 2), y + 5.3, {
+        size: 8,
+        style: 'bold',
+        align: 'center'
+      });
     }
   }
 
-  function drawSectionHeader(y, title, showScoreLabel = false) {
-    rect(tableX, y, wLabel, rowH, fillHeader);
+  function ensureSpace(heightNeeded) {
+    if (y + heightNeeded > pageHeight - outerMargin - footerReserve) {
+      doc.addPage();
+      y = 14;
+    }
+  }
+
+  function drawSectionHeader(yPos, title, showScoreLabel = false) {
+    rect(tableX, yPos, wLabel, rowH, fillHeader);
 
     for (let i = 0; i < 5; i++) {
-      rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH, fillHeader);
+      rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
     }
 
-    rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH, fillScore);
+    rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH, fillScore);
 
-    text(title, tableX + 2, y + 5.2, { size: 7.5, style: 'normal' });
+    text(title, tableX + 2, yPos + 5.2, { size: 7.5, style: 'normal' });
 
     for (let i = 1; i <= 5; i++) {
       const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
-      text(i, x, y + 5.2, { size: 7, style: 'bold', align: 'center' });
+      text(i, x, yPos + 5.2, { size: 7, style: 'bold', align: 'center' });
     }
 
     if (showScoreLabel) {
-      text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+      text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
         size: 7,
         style: 'bold',
         align: 'center'
@@ -1300,45 +1350,71 @@ function buildPdf(record) {
     }
   }
 
-  function drawRow(y, label, score, scoreTotal, italic = false) {
-    rect(tableX, y, wLabel, rowH);
+  function drawRow(yPos, label, score, scoreTotal, italic = false) {
+    rect(tableX, yPos, wLabel, rowH);
     for (let i = 0; i < 5; i++) {
-      rect(tableX + wLabel + (i * wScoreCols), y, wScoreCols, rowH);
+      rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
     }
-    rect(tableX + wLabel + (5 * wScoreCols), y, wScoreTotal, rowH);
+    rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH);
 
-    text(label, tableX + 2, y + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
+    text(label, tableX + 2, yPos + 5.2, {
+      size: 7,
+      style: italic ? 'italic' : 'normal'
+    });
 
     for (let i = 1; i <= 5; i++) {
-      scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), y);
+      scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), yPos);
     }
 
-    text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), y + 5.2, {
+    text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
       size: 7,
       align: 'center'
     });
   }
 
+  let y = 10;
+
   // Header box
-  rect(tableX, 10, tableWidth, 14);
-  text('MRI ApartmentData', tableX + (tableWidth / 2), 17, { size: 14, style: 'bold', align: 'center' });
-  text('Audit Form', tableX + (tableWidth / 2), 22, { size: 11, align: 'center' });
+  rect(tableX, y, tableWidth, 14);
+  text('MRI ApartmentData', tableX + (tableWidth / 2), y + 7, {
+    size: 10,
+    style: 'bold',
+    align: 'center'
+  });
+  text('Audit Form', tableX + (tableWidth / 2), y + 11.5, {
+    size: 8,
+    align: 'center'
+  });
+  y += 14;
 
   // Audit date row
-  rect(tableX, 24, tableWidth, 10);
-  text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, 30, { size: 8, style: 'italic' });
+  rect(tableX, y, tableWidth, 10);
+  text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, {
+    size: 7,
+    style: 'italic'
+  });
+  y += 10;
 
   // Agent / channel row
-  rect(tableX, 34, tableWidth, 10);
-  rect(tableX, 34, 94, 10);
-  rect(tableX + 94, 34, tableWidth - 94, 10);
-  text(`Agent: ${record.agent_name || '-'}`, tableX + 2, 40, { size: 8, style: 'italic' });
-  text(`Email/AI: ${record.audit_channel || '-'}`, tableX + 96, 40, { size: 8, style: 'italic' });
+  rect(tableX, y, tableWidth, 10);
+  rect(tableX, y, 94, 10);
+  rect(tableX + 94, y, tableWidth - 94, 10);
+  text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, {
+    size: 7,
+    style: 'italic'
+  });
+  text(`Email/AI: ${record.audit_channel || '-'}`, tableX + 96, y + 6, {
+    size: 7,
+    style: 'italic'
+  });
+  y += 13;
 
-  text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, 50, { size: 8 });
+  text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, {
+    size: 7
+  });
+  y += 4;
 
-  let y = 54;
-
+  ensureSpace(7 * rowH + 10);
   drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
   drawRow(y, 'Property Name:', record.property_name_score, '10'); y += rowH;
   drawRow(y, 'Management Company:', record.mgmt_company_score, '10'); y += rowH;
@@ -1348,56 +1424,61 @@ function buildPdf(record) {
   drawRow(y, 'Office Hours:', record.office_hours_score, '10'); y += rowH;
   drawRow(y, 'Subtotal:', record.basic_raw, formatNum(record.basic_weighted), true); y += 10;
 
+  ensureSpace(4 * rowH + 10);
   drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
   drawRow(y, 'Commission:', record.commission_score, '10'); y += rowH;
   drawRow(y, 'Note:', record.locator_note_score, '10'); y += rowH;
   drawRow(y, 'Requirements:', record.requirements_score, '10'); y += rowH;
   drawRow(y, 'Subtotal:', record.locator_raw, formatNum(record.locator_weighted), true); y += 10;
 
+  ensureSpace(3 * rowH + 10);
   drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
   drawRow(y, 'Occupancy:', record.occupancy_score, '5'); y += rowH;
   drawRow(y, 'Special Coding:', record.special_coding_score, '5'); y += rowH;
   drawRow(y, 'Subtotal:', record.occupancy_raw, formatNum(record.occupancy_weighted), true); y += 10;
 
+  ensureSpace(3 * rowH + 10);
   drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
   drawRow(y, 'Pricing:', record.pricing_score, '5'); y += rowH;
   drawRow(y, 'Availability:', record.availability_score, '5'); y += rowH;
   drawRow(y, 'Subtotal:', record.floorplan_raw, formatNum(record.floorplan_weighted), true); y += 10;
 
+  ensureSpace(2 * rowH + 14);
   drawSectionHeader(y, 'Note:'); y += rowH;
   drawRow(y, 'Notation', record.notation_score, '10'); y += rowH;
 
+  // Final overall row only once, no duplicate overall line below
+  ensureSpace(rowH + 8);
   rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
   rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
-  text('Score', tableX + wLabel + (wScoreCols * 5) - 8, y + 5.2, { size: 8, style: 'italic', align: 'right' });
-  text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
-    size: 10,
-    style: 'bold',
-    align: 'center'
-  });
-  y += 12;
 
-  text('Overall Rating: [Overall Rating out of 100]', tableX, y, { size: 8 });
-  text(formatNum(record.overall_score_100), tableX + tableWidth - 18, y, { size: 11, style: 'bold', align: 'right' });
-  y += 8;
+  text('Overall Rating: [Overall Rating out of 100]', tableX + 2, y + 5.2, {
+    size: 7.5,
+    style: 'italic'
+  });
+
+  text(
+    formatNum(record.overall_score_100),
+    tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2),
+    y + 5.2,
+    {
+      size: 10,
+      style: 'bold',
+      align: 'center'
+    }
+  );
+  y += 11;
 
   const note = record.final_error_note || 'All notes and information match.';
   const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
-  text(wrapped, tableX, y, { size: 8 });
+
+  ensureSpace(wrapped.length * 4 + 2);
+  text(wrapped, tableX, y, { size: 7.5 });
   y += (wrapped.length * 4);
 
-  // Bottom signature / audited by
-  y += 10;
-  if (y > pageHeight - 20) {
-    doc.addPage();
-    y = 20;
-  }
-
-  text(`Audited By: ${currentActorName || 'Mara'}`, tableX, y, { size: 9, style: 'bold' });
-
+  drawFooter();
   return doc;
 }
-
     function openPdfInNewTab(id) {
       const record = db.find(r => String(r.audit_id) === String(id));
       if (!record) {
