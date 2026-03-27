@@ -1133,8 +1133,7 @@ function renderTable() {
   const startIndex = (currentPage - 1) * rowsPerPage;
   const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
 
-  renderPagination(totalRows);
-}
+
 
       tbody.innerHTML = rows.map(row => {
         const total = round2(toNumber(row.overall_score_100));
