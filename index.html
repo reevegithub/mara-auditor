@@ -250,12 +250,27 @@
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
               </table>
+              <div class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+  <div id="tablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 entries</div>
+  <div id="paginationControls" class="flex items-center gap-2"></div>
+</div>
             </div>
           </div>
         </div>
       </main>
     </div>
-
+    
+<div class="flex items-center gap-2">
+  <label class="text-xs font-bold text-slate-500">Rows</label>
+  <select id="rowsPerPageSelect" onchange="changeRowsPerPage()" class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
+    <option value="5">5</option>
+    <option value="10" selected>10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+    <option value="100">100</option>
+  </select>
+</div>
+    
     <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <div>© 2026 Mara's Auditor</div>
@@ -479,7 +494,8 @@
     let trendChart = null;
     let agentChart = null;
     let isSaving = false;
-
+let currentPage = 1;
+let rowsPerPage = 10;
     function initApp() {
       document.getElementById('appScriptUrl').value = apiUrl;
       renderAll();
