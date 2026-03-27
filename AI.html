@@ -195,7 +195,9 @@
         addMsg('assistant', escapeHtml(error.message || 'AI request failed.'));
       }
     }
-
+    function goLogs() {
+      window.location.href = 'Logs.html';
+    }
     function escapeHtml(value) {
       return String(value ?? '')
         .replace(/&/g, '&amp;')
