@@ -165,14 +165,14 @@
       }
     }
 
-    /* ===== Presence / Users avatars ===== */
     .users-presence-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  margin-left: 8px;
-}
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      margin-left: 8px;
+      flex-wrap: wrap;
+    }
 
     .users-presence-label {
       font-size: 10px;
@@ -326,30 +326,30 @@
       font-weight: 600;
     }
 
- .presence-me-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 12px;
-  border-radius: 9999px;
-  border: 1px solid rgb(226 232 240);
-  background: rgba(255, 255, 255, .95);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
-  cursor: pointer;
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
+    .presence-me-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 9999px;
+      border: 1px solid rgb(226 232 240);
+      background: rgba(255, 255, 255, .95);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
 
-.presence-me-chip:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .10);
-  border-color: rgb(59 130 246);
-}
+    .presence-me-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .10);
+      border-color: rgb(59 130 246);
+    }
 
-.dark .presence-me-chip {
-  border-color: rgb(51 65 85);
-  background: rgba(15, 23, 42, .92);
-}
+    .dark .presence-me-chip {
+      border-color: rgb(51 65 85);
+      background: rgba(15, 23, 42, .92);
+    }
 
     .presence-me-text {
       display: flex;
@@ -386,16 +386,17 @@
       class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div class="flex items-center gap-3 min-w-0 flex-wrap">
-        <div class="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
-  <img src="logo.png" alt="Logo" class="w-full h-full object-contain p-1.5">
-</div>
+          <div class="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+            <img src="logo.png" alt="Logo" class="w-full h-full object-contain p-1.5"
+              onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fa-solid fa-clipboard-check text-blue-600&quot;></i>';">
+          </div>
 
           <div class="min-w-0">
             <h1 id="appTitleText" class="font-black text-lg md:text-xl truncate">Auditor</h1>
             <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
           </div>
 
-         <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
+          <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
             <div id="myPresenceAvatar"></div>
             <div class="presence-me-text">
               <span id="myPresenceName" class="presence-me-name">Auditor</span>
@@ -983,6 +984,63 @@
     </div>
   </div>
 
+  <div id="profileModal"
+    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+      <h2 class="text-xl font-black mb-2">Update Profile Image</h2>
+      <p class="text-sm text-slate-500 mb-4">
+        Set your profile image by pasting a direct image link. This will be saved to the <b>Users</b> sheet for your current user.
+      </p>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Current User</label>
+        <input id="profileActorName" type="text" readonly
+          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Image URL</label>
+        <input id="profileImageUrl" type="text" placeholder="https://example.com/photo.png"
+          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Preview</label>
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <img id="profilePreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
+            <span id="profilePreviewInitials" class="text-sm font-black text-slate-500">AU</span>
+          </div>
+          <div class="text-xs text-slate-500">
+            Paste a direct JPG, PNG, WEBP, or GIF image link.
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-4 mb-5">
+        <div class="text-sm font-black mb-2">Guide</div>
+        <ol class="text-xs text-slate-500 space-y-1 list-decimal pl-4">
+          <li>Upload your image somewhere public like Google Drive, Imgur, your website, or CDN.</li>
+          <li>Get the direct image link ending in .jpg, .jpeg, .png, or .webp when possible.</li>
+          <li>Paste it here and click Save Profile Image.</li>
+          <li>If the image does not load, check that the link is publicly accessible.</li>
+        </ol>
+      </div>
+
+      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <button type="button" onclick="closeProfileModal()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          Cancel
+        </button>
+        <button type="button" onclick="saveProfileImage()" id="profileSaveBtn"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+          Save Profile Image
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="loadingOverlay"
     class="loading-overlay fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div
@@ -1045,10 +1103,12 @@
     let isMutatingData = false;
     let lastDataFingerprint = '';
 
-    let currentActorName = 'Auditor';
-    let currentActorPhoto = '';
+    let currentActorName = localStorage.getItem('auditorActorName') || 'Auditor';
+    let currentActorPhoto = localStorage.getItem('auditorActorPhoto') || '';
     let heartbeatTimer = null;
     let presenceRefreshTimer = null;
+    let interactionHeartbeatThrottleMs = 8000;
+    let lastHeartbeatAt = 0;
 
     function getPossessiveActorTitle(actorName) {
       const actor = String(actorName || '').trim();
@@ -1070,6 +1130,9 @@
 
       const myName = document.getElementById('myPresenceName');
       if (myName) myName.textContent = currentActorName || 'Auditor';
+
+      localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
+      localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
     }
 
     function initApp() {
@@ -1680,11 +1743,11 @@
       }
     }
 
- function isAnyModalOpen() {
-  return ['crudModal', 'agentModal', 'settingsModal', 'profileModal'].some(id =>
-    document.getElementById(id)?.classList.contains('active')
-  );
-}
+    function isAnyModalOpen() {
+      return ['crudModal', 'agentModal', 'settingsModal', 'profileModal'].some(id =>
+        document.getElementById(id)?.classList.contains('active')
+      );
+    }
 
     function canAutoSync() {
       return !!apiUrl && !isAnyModalOpen() && !isFetchingData && !isMutatingData;
@@ -1695,6 +1758,7 @@
       const agents = Array.isArray(json?.agents) ? json.agents : [];
       const users = Array.isArray(json?.users) ? json.users : [];
       const actor = String(json?.actor || '');
+      const actorPhoto = String(json?.actor_photo || '');
 
       const auditKey = audits.map(row => [
         row.audit_id || '',
@@ -1719,7 +1783,7 @@
         row.last_seen || ''
       ].join('|')).join('||');
 
-      return `${actor}###${auditKey}###${agentKey}###${userKey}`;
+      return `${actor}###${actorPhoto}###${auditKey}###${agentKey}###${userKey}`;
     }
 
     async function checkForRemoteUpdates() {
@@ -1759,8 +1823,8 @@
           agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
           usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
           db.sort(sortRecords);
-          currentActorName = json.actor || 'Auditor';
-          currentActorPhoto = json.actor_photo || '';
+          currentActorName = json.actor || currentActorName || 'Auditor';
+          currentActorPhoto = json.actor_photo || currentActorPhoto || '';
           lastDataFingerprint = remoteFingerprint;
 
           applyActorBranding();
@@ -1789,9 +1853,21 @@
       lastUserActivityAt = Date.now();
     }
 
+    function maybeSendInteractionHeartbeat() {
+      const now = Date.now();
+      if (!apiUrl) return;
+      if (document.hidden) return;
+      if (isFetchingData || isMutatingData) return;
+      if ((now - lastHeartbeatAt) < interactionHeartbeatThrottleMs) return;
+      sendHeartbeat(false);
+    }
+
     function bindUserActivityListeners() {
       ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
-        document.addEventListener(evt, markUserActivity, { passive: true });
+        document.addEventListener(evt, () => {
+          markUserActivity();
+          maybeSendInteractionHeartbeat();
+        }, { passive: true });
       });
     }
 
@@ -1834,14 +1910,11 @@
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
 
-    function buildAvatarHtml(user, hideName = false) {
-      const online = isUserOnline(user);
-      const title = `${user.user_name || 'User'}${online ? ' • Online' : ' • Offline'}`;
+    function buildAvatarInnerHtml(user) {
       const initials = getUserInitials(user.user_name);
       const hasPhoto = !!user.photo_url;
 
       return `
-      <div class="presence-avatar ${online ? 'online' : ''}" title="${escapeHtml(title)}">
         ${hasPhoto ? `
           <img
             src="${escapeHtml(user.photo_url)}"
@@ -1853,8 +1926,18 @@
           <span class="presence-initials">${escapeHtml(initials)}</span>
         `}
         <span class="presence-status-dot"></span>
-      </div>
-    `;
+      `;
+    }
+
+    function buildAvatarHtml(user) {
+      const online = isUserOnline(user);
+      const title = `${user.user_name || 'User'}${online ? ' • Online' : ' • Offline'}`;
+
+      return `
+        <div class="presence-avatar ${online ? 'online' : ''}" title="${escapeHtml(title)}">
+          ${buildAvatarInnerHtml(user)}
+        </div>
+      `;
     }
 
     function renderMyPresence() {
@@ -1891,12 +1974,14 @@
           return String(a.user_name || '').localeCompare(String(b.user_name || ''));
         });
 
-      if (!others.length) {
-        list.innerHTML = `<div class="presence-empty">No other users</div>`;
+      const onlineUsers = others.filter(isUserOnline);
+
+      if (!onlineUsers.length) {
+        list.innerHTML = `<div class="presence-empty">No other online auditors</div>`;
         return;
       }
 
-      list.innerHTML = others.map(user => buildAvatarHtml(user)).join('');
+      list.innerHTML = onlineUsers.map(user => buildAvatarHtml(user)).join('');
     }
 
     async function sendHeartbeat(force = false) {
@@ -1904,6 +1989,8 @@
       if (document.hidden && !force) return;
 
       try {
+        lastHeartbeatAt = Date.now();
+
         const json = await apiPost({
           action: 'heartbeat',
           actor: currentActorName,
@@ -1912,11 +1999,13 @@
 
         if (Array.isArray(json.users)) {
           usersDb = json.users.map(normalizeUser);
-          if (json.actor) currentActorName = json.actor;
-          if (json.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
-          applyActorBranding();
-          renderUsersPresence();
         }
+
+        if (json.actor) currentActorName = String(json.actor || currentActorName || 'Auditor');
+        if (json.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
+
+        applyActorBranding();
+        renderUsersPresence();
       } catch (error) {
         console.error('Heartbeat failed:', error);
       }
@@ -1974,8 +2063,8 @@
         agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
         usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
         db.sort(sortRecords);
-        currentActorName = json.actor || 'Auditor';
-        currentActorPhoto = json.actor_photo || '';
+        currentActorName = json.actor || currentActorName || 'Auditor';
+        currentActorPhoto = json.actor_photo || currentActorPhoto || '';
         lastDataFingerprint = createDataFingerprint(json);
 
         applyActorBranding();
@@ -2722,20 +2811,105 @@
       return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') {
-    closeCrudModal();
-    closeSettings();
-    closeAgentModal();
-    closeProfileModal();
-  }
-});
+    function normalizeImageUrl(url) {
+      const s = String(url || '').trim();
+      if (!s) return '';
+
+      const driveFileMatch = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+      if (driveFileMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
+      }
+
+      const driveOpenMatch = s.match(/[?&]id=([^&]+)/i);
+      if (/drive\.google\.com/i.test(s) && driveOpenMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+      }
+
+      return s;
+    }
+
+    function openProfileModal() {
+      if (!requireConfiguredApi()) return;
+
+      document.getElementById('profileActorName').value = currentActorName || 'Auditor';
+      document.getElementById('profileImageUrl').value = currentActorPhoto || '';
+      updateProfilePreview();
+      document.getElementById('profileModal').classList.add('active');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.remove('active');
+    }
+
+    function updateProfilePreview() {
+      const url = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
+      const img = document.getElementById('profilePreviewImg');
+      const initials = document.getElementById('profilePreviewInitials');
+      const actorName = document.getElementById('profileActorName')?.value || currentActorName || 'Auditor';
+
+      initials.textContent = getUserInitials(actorName);
+
+      if (url) {
+        img.src = url;
+        img.classList.remove('hidden');
+        initials.classList.add('hidden');
+
+        img.onerror = function () {
+          img.classList.add('hidden');
+          initials.classList.remove('hidden');
+        };
+
+        img.onload = function () {
+          img.classList.remove('hidden');
+          initials.classList.add('hidden');
+        };
+      } else {
+        img.src = '';
+        img.classList.add('hidden');
+        initials.classList.remove('hidden');
+      }
+    }
+
+    async function saveProfileImage() {
+      if (!requireConfiguredApi()) return;
+
+      const photoUrl = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
+
+      try {
+        showLoading('Saving Profile', 'Updating your profile image...');
+        document.getElementById('profileSaveBtn').disabled = true;
+
+        const res = await apiPost({
+          action: 'update_profile_photo',
+          actor: currentActorName,
+          photo_url: photoUrl
+        });
+
+        currentActorPhoto = String(res?.actor_photo || photoUrl || '');
+        if (res?.actor) currentActorName = String(res.actor || currentActorName || 'Auditor');
+        usersDb = Array.isArray(res?.users) ? res.users.map(normalizeUser) : usersDb;
+
+        renderUsersPresence();
+        applyActorBranding();
+        closeProfileModal();
+        setSyncStatus('Profile updated', 'check', 'success');
+        sendHeartbeat(true);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to save profile image.');
+        setSyncStatus('Profile update failed', 'triangle-exclamation', 'error');
+      } finally {
+        document.getElementById('profileSaveBtn').disabled = false;
+        hideLoading();
+      }
+    }
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         closeCrudModal();
         closeSettings();
         closeAgentModal();
+        closeProfileModal();
       }
     });
 
@@ -2745,165 +2919,19 @@ document.addEventListener('keydown', function (e) {
       }
     });
 
-    window.addEventListener('beforeunload', function () {
-      // no-op, last heartbeat will expire naturally after 60s
-    });
-
     document.addEventListener('DOMContentLoaded', function () {
+      const profileImageUrlInput = document.getElementById('profileImageUrl');
+      if (profileImageUrlInput) {
+        profileImageUrlInput.addEventListener('input', updateProfilePreview);
+      }
 
-const profileImageUrlInput = document.getElementById('profileImageUrl');
-if (profileImageUrlInput) {
-  profileImageUrlInput.addEventListener('input', updateProfilePreview);
-}
       applySavedTheme();
       initApp();
       bindUserActivityListeners();
       startIdleAutoSync();
       markUserActivity();
     });
-
-
-
-function openProfileModal() {
-  if (!requireConfiguredApi()) return;
-
-  document.getElementById('profileActorName').value = currentActorName || 'Auditor';
-  document.getElementById('profileImageUrl').value = currentActorPhoto || '';
-  updateProfilePreview();
-  document.getElementById('profileModal').classList.add('active');
-}
-
-function closeProfileModal() {
-  document.getElementById('profileModal').classList.remove('active');
-}
-
-function updateProfilePreview() {
-  const url = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
-  const img = document.getElementById('profilePreviewImg');
-  const initials = document.getElementById('profilePreviewInitials');
-
-
-  initials.textContent = getUserInitials(currentActorName || 'Auditor');
-
-  if (url) {
-    img.src = url;
-    img.classList.remove('hidden');
-    initials.classList.add('hidden');
-
-    img.onerror = function () {
-      img.classList.add('hidden');
-      initials.classList.remove('hidden');
-    };
-
-    img.onload = function () {
-      img.classList.remove('hidden');
-      initials.classList.add('hidden');
-    };
-  } else {
-    img.src = '';
-    img.classList.add('hidden');
-    initials.classList.remove('hidden');
-  }
-}
-
-async function saveProfileImage() {
-  if (!requireConfiguredApi()) return;
-
- const photoUrl = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
-
-  try {
-    showLoading('Saving Profile', 'Updating your profile image...');
-    document.getElementById('profileSaveBtn').disabled = true;
-
-    const res = await apiPost({
-      action: 'update_profile_photo',
-      actor: currentActorName,
-      photo_url: photoUrl
-    });
-
-    currentActorPhoto = String(res?.actor_photo || photoUrl || '');
-    usersDb = Array.isArray(res?.users) ? res.users.map(normalizeUser) : usersDb;
-
-    renderUsersPresence();
-    applyActorBranding();
-    closeProfileModal();
-    setSyncStatus('Profile updated', 'check', 'success');
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Failed to save profile image.');
-    setSyncStatus('Profile update failed', 'triangle-exclamation', 'error');
-  } finally {
-    document.getElementById('profileSaveBtn').disabled = false;
-    hideLoading();
-  }
-}
-
-function normalizeImageUrl(url) {
-  const s = String(url || '').trim();
-  const match = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
-  if (match) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-  }
-  return s;
-}
   </script>
-
-<div id="profileModal"
-  class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div
-    class="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
-    <h2 class="text-xl font-black mb-2">Update Profile Image</h2>
-    <p class="text-sm text-slate-500 mb-4">
-      Set your profile image by pasting a direct image link. This will be saved to the <b>Users</b> sheet for your current user.
-    </p>
-
-    <div class="mb-4">
-      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Current User</label>
-      <input id="profileActorName" type="text" readonly
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm">
-    </div>
-
-    <div class="mb-4">
-      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Image URL</label>
-      <input id="profileImageUrl" type="text" placeholder="https://example.com/photo.png"
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm">
-    </div>
-
-    <div class="mb-4">
-      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Preview</label>
-      <div class="flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-          <img id="profilePreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
-          <span id="profilePreviewInitials" class="text-sm font-black text-slate-500">AU</span>
-        </div>
-        <div class="text-xs text-slate-500">
-          Paste a direct JPG, PNG, WEBP, or GIF image link.
-        </div>
-      </div>
-    </div>
-
-    <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-4 mb-5">
-      <div class="text-sm font-black mb-2">Guide</div>
-      <ol class="text-xs text-slate-500 space-y-1 list-decimal pl-4">
-        <li>Upload your image somewhere public like Google Drive, Imgur, your website, or CDN.</li>
-        <li>Get the direct image link ending in .jpg, .jpeg, .png, or .webp when possible.</li>
-        <li>Paste it here and click Save Profile Image.</li>
-        <li>If the image does not load, check that the link is publicly accessible.</li>
-      </ol>
-    </div>
-
-    <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-      <button type="button" onclick="closeProfileModal()"
-        class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-        Cancel
-      </button>
-      <button type="button" onclick="saveProfileImage()" id="profileSaveBtn"
-        class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-        Save Profile Image
-      </button>
-    </div>
-  </div>
-</div>
 </body>
 
 </html>
