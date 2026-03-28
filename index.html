@@ -391,18 +391,13 @@
               onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fa-solid fa-clipboard-check text-blue-600&quot;></i>';">
           </div>
 
-          <div class="min-w-0">
-            <h1 id="appTitleText" class="font-black text-lg md:text-xl truncate">Auditor</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">QA Audit System</p>
-          </div>
-
-          <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
-            <div id="myPresenceAvatar"></div>
-            <div class="presence-me-text">
-              <span id="myPresenceName" class="presence-me-name">Auditor</span>
-              <span class="presence-me-sub">Current User</span>
-            </div>
-          </div>
+        <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
+  <div id="myPresenceAvatar"></div>
+  <div class="presence-me-text">
+    <span id="myPresenceName" class="presence-me-name">Auditor</span>
+    <span class="presence-me-sub">QA Audit System</span>
+  </div>
+</div>
 
           <div class="users-presence-wrap">
             <div class="users-presence-label">Auditors:</div>
@@ -723,13 +718,13 @@
                 <div>
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
                     Channel</label>
-                  <input id="audit_channel" type="text"
+                  <input id="audit_channel" type="text"  required 
                     class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
                     Field ID</label>
-                  <input id="property_field_id" type="text"
+                  <input id="property_field_id" type="text" required 
                     class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
                 </div>
               </div>
@@ -746,36 +741,36 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
-                        Name</label><input id="property_name_score" type="number" min="0" max="5" step="0.01"
+                        Name</label><input id="property_name_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt
-                        Company</label><input id="mgmt_company_score" type="number" min="0" max="5" step="0.01"
+                        Company</label><input id="mgmt_company_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Apartment
-                        Mgr</label><input id="apartment_mgr_score" type="number" min="0" max="5" step="0.01"
+                        Mgr</label><input id="apartment_mgr_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional
-                        Mgr</label><input id="regional_mgr_score" type="number" min="0" max="5" step="0.01"
+                        Mgr</label><input id="regional_mgr_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label><input
-                        id="email_score" type="number" min="0" max="5" step="0.01"
+                        id="email_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label><input
-                        id="website_score" type="number" min="0" max="5" step="0.01"
+                        id="website_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office
-                        Hours</label><input id="office_hours_score" type="number" min="0" max="5" step="0.01"
+                        Hours</label><input id="office_hours_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                   </div>
@@ -792,17 +787,17 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label><input
-                        id="commission_score" type="number" min="0" max="5" step="0.01"
+                        id="commission_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator
-                        Note</label><input id="locator_note_score" type="number" min="0" max="5" step="0.01"
+                        Note</label><input id="locator_note_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label><input
-                        id="requirements_score" type="number" min="0" max="5" step="0.01"
+                        id="requirements_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                   </div>
@@ -821,12 +816,12 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label><input
-                        id="occupancy_score" type="number" min="0" max="5" step="0.01"
+                        id="occupancy_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special
-                        Coding</label><input id="special_coding_score" type="number" min="0" max="5" step="0.01"
+                        Coding</label><input id="special_coding_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                   </div>
@@ -843,12 +838,12 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label><input
-                        id="pricing_score" type="number" min="0" max="5" step="0.01"
+                        id="pricing_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label><input
-                        id="availability_score" type="number" min="0" max="5" step="0.01"
+                        id="availability_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                   </div>
@@ -865,7 +860,7 @@
                   <div class="grid grid-cols-1 gap-3">
                     <div><label
                         class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label><input
-                        id="notation_score" type="number" min="0" max="5" step="0.01"
+                        id="notation_score" type="number" min="0" max="5" step="1" required
                         class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
                     </div>
                   </div>
@@ -1117,23 +1112,20 @@
       return `${actor}'s Auditor`;
     }
 
-    function applyActorBranding() {
-      const brandedTitle = getPossessiveActorTitle(currentActorName);
+function applyActorBranding() {
+  const brandedTitle = getPossessiveActorTitle(currentActorName);
 
-      document.title = brandedTitle;
+  document.title = brandedTitle;
 
-      const titleEl = document.getElementById('appTitleText');
-      if (titleEl) titleEl.textContent = brandedTitle;
+  const footerBrand = document.getElementById('footerBrand');
+  if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
 
-      const footerBrand = document.getElementById('footerBrand');
-      if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
+  const myName = document.getElementById('myPresenceName');
+  if (myName) myName.textContent = currentActorName || 'Auditor';
 
-      const myName = document.getElementById('myPresenceName');
-      if (myName) myName.textContent = currentActorName || 'Auditor';
-
-      localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
-      localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
-    }
+  localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
+  localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
+}
 
     function initApp() {
       document.getElementById('appScriptUrl').value = apiUrl;
@@ -1468,20 +1460,20 @@ function closeCrudModal() {
       return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
     }
 
-    function getScore(id) {
-      const el = document.getElementById(id);
-      if (!el) return 0;
+  function getScore(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
 
-      let raw = String(el.value || '').trim();
-      if (raw === '') return 0;
+  let raw = String(el.value || '').trim();
+  if (raw === '') return 0;
 
-      let val = toNumber(raw);
-      val = clamp(val, 0, 5);
-      val = round2(val);
+  let val = toNumber(raw);
+  val = Math.round(val);
+  val = clamp(val, 0, 5);
 
-      if (String(val) !== raw && raw !== '') el.value = val;
-      return val;
-    }
+  if (String(val) !== raw) el.value = val;
+  return val;
+}
 
     function scaleScore(raw, maxRaw, weightedMax) {
       if (!maxRaw) return 0;
@@ -1597,17 +1589,42 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
       };
     }
 
-    function validatePayload(payload) {
-      if (!payload.audit_date) {
-        alert('Audit date is required.');
-        return false;
-      }
-      if (!payload.agent_name) {
-        alert('Agent name is required.');
-        return false;
-      }
-      return true;
+  function validatePayload(payload) {
+  const requiredFields = [
+    ['audit_date', 'Audit date'],
+    ['agent_name', 'Agent name'],
+    ['audit_channel', 'Audit channel'],
+    ['property_field_id', 'Property field ID'],
+    ['property_name_score', 'Property name score'],
+    ['mgmt_company_score', 'Management company score'],
+    ['apartment_mgr_score', 'Apartment manager score'],
+    ['regional_mgr_score', 'Regional manager score'],
+    ['email_score', 'Email score'],
+    ['website_score', 'Website score'],
+    ['office_hours_score', 'Office hours score'],
+    ['commission_score', 'Commission score'],
+    ['locator_note_score', 'Locator note score'],
+    ['requirements_score', 'Requirements score'],
+    ['occupancy_score', 'Occupancy score'],
+    ['special_coding_score', 'Special coding score'],
+    ['pricing_score', 'Pricing score'],
+    ['availability_score', 'Availability score'],
+    ['notation_score', 'Notation score']
+  ];
+
+  for (const [fieldId, label] of requiredFields) {
+    const el = document.getElementById(fieldId);
+    const value = el ? String(el.value || '').trim() : '';
+
+    if (value === '') {
+      alert(`${label} is required.`);
+      el?.focus();
+      return false;
     }
+  }
+
+  return true;
+}
 
     async function apiPost(formObj) {
       const body = new URLSearchParams();
