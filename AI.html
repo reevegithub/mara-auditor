@@ -249,8 +249,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 38px;
-      padding: 0 12px;
+      min-height: 46px;
+      padding: 0 14px;
       border-radius: 9999px;
       border: 1px solid rgb(226 232 240);
       background: rgba(255,255,255,.95);
@@ -277,16 +277,16 @@
     }
 
     .presence-me-name {
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 15px;
+      font-weight: 900;
     }
 
     .presence-me-sub {
-      font-size: 10px;
+      font-size: 11px;
       color: rgb(100 116 139);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .12em;
+      letter-spacing: .18em;
     }
 
     @media (max-width: 1024px) {
@@ -309,18 +309,13 @@
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
 
-          <div class="min-w-0">
-            <h1 id="pageTitle" class="font-black text-lg md:text-xl truncate">Auditor</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">MRI Apartment Data Auditing</p>
-          </div>
-
-          <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
-            <div id="myPresenceAvatar"></div>
-            <div class="presence-me-text">
-              <span id="myPresenceName" class="presence-me-name">Auditor</span>
-              <span class="presence-me-sub">Current User</span>
-            </div>
-          </div>
+         <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
+  <div id="myPresenceAvatar"></div>
+  <div class="presence-me-text">
+    <span id="myPresenceName" class="presence-me-name">Auditor</span>
+    <span class="presence-me-sub">QA Audit System</span>
+  </div>
+</div>
 
           <div class="users-presence-wrap">
             <div class="users-presence-label">Auditors:</div>
@@ -484,24 +479,20 @@
       return 'Mira';
     }
 
-    function applyActorBranding() {
-      const actor = getActorDisplayName();
-      const brandText = `${actor}'s Auditor`;
+function applyActorBranding() {
+  const brandedTitle = getPossessiveActorTitle(currentActorName);
 
-      document.title = `${brandText} - A.I Chat`;
+  document.title = brandedTitle;
 
-      const pageTitle = document.getElementById('pageTitle');
-      if (pageTitle) pageTitle.textContent = brandText;
+  const footerBrand = document.getElementById('footerBrand');
+  if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
 
-      const footerTitle = document.getElementById('footerTitle');
-      if (footerTitle) footerTitle.textContent = `© 2026 ${brandText}`;
+  const myName = document.getElementById('myPresenceName');
+  if (myName) myName.textContent = currentActorName || 'Auditor';
 
-      const myName = document.getElementById('myPresenceName');
-      if (myName) myName.textContent = actor;
-
-      localStorage.setItem('auditorActorName', actor);
-      localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
-    }
+  localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
+  localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
+}
 
     async function syncActorFromServer() {
       if (!apiUrl) {
