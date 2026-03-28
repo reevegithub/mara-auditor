@@ -479,13 +479,20 @@
       return 'Mira';
     }
 
+function getPossessiveActorTitle(actorName) {
+  const actor = String(actorName || '').trim();
+  if (!actor) return 'Auditor';
+  if (actor.toLowerCase().endsWith('s')) return `${actor}' Auditor`;
+  return `${actor}'s Auditor`;
+}
+
 function applyActorBranding() {
   const brandedTitle = getPossessiveActorTitle(currentActorName);
 
-  document.title = brandedTitle;
+  document.title = `${brandedTitle} - A.I Chat`;
 
-  const footerBrand = document.getElementById('footerBrand');
-  if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
+  const footerTitle = document.getElementById('footerTitle');
+  if (footerTitle) footerTitle.textContent = `© 2026 ${brandedTitle}`;
 
   const myName = document.getElementById('myPresenceName');
   if (myName) myName.textContent = currentActorName || 'Auditor';
@@ -493,7 +500,6 @@ function applyActorBranding() {
   localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
   localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
 }
-
     async function syncActorFromServer() {
       if (!apiUrl) {
         applyActorBranding();
