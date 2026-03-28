@@ -1654,7 +1654,7 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
       return json;
     }
 
-   async function saveAudit() {
+ async function saveAudit() {
   if (!requireConfiguredApi()) return;
 
   const payload = buildPayload();
@@ -1674,14 +1674,30 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
   try {
     isMutatingData = true;
     toggleSaveButton(true);
-    showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
+    showLoading('Saving Audit', 'Saving record...');
     setSyncStatus('Saving...', 'spinner', 'loading');
 
-    await apiPost({ action, ...payload });
-    await fetchData(false);
+    const res = await apiPost({ action, ...payload });
 
-    setSyncStatus('Synced', 'check', 'success');
+    // Prefer server-returned record if your Apps Script sends it back
+    const savedRecord = normalizeRecord(res.record || payload);
+
+    if (action === 'create') {
+      // if Apps Script generated audit_id, use returned value
+      if (!savedRecord.audit_id && res.audit_id) savedRecord.audit_id = String(res.audit_id);
+      db.unshift(savedRecord);
+    } else {
+      const index = db.findIndex(r => String(r.audit_id) === String(savedRecord.audit_id));
+      if (index >= 0) db[index] = savedRecord;
+    }
+
+    db.sort(sortRecords);
+    renderAll();
     closeCrudModal();
+    setSyncStatus('Synced', 'check', 'success');
+
+    // optional background-style refresh later through your normal autosync
+    lastDataFingerprint = '';
   } catch (error) {
     console.error(error);
     alert(error.message || 'Error saving audit.');
@@ -1693,33 +1709,47 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
   }
 }
 
-    async function saveAgent() {
-      if (!requireConfiguredApi()) return;
+  async function saveAgent() {
+  if (!requireConfiguredApi()) return;
 
-      const agentId = (document.getElementById('agent_id').value || '').trim();
-      const agentName = (document.getElementById('agent_modal_name').value || '').trim();
+  const agentId = (document.getElementById('agent_id').value || '').trim();
+  const agentName = (document.getElementById('agent_modal_name').value || '').trim();
 
-      if (!agentName) {
-        alert('Agent name is required.');
-        return;
-      }
+  if (!agentName) {
+    alert('Agent name is required.');
+    return;
+  }
 
-      try {
-        showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
-        await apiPost({
-          action: agentId ? 'update_agent' : 'create_agent',
-          agent_id: agentId,
-          agent_name: agentName
-        });
-        await fetchData(false);
-        closeAgentModal();
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error saving agent.');
-      } finally {
-        hideLoading();
-      }
+  try {
+    showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
+    const res = await apiPost({
+      action: agentId ? 'update_agent' : 'create_agent',
+      agent_id: agentId,
+      agent_name: agentName
+    });
+
+    const savedAgent = {
+      agent_id: res.agent_id || agentId,
+      agent_name,
+      created_at: res.created_at || new Date().toLocaleString()
+    };
+
+    if (agentId) {
+      const index = agentsDb.findIndex(a => String(a.agent_id) === String(agentId));
+      if (index >= 0) agentsDb[index] = savedAgent;
+    } else {
+      agentsDb.unshift(savedAgent);
     }
+
+    renderAll();
+    closeAgentModal();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error saving agent.');
+  } finally {
+    hideLoading();
+  }
+}
 
    function toggleSaveButton(loading) {
   const btn = document.getElementById('saveBtn');
@@ -1745,47 +1775,56 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
     : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
   btn.title = '';
 }
-    async function deleteAudit(id) {
-      if (!requireConfiguredApi()) return;
-      if (!confirm('Delete this audit record?')) return;
+   async function deleteAudit(id) {
+  if (!requireConfiguredApi()) return;
+  if (!confirm('Delete this audit record?')) return;
 
-      try {
-        isMutatingData = true;
-        showLoading('Deleting Audit', 'Removing record and updating dashboard...');
-        setSyncStatus('Deleting...', 'spinner', 'loading');
-        await apiPost({ action: 'delete', audit_id: id, actor: currentActorName });
-        await fetchData(false);
-        setSyncStatus('Deleted', 'check', 'success');
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error deleting audit.');
-        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-      } finally {
-        isMutatingData = false;
-        hideLoading();
-      }
-    }
+  try {
+    isMutatingData = true;
+    showLoading('Deleting Audit', 'Removing record...');
+    setSyncStatus('Deleting...', 'spinner', 'loading');
 
-    async function deleteAgent(id) {
-      if (!requireConfiguredApi()) return;
-      if (!confirm('Delete this agent?')) return;
+    await apiPost({ action: 'delete', audit_id: id, actor: currentActorName });
 
-      try {
-        isMutatingData = true;
-        showLoading('Deleting Agent', 'Removing agent...');
-        setSyncStatus('Deleting agent...', 'spinner', 'loading');
-        await apiPost({ action: 'delete_agent', agent_id: id, actor: currentActorName });
-        await fetchData(false);
-        setSyncStatus('Agent deleted', 'check', 'success');
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error deleting agent.');
-        setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-      } finally {
-        isMutatingData = false;
-        hideLoading();
-      }
-    }
+    db = db.filter(r => String(r.audit_id) !== String(id));
+    renderAll();
+
+    setSyncStatus('Deleted', 'check', 'success');
+    lastDataFingerprint = '';
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error deleting audit.');
+    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    hideLoading();
+  }
+}
+
+   async function deleteAgent(id) {
+  if (!requireConfiguredApi()) return;
+  if (!confirm('Delete this agent?')) return;
+
+  try {
+    isMutatingData = true;
+    showLoading('Deleting Agent', 'Removing agent...');
+    setSyncStatus('Deleting agent...', 'spinner', 'loading');
+
+    await apiPost({ action: 'delete_agent', agent_id: id, actor: currentActorName });
+
+    agentsDb = agentsDb.filter(a => String(a.agent_id) !== String(id));
+    renderAll();
+
+    setSyncStatus('Agent deleted', 'check', 'success');
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error deleting agent.');
+    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    hideLoading();
+  }
+}
 
     function isAnyModalOpen() {
       return ['crudModal', 'agentModal', 'settingsModal', 'profileModal'].some(id =>
