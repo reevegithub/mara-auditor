@@ -1092,11 +1092,12 @@
     let currentAgentPage = 1;
     let agentRowsPerPage = 10;
 
-    let lastUserActivityAt = Date.now();
-    let idleSyncTimer = null;
-    let isFetchingData = false;
-    let isMutatingData = false;
-    let lastDataFingerprint = '';
+let lastUserActivityAt = Date.now();
+let idleSyncTimer = null;
+let isFetchingData = false;
+let isMutatingData = false;
+let lastDataFingerprint = '';
+let mouseActivityThrottleAt = 0;
 
     let currentActorName = localStorage.getItem('auditorActorName') || 'Auditor';
     let currentActorPhoto = localStorage.getItem('auditorActorPhoto') || '';
@@ -1709,42 +1710,36 @@ async function saveAudit() {
     showLoading('Saving Audit', 'Saving record...');
     setSyncStatus('Saving...', 'spinner', 'loading');
 
-    const res = await apiPost({ action, ...payload });
+    const res = await apiPost({ action, ...payload, actor: currentActorName });
 
-    // Build a full local record using payload as base, then overwrite with server values
     const savedRecord = normalizeRecord({
       ...payload,
       ...(res?.record || {}),
-      audit_id:
-        (res?.record?.audit_id ?? res?.audit_id ?? payload.audit_id ?? '').toString().trim(),
-      auditor:
-        (res?.record?.auditor ?? payload.auditor ?? currentActorName ?? '').toString().trim()
+      audit_id: String(res?.record?.audit_id ?? res?.audit_id ?? payload.audit_id ?? '').trim(),
+      auditor: String(res?.record?.auditor ?? payload.auditor ?? currentActorName ?? '').trim()
     });
 
-    if (!savedRecord.audit_id) {
-      // fallback if server did not return generated id
-      await fetchData(false);
-      closeCrudModal();
-      setSyncStatus('Synced', 'check', 'success');
-      return;
-    }
-
-    if (action === 'create') {
-      db.unshift(savedRecord);
-    } else {
-      const index = db.findIndex(r => String(r.audit_id) === String(savedRecord.audit_id));
-      if (index >= 0) {
-        db[index] = savedRecord;
-      } else {
+    if (savedRecord.audit_id) {
+      if (action === 'create') {
         db.unshift(savedRecord);
+      } else {
+        const index = db.findIndex(r => String(r.audit_id) === String(savedRecord.audit_id));
+        if (index >= 0) db[index] = savedRecord;
+        else db.unshift(savedRecord);
       }
-    }
 
-    db.sort(sortRecords);
-    renderAll();
+      db.sort(sortRecords);
+      renderAuditOnly();
+      
+    }
+   
     closeCrudModal();
-    setSyncStatus('Synced', 'check', 'success');
+    hideLoading();
     lastDataFingerprint = '';
+    lastUserActivityAt = Date.now();
+    setSyncStatus('Synced', 'check', 'success');
+
+    await fetchData(false);
   } catch (error) {
     console.error(error);
     alert(error.message || 'Error saving audit.');
@@ -1752,10 +1747,10 @@ async function saveAudit() {
   } finally {
     isMutatingData = false;
     toggleSaveButton(false);
-    hideLoading();
+ 
   }
 }
-  async function saveAgent() {
+ async function saveAgent() {
   if (!requireConfiguredApi()) return;
 
   const agentId = (document.getElementById('agent_id').value || '').trim();
@@ -1767,61 +1762,53 @@ async function saveAudit() {
   }
 
   try {
+    isMutatingData = true;
     showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
+    setSyncStatus(agentId ? 'Updating agent...' : 'Creating agent...', 'spinner', 'loading');
+
     const res = await apiPost({
       action: agentId ? 'update_agent' : 'create_agent',
       agent_id: agentId,
-      agent_name: agentName
+      agent_name: agentName,
+      actor: currentActorName
     });
 
     const savedAgent = {
-      agent_id: res.agent_id || agentId,
-      agent_name,
-      created_at: res.created_at || new Date().toLocaleString()
+      agent_id: String(res?.data?.agent_id || agentId || '').trim(),
+      agent_name: String(res?.data?.agent_name || agentName || '').trim(),
+      created_at: String(res?.data?.created_at || '').trim()
     };
 
     if (agentId) {
       const index = agentsDb.findIndex(a => String(a.agent_id) === String(agentId));
-      if (index >= 0) agentsDb[index] = savedAgent;
+      if (index >= 0) {
+        agentsDb[index] = savedAgent;
+      } else {
+        agentsDb.unshift(savedAgent);
+      }
     } else {
       agentsDb.unshift(savedAgent);
     }
 
-    renderAll();
+    renderAgentsOnly();
     closeAgentModal();
+     hideLoading();
+    lastDataFingerprint = '';
+    lastUserActivityAt = Date.now();
+    setSyncStatus('Agent saved', 'check', 'success');
+
+    await fetchData(false);
   } catch (error) {
     console.error(error);
     alert(error.message || 'Error saving agent.');
+    setSyncStatus('Agent save failed', 'triangle-exclamation', 'error');
   } finally {
-    hideLoading();
+    isMutatingData = false;
+   
   }
 }
-
-   function toggleSaveButton(loading) {
-  const btn = document.getElementById('saveBtn');
-  if (!btn) return;
-
-  const auditId = (document.getElementById('audit_id')?.value || '').trim();
-  const existingRecord = auditId ? db.find(r => String(r.audit_id) === String(auditId)) : null;
-  const lockedByOwner = existingRecord && !canEditAuditRecord(existingRecord);
-
-  if (lockedByOwner) {
-    btn.disabled = true;
-    btn.classList.add('opacity-50', 'cursor-not-allowed');
-    btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked';
-    btn.title = getAuditOwnershipMessage(existingRecord);
-    return;
-  }
-
-  btn.disabled = loading;
-  btn.classList.toggle('opacity-70', loading);
-  btn.classList.toggle('cursor-not-allowed', loading);
-  btn.innerHTML = loading
-    ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
-    : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
-  btn.title = '';
-}
-   async function deleteAudit(id) {
+function toggleSaveButton(loading) { const btn = document.getElementById('saveBtn'); if (!btn) return; const auditId = (document.getElementById('audit_id')?.value || '').trim(); const existingRecord = auditId ? db.find(r => String(r.audit_id) === String(auditId)) : null; const lockedByOwner = existingRecord && !canEditAuditRecord(existingRecord); if (lockedByOwner) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked'; btn.title = getAuditOwnershipMessage(existingRecord); return; } btn.disabled = loading; btn.classList.toggle('opacity-70', loading); btn.classList.toggle('cursor-not-allowed', loading); btn.innerHTML = loading ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...' : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit'; btn.title = ''; }
+  async function deleteAudit(id) {
   if (!requireConfiguredApi()) return;
   if (!confirm('Delete this audit record?')) return;
 
@@ -1833,21 +1820,24 @@ async function saveAudit() {
     await apiPost({ action: 'delete', audit_id: id, actor: currentActorName });
 
     db = db.filter(r => String(r.audit_id) !== String(id));
-    renderAll();
-
-    setSyncStatus('Deleted', 'check', 'success');
+    renderAuditOnly();
+    hideLoading();
     lastDataFingerprint = '';
+    lastUserActivityAt = Date.now();
+    setSyncStatus('Deleted', 'check', 'success');
+
+    await fetchData(false);
   } catch (error) {
     console.error(error);
     alert(error.message || 'Error deleting audit.');
     setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
   } finally {
     isMutatingData = false;
-    hideLoading();
+    
   }
 }
 
-   async function deleteAgent(id) {
+ async function deleteAgent(id) {
   if (!requireConfiguredApi()) return;
   if (!confirm('Delete this agent?')) return;
 
@@ -1859,16 +1849,20 @@ async function saveAudit() {
     await apiPost({ action: 'delete_agent', agent_id: id, actor: currentActorName });
 
     agentsDb = agentsDb.filter(a => String(a.agent_id) !== String(id));
-    renderAll();
-
+    renderAgentsOnly();
+     hideLoading();
+    lastDataFingerprint = '';
+    lastUserActivityAt = Date.now();
     setSyncStatus('Agent deleted', 'check', 'success');
+
+    await fetchData(false);
   } catch (error) {
     console.error(error);
     alert(error.message || 'Error deleting agent.');
     setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
   } finally {
     isMutatingData = false;
-    hideLoading();
+   
   }
 }
 
@@ -1878,9 +1872,14 @@ async function saveAudit() {
       );
     }
 
-    function canAutoSync() {
-      return !!apiUrl && !isAnyModalOpen() && !isFetchingData && !isMutatingData;
-    }
+ function canAutoSync() {
+  return (
+    !!apiUrl &&
+    !document.hidden &&
+    !isFetchingData &&
+    !isMutatingData
+  );
+}
 
     function createDataFingerprint(json) {
       const audits = Array.isArray(json?.data) ? json.data : [];
@@ -1915,72 +1914,78 @@ async function saveAudit() {
       return `${actor}###${actorPhoto}###${auditKey}###${agentKey}###${userKey}`;
     }
 
-    async function checkForRemoteUpdates() {
-      if (!canAutoSync()) return;
+async function checkForRemoteUpdates() {
+  if (!canAutoSync()) return;
 
-      const idleMs = Date.now() - lastUserActivityAt;
-      if (idleMs < 5000) return;
+  const idleMs = Date.now() - lastUserActivityAt;
 
-      try {
-        setSyncStatus('Checking updates...', 'spinner', 'loading');
+  // exact rule: sync check runs every 3s, but only when idle for 5s
+  if (idleMs < 5000) return;
 
-        const res = await fetch(apiUrl + '?t=' + Date.now(), {
-          method: 'GET',
-          cache: 'no-store'
-        });
+  isFetchingData = true;
 
-        const text = await res.text();
+  try {
+    setSyncStatus('Checking updates...', 'spinner', 'loading');
 
-        let json;
-        try {
-          json = JSON.parse(text);
-        } catch (e) {
-          console.error('Raw auto-sync response:', text);
-          setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-          return;
-        }
+    const res = await fetch(apiUrl + '?t=' + Date.now(), {
+      method: 'GET',
+      cache: 'no-store'
+    });
 
-        if (!json || json.status !== 'success') {
-          setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-          return;
-        }
+    const text = await res.text();
 
-        const remoteFingerprint = createDataFingerprint(json);
-
-        if (lastDataFingerprint && remoteFingerprint !== lastDataFingerprint) {
-          db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
-          agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
-          usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
-          db.sort(sortRecords);
-          currentActorName = json.actor || currentActorName || 'Auditor';
-          currentActorPhoto = json.actor_photo || currentActorPhoto || '';
-          lastDataFingerprint = remoteFingerprint;
-
-          applyActorBranding();
-          renderAll();
-          applyLockState();
-          setSyncStatus('New data synced', 'check', 'success');
-          return;
-        }
-
-        setSyncStatus('Synced', 'check', 'success');
-      } catch (error) {
-        console.error(error);
-        setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-      }
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.error('Raw auto-sync response:', text);
+      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+      return;
     }
 
-    function startIdleAutoSync() {
-      if (idleSyncTimer) clearInterval(idleSyncTimer);
-
-      idleSyncTimer = setInterval(() => {
-        checkForRemoteUpdates();
-      }, 3000);
+    if (!json || json.status !== 'success') {
+      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+      return;
     }
 
-    function markUserActivity() {
-      lastUserActivityAt = Date.now();
+    const remoteFingerprint = createDataFingerprint(json);
+
+    if (!lastDataFingerprint || remoteFingerprint !== lastDataFingerprint) {
+      db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
+      agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
+      usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
+      db.sort(sortRecords);
+
+      currentActorName = json.actor || currentActorName || 'Auditor';
+      currentActorPhoto = json.actor_photo || currentActorPhoto || '';
+      lastDataFingerprint = remoteFingerprint;
+
+      applyActorBranding();
+      renderAll();
+      applyLockState();
+      setSyncStatus('New data synced', 'check', 'success');
+      return;
     }
+
+    setSyncStatus('Synced', 'check', 'success');
+  } catch (error) {
+    console.error(error);
+    setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
+  } finally {
+    isFetchingData = false;
+  }
+}
+function startIdleAutoSync() {
+  if (idleSyncTimer) clearInterval(idleSyncTimer);
+
+  idleSyncTimer = setInterval(() => {
+    checkForRemoteUpdates();
+  }, 3000);
+}
+
+function markUserActivity() {
+  lastUserActivityAt = Date.now();
+}
 
     function maybeSendInteractionHeartbeat() {
       const now = Date.now();
@@ -1991,14 +1996,26 @@ async function saveAudit() {
       sendHeartbeat(false);
     }
 
-    function bindUserActivityListeners() {
-      ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
-        document.addEventListener(evt, () => {
-          markUserActivity();
-          maybeSendInteractionHeartbeat();
-        }, { passive: true });
-      });
-    }
+   function bindUserActivityListeners() {
+  const strongActivityEvents = ['mousedown', 'keydown', 'touchstart', 'click', 'input', 'focusin'];
+
+  strongActivityEvents.forEach(evt => {
+    document.addEventListener(evt, () => {
+      markUserActivity();
+      maybeSendInteractionHeartbeat();
+    }, { passive: true });
+  });
+
+  // optional: mousemove counts as activity, but throttled so it doesn't block idle forever
+  document.addEventListener('mousemove', () => {
+    const now = Date.now();
+    if ((now - mouseActivityThrottleAt) < 2000) return; // count mouse movement at most once every 2s
+    mouseActivityThrottleAt = now;
+    markUserActivity();
+  }, { passive: true });
+
+  // do not treat scroll as hard activity for idle sync
+}
 
     function normalizeUser(user) {
       return {
@@ -3127,6 +3144,23 @@ function normalizeActorName(value) {
       notice.classList.add('hidden');
     }
   }
+
+function renderAuditOnly() {
+  renderTable();
+  renderKPIs();
+  renderCharts();
+}
+
+function renderAgentsOnly() {
+  renderAgentsTable();
+  renderAgentDropdown();
+  renderAuditFilterAgentDropdown();
+  renderKPIs();
+}
+
+function renderPresenceOnly() {
+  renderUsersPresence();
+}
   </script>
 </body>
 
