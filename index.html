@@ -1369,11 +1369,12 @@ function applyActorBranding() {
       startPresenceRefresh();
     }
 
-   function openCrudModal(id = null) {
+function openCrudModal(id = null) {
   if (!requireConfiguredApi()) return;
 
   const form = document.getElementById('auditForm');
   form.reset();
+
   document.getElementById('audit_id').value = '';
   document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
 
@@ -1381,18 +1382,50 @@ function applyActorBranding() {
   setAuditFormLockedState(false);
 
   if (id) {
-    const record = db.find(r => String(r.audit_id) === String(id));
-    if (record) {
-      Object.keys(record).forEach(key => {
-        const el = document.getElementById(key);
-        if (!el) return;
-        if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
-        else el.value = record[key] ?? '';
-      });
+    const record = db.find(r => String(r.audit_id).trim() === String(id).trim());
 
-      if (!canEditAuditRecord(record)) {
-        setAuditFormLockedState(true, getAuditOwnershipMessage(record));
+    if (!record) {
+      alert('Record not found locally yet. Please refresh once.');
+      return;
+    }
+
+    const fields = [
+      'audit_id',
+      'audit_date',
+      'agent_name',
+      'audit_channel',
+      'property_field_id',
+      'property_name_score',
+      'mgmt_company_score',
+      'apartment_mgr_score',
+      'regional_mgr_score',
+      'email_score',
+      'website_score',
+      'office_hours_score',
+      'commission_score',
+      'locator_note_score',
+      'requirements_score',
+      'occupancy_score',
+      'special_coding_score',
+      'pricing_score',
+      'availability_score',
+      'notation_score',
+      'final_error_note'
+    ];
+
+    fields.forEach(key => {
+      const el = document.getElementById(key);
+      if (!el) return;
+
+      if (key === 'audit_date') {
+        el.value = normalizeDateForInput(record[key]);
+      } else {
+        el.value = record[key] ?? '';
       }
+    });
+
+    if (!canEditAuditRecord(record)) {
+      setAuditFormLockedState(true, getAuditOwnershipMessage(record));
     }
   } else {
     document.getElementById('audit_date').value = getTodayLocal();
@@ -1401,7 +1434,6 @@ function applyActorBranding() {
   calculateScores();
   document.getElementById('crudModal').classList.add('active');
 }
-
 function closeCrudModal() {
   setAuditFormLockedState(false);
   document.getElementById('crudModal').classList.remove('active');
@@ -1531,7 +1563,7 @@ function closeCrudModal() {
       setText('disp_notation_weighted', notation_weighted.toFixed(2));
 
      setText('disp_overall_raw', `${Math.round(overall_raw)} / 75`);
-setText('disp_overall_score', String(Math.round(overall_score_100)));
+setText('disp_overall_score', overall_score_100.toFixed(2));
 
       return {
         basic_raw,
@@ -1654,7 +1686,7 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
       return json;
     }
 
- async function saveAudit() {
+async function saveAudit() {
   if (!requireConfiguredApi()) return;
 
   const payload = buildPayload();
@@ -1679,24 +1711,39 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
 
     const res = await apiPost({ action, ...payload });
 
-    // Prefer server-returned record if your Apps Script sends it back
-    const savedRecord = normalizeRecord(res.record || payload);
+    // Build a full local record using payload as base, then overwrite with server values
+    const savedRecord = normalizeRecord({
+      ...payload,
+      ...(res?.record || {}),
+      audit_id:
+        (res?.record?.audit_id ?? res?.audit_id ?? payload.audit_id ?? '').toString().trim(),
+      auditor:
+        (res?.record?.auditor ?? payload.auditor ?? currentActorName ?? '').toString().trim()
+    });
+
+    if (!savedRecord.audit_id) {
+      // fallback if server did not return generated id
+      await fetchData(false);
+      closeCrudModal();
+      setSyncStatus('Synced', 'check', 'success');
+      return;
+    }
 
     if (action === 'create') {
-      // if Apps Script generated audit_id, use returned value
-      if (!savedRecord.audit_id && res.audit_id) savedRecord.audit_id = String(res.audit_id);
       db.unshift(savedRecord);
     } else {
       const index = db.findIndex(r => String(r.audit_id) === String(savedRecord.audit_id));
-      if (index >= 0) db[index] = savedRecord;
+      if (index >= 0) {
+        db[index] = savedRecord;
+      } else {
+        db.unshift(savedRecord);
+      }
     }
 
     db.sort(sortRecords);
     renderAll();
     closeCrudModal();
     setSyncStatus('Synced', 'check', 'success');
-
-    // optional background-style refresh later through your normal autosync
     lastDataFingerprint = '';
   } catch (error) {
     console.error(error);
@@ -1708,7 +1755,6 @@ setText('disp_overall_score', String(Math.round(overall_score_100)));
     hideLoading();
   }
 }
-
   async function saveAgent() {
   if (!requireConfiguredApi()) return;
 
