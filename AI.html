@@ -24,24 +24,276 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; }
+
     .glass {
       background: rgba(255,255,255,.88);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(226,232,240,.95);
       box-shadow: 0 12px 32px rgba(15,23,42,.06);
     }
+
     .dark .glass {
       background: rgba(15,23,42,.78);
       border-color: rgba(51,65,85,.95);
       box-shadow: 0 12px 32px rgba(2,6,23,.35);
     }
+
     .thin-scroll::-webkit-scrollbar {
       width: 10px;
       height: 10px;
     }
+
     .thin-scroll::-webkit-scrollbar-thumb {
       background: rgba(100,116,139,.35);
       border-radius: 999px;
+    }
+
+    .modal {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 16px;
+      background: white;
+      padding: 6px;
+      box-shadow: 0 10px 20px rgba(15,23,42,.10);
+      border: 1px solid rgba(226,232,240,.95);
+      flex-shrink: 0;
+    }
+
+    .dark .header-logo {
+      background: rgb(15 23 42);
+      border-color: rgba(51,65,85,.95);
+    }
+
+    .chat-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(226,232,240,.95);
+      background: #fff;
+    }
+
+    .dark .chat-avatar {
+      border-color: rgba(51,65,85,.95);
+      background: rgb(15 23 42);
+    }
+
+    .typing-dot {
+      display: inline-block;
+      animation: blink 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: .2s; }
+    .typing-dot:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: .2; }
+      40% { opacity: 1; }
+    }
+
+    .users-presence-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      margin-left: 8px;
+      flex-wrap: wrap;
+    }
+
+    .users-presence-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgb(100 116 139);
+      white-space: nowrap;
+    }
+
+    .users-presence-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      flex-wrap: wrap;
+    }
+
+    .presence-avatar {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 9999px;
+      overflow: visible;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      color: #0f172a;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      border: 2px solid rgba(255,255,255,.95);
+      box-shadow: 0 6px 16px rgba(15,23,42,.12), 0 0 0 1px rgba(148,163,184,.18);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      cursor: default;
+    }
+
+    .presence-avatar:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15,23,42,.16), 0 0 0 1px rgba(148,163,184,.24);
+    }
+
+    .presence-avatar.online {
+      border-color: rgba(34,197,94,.95);
+      box-shadow: 0 8px 18px rgba(15,23,42,.14), 0 0 0 3px rgba(34,197,94,.18);
+    }
+
+    .presence-avatar.online::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      border: 2px solid rgba(34,197,94,.28);
+      animation: userRingPulse 1.6s infinite ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes userRingPulse {
+      0% { transform: scale(.92); opacity: .85; }
+      70% { transform: scale(1.12); opacity: 0; }
+      100% { transform: scale(1.12); opacity: 0; }
+    }
+
+    .presence-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .presence-initials {
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.55), rgba(255,255,255,0)),
+        linear-gradient(135deg, #dbeafe, #bfdbfe 45%, #c7d2fe);
+      color: #1e293b;
+    }
+
+    .dark .presence-initials {
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.08), rgba(255,255,255,0)),
+        linear-gradient(135deg, #334155, #1e293b 55%, #0f172a);
+      color: #e2e8f0;
+    }
+
+    .presence-status-dot {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 9999px;
+      border: 2px solid #fff;
+      background: #94a3b8;
+      box-shadow: 0 0 0 1px rgba(15,23,42,.06);
+    }
+
+    .dark .presence-status-dot {
+      border-color: #0f172a;
+    }
+
+    .presence-avatar.online .presence-status-dot {
+      background: #22c55e;
+      animation: presenceDotBlink 1.2s infinite ease-in-out;
+    }
+
+    @keyframes presenceDotBlink {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(34,197,94,.45);
+      }
+      50% {
+        transform: scale(.82);
+        opacity: .6;
+        box-shadow: 0 0 0 5px rgba(34,197,94,0);
+      }
+    }
+
+    .presence-empty {
+      font-size: 12px;
+      color: rgb(100 116 139);
+      font-weight: 600;
+    }
+
+    .presence-me-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 9999px;
+      border: 1px solid rgb(226 232 240);
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 6px 18px rgba(15,23,42,.05);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .presence-me-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15,23,42,.10);
+      border-color: rgb(59 130 246);
+    }
+
+    .dark .presence-me-chip {
+      border-color: rgb(51 65 85);
+      background: rgba(15,23,42,.92);
+    }
+
+    .presence-me-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .presence-me-name {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .presence-me-sub {
+      font-size: 10px;
+      color: rgb(100 116 139);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    @media (max-width: 1024px) {
+      .users-presence-label,
+      .presence-me-text {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -50,13 +302,29 @@
   <div class="min-h-screen flex flex-col">
     <header class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shrink-0">
+        <div class="flex items-center gap-3 min-w-0 flex-wrap">
+          <img src="logo.png" alt="Logo" class="header-logo"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white items-center justify-center shadow-lg shrink-0 hidden">
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
+
           <div class="min-w-0">
             <h1 id="pageTitle" class="font-black text-lg md:text-xl truncate">Auditor</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">AI Assistant</p>
+            <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">MRI Apartment Data Auditing</p>
+          </div>
+
+          <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
+            <div id="myPresenceAvatar"></div>
+            <div class="presence-me-text">
+              <span id="myPresenceName" class="presence-me-name">Auditor</span>
+              <span class="presence-me-sub">Current User</span>
+            </div>
+          </div>
+
+          <div class="users-presence-wrap">
+            <div class="users-presence-label">Auditors:</div>
+            <div id="usersPresenceList" class="users-presence-list"></div>
           </div>
         </div>
 
@@ -84,10 +352,20 @@
     <main class="flex-1 p-4 md:p-6 overflow-auto thin-scroll">
       <div class="max-w-5xl mx-auto space-y-4">
         <div class="glass rounded-3xl p-5">
-          <h2 class="text-xl font-black">A.I Chat</h2>
-          <p class="text-sm text-slate-500 mt-1">
-            Ask about audit scores, trends, records, and logs. The AI can use your audit data and action history.
-          </p>
+          <div class="flex items-start gap-4">
+            <img src="ai.jpg" alt="Mira AI" class="chat-avatar w-14 h-14" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="w-14 h-14 rounded-full bg-blue-600 text-white items-center justify-center text-xl font-black hidden">M</div>
+
+            <div class="min-w-0">
+              <h2 class="text-xl font-black">Mira</h2>
+              <p class="text-sm text-slate-500 mt-1">
+                Professional A.I Assistant for MRI Apartment Data Auditing.
+              </p>
+              <p class="text-xs text-slate-400 mt-2">
+                Press <strong>Enter</strong> to send. Press <strong>Shift + Enter</strong> for a new line.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div id="chatBox" class="glass rounded-3xl p-4 md:p-5 min-h-[420px] space-y-4"></div>
@@ -98,9 +376,9 @@
               id="aiPrompt"
               rows="3"
               placeholder="Example: Summarize the lowest scoring agent and show what actions the current actor performed recently."
-              class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
+              class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500 resize-none"
             ></textarea>
-            <button onclick="sendAiPrompt()" class="px-5 py-3 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 text-white md:self-end">
+            <button id="sendAiBtn" onclick="sendAiPrompt()" class="px-5 py-3 rounded-2xl font-bold bg-blue-600 hover:bg-blue-700 text-white md:self-end">
               <i class="fa-solid fa-paper-plane mr-2"></i>Ask AI
             </button>
           </div>
@@ -111,14 +389,78 @@
     <footer class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
       <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <div id="footerTitle">© 2026 Auditor</div>
-        <div>AI-powered audit insights via Google Apps Script + Gemini</div>
+        <div>Mira · Professional AI for MRI Apartment Data Auditing</div>
       </div>
     </footer>
+  </div>
+
+  <div id="profileModal"
+    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      class="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
+      <h2 class="text-xl font-black mb-2">Update Profile Image</h2>
+      <p class="text-sm text-slate-500 mb-4">
+        Set your profile image by pasting a direct image link. This will be saved to the <b>Users</b> sheet for your current user.
+      </p>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Current User</label>
+        <input id="profileActorName" type="text" readonly
+          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Image URL</label>
+        <input id="profileImageUrl" type="text" placeholder="https://example.com/photo.png"
+          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Preview</label>
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <img id="profilePreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
+            <span id="profilePreviewInitials" class="text-sm font-black text-slate-500">AU</span>
+          </div>
+          <div class="text-xs text-slate-500">
+            Paste a direct JPG, PNG, WEBP, or GIF image link.
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-4 mb-5">
+        <div class="text-sm font-black mb-2">Guide</div>
+        <ol class="text-xs text-slate-500 space-y-1 list-decimal pl-4">
+          <li>Upload your image somewhere public like Google Drive, Imgur, your website, or CDN.</li>
+          <li>Get the direct image link ending in .jpg, .jpeg, .png, or .webp when possible.</li>
+          <li>Paste it here and click Save Profile Image.</li>
+          <li>If the image does not load, check that the link is publicly accessible.</li>
+        </ol>
+      </div>
+
+      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
+        <button type="button" onclick="closeProfileModal()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          Cancel
+        </button>
+        <button type="button" onclick="saveProfileImage()" id="profileSaveBtn"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
+          Save Profile Image
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
     let apiUrl = localStorage.getItem('auditorAppUrl') || localStorage.getItem('maraAppUrl') || '';
     let currentActorName = localStorage.getItem('auditorActorName') || 'Auditor';
+    let currentActorPhoto = localStorage.getItem('auditorActorPhoto') || '';
+    let usersDb = [];
+    let heartbeatTimer = null;
+    let presenceRefreshTimer = null;
+    let isSendingAi = false;
+    let lastHeartbeatAt = 0;
+    let interactionHeartbeatThrottleMs = 8000;
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
@@ -138,8 +480,8 @@
       return actor || 'Auditor';
     }
 
-    function getActorAiName() {
-      return `${getActorDisplayName()} AI`;
+    function getAiName() {
+      return 'Mira';
     }
 
     function applyActorBranding() {
@@ -154,12 +496,17 @@
       const footerTitle = document.getElementById('footerTitle');
       if (footerTitle) footerTitle.textContent = `© 2026 ${brandText}`;
 
+      const myName = document.getElementById('myPresenceName');
+      if (myName) myName.textContent = actor;
+
       localStorage.setItem('auditorActorName', actor);
+      localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
     }
 
     async function syncActorFromServer() {
       if (!apiUrl) {
         applyActorBranding();
+        renderUsersPresence();
         return;
       }
 
@@ -176,16 +523,19 @@
           json = JSON.parse(text);
         } catch (e) {
           applyActorBranding();
+          renderUsersPresence();
           return;
         }
 
-        if (json?.actor) {
-          currentActorName = json.actor;
-        }
+        if (json?.actor) currentActorName = json.actor;
+        if (json?.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
+        if (Array.isArray(json?.users)) usersDb = json.users.map(normalizeUser);
 
         applyActorBranding();
+        renderUsersPresence();
       } catch (error) {
         applyActorBranding();
+        renderUsersPresence();
       }
     }
 
@@ -206,43 +556,372 @@
         .replace(/'/g, '&#039;');
     }
 
-    function addMsg(role, html) {
+    function normalizeUser(user) {
+      return {
+        user_name: String(user?.user_name || '').trim(),
+        photo_url: String(user?.photo_url || '').trim(),
+        last_seen: String(user?.last_seen || '').trim()
+      };
+    }
+
+    function parseServerDateTime(value) {
+      const s = String(value || '').trim();
+      if (!s) return 0;
+
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)) {
+        const [datePart, timePart] = s.split(' ');
+        const [y, m, d] = datePart.split('-').map(Number);
+        const [hh, mm, ss] = timePart.split(':').map(Number);
+        return new Date(y, m - 1, d, hh, mm, ss).getTime();
+      }
+
+      const ms = new Date(s).getTime();
+      return Number.isFinite(ms) ? ms : 0;
+    }
+
+    function isUserOnline(user) {
+      const lastSeenMs = parseServerDateTime(user?.last_seen);
+      if (!lastSeenMs) return false;
+      return (Date.now() - lastSeenMs) <= 60000;
+    }
+
+    function getUserInitials(name) {
+      const cleaned = String(name || '').trim();
+      if (!cleaned) return 'AU';
+
+      const parts = cleaned.split(/\s+/).filter(Boolean);
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function buildAvatarInnerHtml(user) {
+      const initials = getUserInitials(user.user_name);
+      const hasPhoto = !!user.photo_url;
+
+      return `
+        ${hasPhoto ? `
+          <img
+            src="${escapeHtml(user.photo_url)}"
+            alt="${escapeHtml(user.user_name || 'User')}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
+          >
+          <span class="presence-initials" style="display:none;">${escapeHtml(initials)}</span>
+        ` : `
+          <span class="presence-initials">${escapeHtml(initials)}</span>
+        `}
+        <span class="presence-status-dot"></span>
+      `;
+    }
+
+    function buildAvatarHtml(user) {
+      const online = isUserOnline(user);
+      const title = `${user.user_name || 'User'}${online ? ' • Online' : ' • Offline'}`;
+
+      return `
+        <div class="presence-avatar ${online ? 'online' : ''}" title="${escapeHtml(title)}">
+          ${buildAvatarInnerHtml(user)}
+        </div>
+      `;
+    }
+
+    function renderMyPresence() {
+      const chip = document.getElementById('myPresenceChip');
+      const avatarWrap = document.getElementById('myPresenceAvatar');
+      const nameEl = document.getElementById('myPresenceName');
+
+      if (!chip || !avatarWrap || !nameEl) return;
+
+      const me = {
+        user_name: currentActorName,
+        photo_url: currentActorPhoto,
+        last_seen: new Date().toISOString()
+      };
+
+      chip.classList.remove('hidden');
+      avatarWrap.innerHTML = buildAvatarHtml(me);
+      nameEl.textContent = currentActorName || 'Auditor';
+    }
+
+    function renderUsersPresence() {
+      const list = document.getElementById('usersPresenceList');
+      if (!list) return;
+
+      renderMyPresence();
+
+      const others = [...usersDb]
+        .filter(u => String(u.user_name || '').trim())
+        .filter(u => String(u.user_name || '').trim().toLowerCase() !== String(currentActorName || '').trim().toLowerCase())
+        .sort((a, b) => {
+          const aOnline = isUserOnline(a) ? 1 : 0;
+          const bOnline = isUserOnline(b) ? 1 : 0;
+          if (aOnline !== bOnline) return bOnline - aOnline;
+          return String(a.user_name || '').localeCompare(String(b.user_name || ''));
+        });
+
+      const onlineUsers = others.filter(isUserOnline);
+
+      if (!onlineUsers.length) {
+        list.innerHTML = `<div class="presence-empty">No other online auditors</div>`;
+        return;
+      }
+
+      list.innerHTML = onlineUsers.map(user => buildAvatarHtml(user)).join('');
+    }
+
+    async function apiPost(formObj) {
+      const body = new URLSearchParams();
+      Object.keys(formObj).forEach(key => {
+        body.set(key, formObj[key] == null ? '' : String(formObj[key]));
+      });
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: body.toString()
+      });
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid server response.');
+      }
+
+      if (!json || json.status !== 'success') {
+        throw new Error(json?.message || 'API request failed.');
+      }
+
+      return json;
+    }
+
+    async function sendHeartbeat(force = false) {
+      if (!apiUrl) return;
+      if (document.hidden && !force) return;
+
+      try {
+        lastHeartbeatAt = Date.now();
+
+        const json = await apiPost({
+          action: 'heartbeat',
+          actor: currentActorName,
+          photo_url: currentActorPhoto
+        });
+
+        if (Array.isArray(json.users)) usersDb = json.users.map(normalizeUser);
+        if (json.actor) currentActorName = String(json.actor || currentActorName || 'Auditor');
+        if (json.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
+
+        applyActorBranding();
+        renderUsersPresence();
+      } catch (error) {
+        console.error('Heartbeat failed:', error);
+      }
+    }
+
+    function startHeartbeat() {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      if (!apiUrl) return;
+
+      sendHeartbeat(true);
+
+      heartbeatTimer = setInterval(() => {
+        sendHeartbeat(false);
+      }, 15000);
+    }
+
+    function startPresenceRefresh() {
+      if (presenceRefreshTimer) clearInterval(presenceRefreshTimer);
+
+      presenceRefreshTimer = setInterval(() => {
+        renderUsersPresence();
+      }, 5000);
+    }
+
+    function bindPresenceActivity() {
+      ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'input'].forEach(evt => {
+        document.addEventListener(evt, () => {
+          const now = Date.now();
+          if (!apiUrl) return;
+          if (document.hidden) return;
+          if ((now - lastHeartbeatAt) < interactionHeartbeatThrottleMs) return;
+          sendHeartbeat(false);
+        }, { passive: true });
+      });
+    }
+
+    function normalizeImageUrl(url) {
+      const s = String(url || '').trim();
+      if (!s) return '';
+
+      const driveFileMatch = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+      if (driveFileMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
+      }
+
+      const driveOpenMatch = s.match(/[?&]id=([^&]+)/i);
+      if (/drive\.google\.com/i.test(s) && driveOpenMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+      }
+
+      return s;
+    }
+
+    function openProfileModal() {
+      document.getElementById('profileActorName').value = currentActorName || 'Auditor';
+      document.getElementById('profileImageUrl').value = currentActorPhoto || '';
+      updateProfilePreview();
+      document.getElementById('profileModal').classList.add('active');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.remove('active');
+    }
+
+    function updateProfilePreview() {
+      const url = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
+      const img = document.getElementById('profilePreviewImg');
+      const initials = document.getElementById('profilePreviewInitials');
+      const actorName = document.getElementById('profileActorName')?.value || currentActorName || 'Auditor';
+
+      initials.textContent = getUserInitials(actorName);
+
+      if (url) {
+        img.src = url;
+        img.classList.remove('hidden');
+        initials.classList.add('hidden');
+
+        img.onerror = function () {
+          img.classList.add('hidden');
+          initials.classList.remove('hidden');
+        };
+
+        img.onload = function () {
+          img.classList.remove('hidden');
+          initials.classList.add('hidden');
+        };
+      } else {
+        img.src = '';
+        img.classList.add('hidden');
+        initials.classList.remove('hidden');
+      }
+    }
+
+    async function saveProfileImage() {
+      if (!apiUrl) {
+        alert('Please set your Apps Script URL first in the dashboard.');
+        return;
+      }
+
+      const photoUrl = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
+
+      try {
+        document.getElementById('profileSaveBtn').disabled = true;
+
+        const res = await apiPost({
+          action: 'update_profile_photo',
+          actor: currentActorName,
+          photo_url: photoUrl
+        });
+
+        currentActorPhoto = String(res?.actor_photo || photoUrl || '');
+        if (res?.actor) currentActorName = String(res.actor || currentActorName || 'Auditor');
+        usersDb = Array.isArray(res?.users) ? res.users.map(normalizeUser) : usersDb;
+
+        renderUsersPresence();
+        applyActorBranding();
+        closeProfileModal();
+        sendHeartbeat(true);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to save profile image.');
+      } finally {
+        document.getElementById('profileSaveBtn').disabled = false;
+      }
+    }
+
+    function formatAssistantText(text) {
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    function addMsg(role, html, isRawHtml = false) {
       const box = document.getElementById('chatBox');
       const isUser = role === 'user';
 
       const wrap = document.createElement('div');
       wrap.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
 
-      wrap.innerHTML = `
-        <div class="${isUser ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'} max-w-3xl rounded-2xl px-4 py-3 shadow-sm">
-          <div class="text-[11px] font-black uppercase tracking-wider mb-1 ${isUser ? 'text-blue-100' : 'text-slate-500'}">
-            ${isUser ? 'You' : escapeHtml(getActorAiName())}
+      if (isUser) {
+        wrap.innerHTML = `
+          <div class="max-w-3xl rounded-2xl px-4 py-3 shadow-sm bg-blue-600 text-white">
+            <div class="text-[11px] font-black uppercase tracking-wider mb-1 text-blue-100">
+              You
+            </div>
+            <div class="text-sm whitespace-pre-wrap break-words">${isRawHtml ? html : escapeHtml(html)}</div>
           </div>
-          <div class="text-sm whitespace-pre-wrap">${html}</div>
-        </div>
-      `;
+        `;
+      } else {
+        wrap.innerHTML = `
+          <div class="flex items-start gap-3 max-w-3xl">
+            <img src="ai.jpg" alt="Mira AI" class="chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="w-[38px] h-[38px] rounded-full bg-blue-600 text-white items-center justify-center text-sm font-black hidden">M</div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 shadow-sm flex-1">
+              <div class="text-[11px] font-black uppercase tracking-wider mb-1 text-slate-500">
+                ${escapeHtml(getAiName())}
+              </div>
+              <div class="text-sm whitespace-pre-wrap break-words">${isRawHtml ? html : escapeHtml(html)}</div>
+            </div>
+          </div>
+        `;
+      }
+
       box.appendChild(wrap);
       box.scrollTop = box.scrollHeight;
+      return wrap;
+    }
+
+    function setSendingState(sending) {
+      isSendingAi = sending;
+      const btn = document.getElementById('sendAiBtn');
+      const input = document.getElementById('aiPrompt');
+
+      if (btn) {
+        btn.disabled = sending;
+        btn.classList.toggle('opacity-60', sending);
+        btn.classList.toggle('cursor-not-allowed', sending);
+      }
+
+      if (input) input.disabled = sending;
     }
 
     async function sendAiPrompt() {
+      if (isSendingAi) return;
+
       const promptEl = document.getElementById('aiPrompt');
-      const prompt = (promptEl.value || '').trim();
-      if (!prompt) return;
+      const rawPrompt = promptEl.value || '';
+
+      if (!rawPrompt.trim()) return;
 
       if (!apiUrl) {
         alert('Please set your Apps Script URL first in the dashboard.');
         return;
       }
 
-      addMsg('user', escapeHtml(prompt));
+      addMsg('user', rawPrompt);
       promptEl.value = '';
-      addMsg('assistant', 'Thinking...');
+      setSendingState(true);
+
+      const thinkingNode = addMsg(
+        'assistant',
+        `Thinking<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span>`,
+        true
+      );
 
       try {
         const body = new URLSearchParams();
         body.set('action', 'ai_chat');
-        body.set('prompt', prompt);
+        body.set('prompt', rawPrompt);
 
         const res = await fetch(apiUrl, {
           method: 'POST',
@@ -258,31 +937,71 @@
           throw new Error('Invalid AI response from server.');
         }
 
-        const box = document.getElementById('chatBox');
-        if (box.lastElementChild) box.removeChild(box.lastElementChild);
-
-        if (json?.actor) {
-          currentActorName = json.actor;
-          applyActorBranding();
+        if (thinkingNode && thinkingNode.parentNode) {
+          thinkingNode.parentNode.removeChild(thinkingNode);
         }
+
+        if (json?.actor) currentActorName = json.actor;
+        if (json?.actor_photo != null) currentActorPhoto = String(json.actor_photo || currentActorPhoto || '');
+        if (Array.isArray(json?.users)) usersDb = json.users.map(normalizeUser);
+
+        applyActorBranding();
+        renderUsersPresence();
 
         if (!json || json.status !== 'success') {
           throw new Error(json?.message || 'AI request failed.');
         }
 
-        addMsg('assistant', escapeHtml(json.reply || 'No response.'));
+        addMsg('assistant', formatAssistantText(json.reply || 'No response.'), true);
       } catch (error) {
-        const box = document.getElementById('chatBox');
-        if (box.lastElementChild) box.removeChild(box.lastElementChild);
+        if (thinkingNode && thinkingNode.parentNode) {
+          thinkingNode.parentNode.removeChild(thinkingNode);
+        }
         addMsg('assistant', escapeHtml(error.message || 'AI request failed.'));
+      } finally {
+        setSendingState(false);
+        promptEl.focus();
       }
     }
 
+    function bindPromptShortcuts() {
+      const promptEl = document.getElementById('aiPrompt');
+      if (!promptEl) return;
+
+      promptEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendAiPrompt();
+        }
+      });
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeProfileModal();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) sendHeartbeat(true);
+    });
+
     document.addEventListener('DOMContentLoaded', async function() {
+      const profileImageUrlInput = document.getElementById('profileImageUrl');
+      if (profileImageUrlInput) {
+        profileImageUrlInput.addEventListener('input', updateProfilePreview);
+      }
+
       applySavedTheme();
       applyActorBranding();
+      bindPromptShortcuts();
+      bindPresenceActivity();
       await syncActorFromServer();
-      addMsg('assistant', 'Hello. Ask me anything about your audit records, top performers, low scores, patterns, or logs.');
+      startHeartbeat();
+      startPresenceRefresh();
+
+      addMsg(
+        'assistant',
+        'Hello. I am Mira, your professional A.I assistant for MRI Apartment Data Auditing. Ask me about audit records, trends, low scores, top performers, or recent logs.'
+      );
     });
   </script>
 </body>
