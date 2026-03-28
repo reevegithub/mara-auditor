@@ -905,14 +905,14 @@
 
               <div
                 class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Computed Overall</div>
-                  <div id="disp_overall_raw" class="text-2xl font-black">0.00</div>
-                </div>
-                <div class="sm:text-right">
-                  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
-                  <div id="disp_overall_score" class="text-4xl font-black">0.00</div>
-                </div>
+               <div>
+  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Computed Overall</div>
+  <div id="disp_overall_raw" class="text-2xl font-black">0 / 75</div>
+</div>
+<div class="sm:text-right">
+  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
+  <div id="disp_overall_score" class="text-4xl font-black">0</div>
+</div>
               </div>
             </form>
           </div>
@@ -1377,38 +1377,43 @@
       startPresenceRefresh();
     }
 
-    function openCrudModal(id = null) {
-      if (!requireConfiguredApi()) return;
+   function openCrudModal(id = null) {
+  if (!requireConfiguredApi()) return;
 
-      const form = document.getElementById('auditForm');
-      form.reset();
-      document.getElementById('audit_id').value = '';
-      document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
+  const form = document.getElementById('auditForm');
+  form.reset();
+  document.getElementById('audit_id').value = '';
+  document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
 
-      renderAgentDropdown();
+  renderAgentDropdown();
+  setAuditFormLockedState(false);
 
-      if (id) {
-        const record = db.find(r => String(r.audit_id) === String(id));
-        if (record) {
-          Object.keys(record).forEach(key => {
-            const el = document.getElementById(key);
-            if (!el) return;
-            if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
-            else el.value = record[key] ?? '';
-          });
-        }
-      } else {
-        document.getElementById('audit_date').value = getTodayLocal();
+  if (id) {
+    const record = db.find(r => String(r.audit_id) === String(id));
+    if (record) {
+      Object.keys(record).forEach(key => {
+        const el = document.getElementById(key);
+        if (!el) return;
+        if (key === 'audit_date') el.value = normalizeDateForInput(record[key]);
+        else el.value = record[key] ?? '';
+      });
+
+      if (!canEditAuditRecord(record)) {
+        setAuditFormLockedState(true, getAuditOwnershipMessage(record));
       }
-
-      calculateScores();
-      document.getElementById('crudModal').classList.add('active');
     }
+  } else {
+    document.getElementById('audit_date').value = getTodayLocal();
+  }
 
-    function closeCrudModal() {
-      document.getElementById('crudModal').classList.remove('active');
-    }
+  calculateScores();
+  document.getElementById('crudModal').classList.add('active');
+}
 
+function closeCrudModal() {
+  setAuditFormLockedState(false);
+  document.getElementById('crudModal').classList.remove('active');
+}
     function openAgentModal(id = null) {
       if (!requireConfiguredApi()) return;
 
@@ -1533,8 +1538,8 @@
       setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
       setText('disp_notation_weighted', notation_weighted.toFixed(2));
 
-      setText('disp_overall_raw', overall_raw.toFixed(2));
-      setText('disp_overall_score', overall_score_100.toFixed(2));
+     setText('disp_overall_raw', `${Math.round(overall_raw)} / 75`);
+setText('disp_overall_score', String(Math.round(overall_score_100)));
 
       return {
         basic_raw,
@@ -1632,35 +1637,44 @@
       return json;
     }
 
-    async function saveAudit() {
-      if (!requireConfiguredApi()) return;
+   async function saveAudit() {
+  if (!requireConfiguredApi()) return;
 
-      const payload = buildPayload();
-      if (!validatePayload(payload)) return;
+  const payload = buildPayload();
+  if (!validatePayload(payload)) return;
 
-      const action = payload.audit_id ? 'update' : 'create';
-
-      try {
-        isMutatingData = true;
-        toggleSaveButton(true);
-        showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
-        setSyncStatus('Saving...', 'spinner', 'loading');
-
-        await apiPost({ action, ...payload });
-        await fetchData(false);
-
-        setSyncStatus('Synced', 'check', 'success');
-        closeCrudModal();
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Error saving audit.');
-        setSyncStatus('Save failed', 'triangle-exclamation', 'error');
-      } finally {
-        isMutatingData = false;
-        toggleSaveButton(false);
-        hideLoading();
-      }
+  if (payload.audit_id) {
+    const existingRecord = db.find(r => String(r.audit_id) === String(payload.audit_id));
+    if (existingRecord && !canEditAuditRecord(existingRecord)) {
+      alert(getAuditOwnershipMessage(existingRecord));
+      setAuditFormLockedState(true, getAuditOwnershipMessage(existingRecord));
+      return;
     }
+  }
+
+  const action = payload.audit_id ? 'update' : 'create';
+
+  try {
+    isMutatingData = true;
+    toggleSaveButton(true);
+    showLoading('Saving Audit', 'Updating record and refreshing dashboard...');
+    setSyncStatus('Saving...', 'spinner', 'loading');
+
+    await apiPost({ action, ...payload });
+    await fetchData(false);
+
+    setSyncStatus('Synced', 'check', 'success');
+    closeCrudModal();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || 'Error saving audit.');
+    setSyncStatus('Save failed', 'triangle-exclamation', 'error');
+  } finally {
+    isMutatingData = false;
+    toggleSaveButton(false);
+    hideLoading();
+  }
+}
 
     async function saveAgent() {
       if (!requireConfiguredApi()) return;
@@ -1690,17 +1704,30 @@
       }
     }
 
-    function toggleSaveButton(loading) {
-      const btn = document.getElementById('saveBtn');
-      if (!btn) return;
-      btn.disabled = loading;
-      btn.classList.toggle('opacity-70', loading);
-      btn.classList.toggle('cursor-not-allowed', loading);
-      btn.innerHTML = loading
-        ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
-        : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
-    }
+   function toggleSaveButton(loading) {
+  const btn = document.getElementById('saveBtn');
+  if (!btn) return;
 
+  const auditId = (document.getElementById('audit_id')?.value || '').trim();
+  const existingRecord = auditId ? db.find(r => String(r.audit_id) === String(auditId)) : null;
+  const lockedByOwner = existingRecord && !canEditAuditRecord(existingRecord);
+
+  if (lockedByOwner) {
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked';
+    btn.title = getAuditOwnershipMessage(existingRecord);
+    return;
+  }
+
+  btn.disabled = loading;
+  btn.classList.toggle('opacity-70', loading);
+  btn.classList.toggle('cursor-not-allowed', loading);
+  btn.innerHTML = loading
+    ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...'
+    : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
+  btn.title = '';
+}
     async function deleteAudit(id) {
       if (!requireConfiguredApi()) return;
       if (!confirm('Delete this audit record?')) return;
@@ -2305,17 +2332,28 @@
             </span>
           </td>
           <td class="px-5 py-4">${escapeHtml(row.auditor || '-')}</td>
-          <td class="px-5 py-4 text-right">
-            <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
-              <i class="fa-solid fa-file-pdf"></i>
-            </button>
-            <button type="button" onclick="openCrudModal('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600" title="Edit">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </td>
+        <td class="px-5 py-4 text-right">
+  <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
+    <i class="fa-solid fa-file-pdf"></i>
+  </button>
+
+  <button type="button"
+    onclick="openCrudModal('${escapeJs(row.audit_id)}')"
+    class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 ${canEditAuditRecord(row) ? 'hover:text-blue-600' : 'hover:text-amber-600'}"
+    title="${canEditAuditRecord(row) ? 'Edit' : 'View only'}">
+    <i class="fa-solid ${canEditAuditRecord(row) ? 'fa-pen' : 'fa-eye'}"></i>
+  </button>
+
+  ${canEditAuditRecord(row) ? `
+    <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
+      <i class="fa-solid fa-trash"></i>
+    </button>
+  ` : `
+    <button type="button" disabled class="w-9 h-9 rounded-lg opacity-40 cursor-not-allowed text-slate-400" title="Only ${escapeHtml(row.auditor || 'the owner')} can delete this">
+      <i class="fa-solid fa-trash"></i>
+    </button>
+  `}
+</td>
         </tr>
       `;
       }).join('');
@@ -2931,6 +2969,62 @@
       startIdleAutoSync();
       markUserActivity();
     });
+
+
+function normalizeActorName(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function canEditAuditRecord(record) {
+    if (!record) return true; // new record
+    return normalizeActorName(record.auditor) === normalizeActorName(currentActorName);
+  }
+
+  function getAuditOwnershipMessage(record) {
+    const owner = String(record?.auditor || '').trim() || 'another auditor';
+    return `This audit belongs to ${owner}. Only the original auditor can edit this record.`;
+  }
+
+  function setAuditFormLockedState(locked, message = '') {
+    const saveBtn = document.getElementById('saveBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('auditForm');
+
+    if (!saveBtn || !form) return;
+
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+      if (el.id === 'audit_id') return;
+      el.disabled = !!locked;
+    });
+
+    saveBtn.disabled = !!locked;
+    saveBtn.classList.toggle('opacity-50', !!locked);
+    saveBtn.classList.toggle('cursor-not-allowed', !!locked);
+
+    if (locked) {
+      saveBtn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked';
+      saveBtn.title = message || 'You cannot edit this record.';
+    } else {
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
+      saveBtn.title = '';
+    }
+
+    let notice = document.getElementById('auditLockNotice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'auditLockNotice';
+      notice.className = 'hidden rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300 px-4 py-3 text-sm font-semibold';
+      modalTitle?.parentElement?.insertAdjacentElement('afterend', notice);
+    }
+
+    if (locked) {
+      notice.textContent = message || 'This record is locked.';
+      notice.classList.remove('hidden');
+    } else {
+      notice.textContent = '';
+      notice.classList.add('hidden');
+    }
+  }
   </script>
 </body>
 
