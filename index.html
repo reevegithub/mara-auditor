@@ -137,8 +137,9 @@
             </div>
             <button id="profileChip" onclick="openProfileModal()" class="presence-chip" title="Profile settings">
               <div id="profileChipAvatar" class="presence-avatar online"><span>LB</span><span class="presence-status-dot"></span></div>
-              <div class="hidden 2xl:flex flex-col leading-tight text-left"><span id="profileChipName" class="text-xs font-black">Profile</span><span class="text-[10px] text-slate-500 font-bold uppercase">Profile</span></div>
+              <div class="hidden xl:flex flex-col leading-tight text-left"><span id="profileChipName" class="text-xs font-black">Profile</span><span class="text-[10px] text-slate-500 font-bold uppercase">Profile</span></div>
             </button>
+            <button onclick="openProfileModal()" class="hidden md:inline-flex rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-black">👤 PROFILE</button>
             <button onclick="reloadData(true)" class="rounded-2xl bg-slate-950 dark:bg-lee-600 text-white px-4 py-2 text-xs font-black shadow-card">SYNC</button>
             <button onclick="exportCurrentCsv()" class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-black">CSV</button>
             <button onclick="exportPdfReport()" class="rounded-2xl bg-lee-600 text-white px-4 py-2 text-xs font-black shadow-card">PDF</button>
@@ -219,6 +220,10 @@
     <div class="w-80 max-w-[85vw] h-full glass p-4" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between mb-4"><div class="font-black text-lg">Lee Business</div><button onclick="toggleMobileNav()" class="text-2xl">×</button></div>
       <div id="mobileSideNav" class="space-y-1"></div>
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+        <button onclick="openProfileModal(); toggleMobileNav()" class="w-full rounded-2xl bg-lee-50 dark:bg-lee-900/20 px-4 py-3 text-xs font-black text-left">👤 Profile Settings</button>
+        <button onclick="openSettings(); toggleMobileNav()" class="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-3 text-xs font-black text-left">⚙️ Backend Settings</button>
+      </div>
     </div>
   </div>
 
@@ -288,7 +293,9 @@ const STORAGE = {
   cacheMode: 'lee_business_cache_mode',
   theme: 'lee_business_theme',
   columns: 'lee_business_columns_',
-  lastUser: 'lee_business_last_user'
+  lastUser: 'lee_business_last_user',
+  cachedDb: 'lee_business_cached_db_v4',
+  cachedAt: 'lee_business_cached_at_v4'
 };
 let API_URL = localStorage.getItem(STORAGE.decryptedApi) || '';
 let TOKEN = '';
@@ -301,6 +308,13 @@ let activeColumns = {};
 let pendingRows = new Set();
 let heartbeatTimer = null;
 let presenceRenderTimer = null;
+let idleSyncTimer = null;
+let lastUserActivityAt = Date.now();
+let isFetchingData = false;
+let isMutatingData = false;
+let pendingRemoteDb = null;
+let lastDataFingerprint = '';
+let googlePromptStarted = false;
 
 const NAV = [
   ['dashboard','Dashboard','📊'], ['businesses','Businesses','🏢'], ['sales','Sales','💰'], ['expenses','Expenses','🧾'], ['materials','Materials','🧱'], ['inventory','Inventory','📦'], ['products','Products','🛍️'], ['logs','Audit Logs','🕒']
@@ -320,7 +334,116 @@ window.addEventListener('load', () => {
   if(localStorage.getItem(STORAGE.theme)==='dark') document.documentElement.classList.add('dark');
   document.getElementById('encryptedApiUrl').value = localStorage.getItem(STORAGE.encryptedApi) || '';
   document.getElementById('cacheMode').value = localStorage.getItem(STORAGE.cacheMode) || 'decrypted';
+  bootFromCache();
+  bindIdleActivityWatchers();
+  startIdleAutoSync();
+  setTimeout(startGoogleAutoPrompt, 1200);
 });
+
+
+function bootFromCache(){
+  const cachedUser = safeJson(localStorage.getItem(STORAGE.lastUser), null);
+  const cachedDb = safeJson(localStorage.getItem(STORAGE.cachedDb), null);
+  if(API_URL && cachedUser && cachedDb){
+    TOKEN = sessionStorage.getItem('lee_business_last_id_token') || TOKEN;
+    USER = cachedUser;
+    DB = normalizeDb(cachedDb);
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    fillBusinessFilters();
+    renderAll();
+    renderPresence();
+    lastDataFingerprint=createDataFingerprint(DB);
+    toast('Loaded cached data instantly. Syncing when Google session is ready.');
+    if(TOKEN) setTimeout(()=>verifyAndLoad().catch(()=>startGoogleAutoPrompt()),500);
+  }
+}
+function safeJson(raw, fallback){ try{return raw?JSON.parse(raw):fallback;}catch(e){return fallback;} }
+function cacheAppState(){
+  if(DB) localStorage.setItem(STORAGE.cachedDb, JSON.stringify(DB));
+  if(USER) localStorage.setItem(STORAGE.lastUser, JSON.stringify(USER));
+  sessionStorage.setItem('lee_business_last_id_token', TOKEN);
+  localStorage.setItem(STORAGE.cachedAt, new Date().toISOString());
+}
+function startGoogleAutoPrompt(){
+  if(googlePromptStarted) return;
+  googlePromptStarted = true;
+  try{ if(window.google?.accounts?.id) google.accounts.id.prompt(); }catch(e){}
+}
+function bindIdleActivityWatchers(){
+  ['mousedown','keydown','touchstart','click','input','focusin'].forEach(evt=>{
+    document.addEventListener(evt,()=>{ lastUserActivityAt=Date.now(); },{passive:true});
+  });
+  let moveThrottle=0;
+  document.addEventListener('mousemove',()=>{
+    const now=Date.now();
+    if(now-moveThrottle>2000){ moveThrottle=now; lastUserActivityAt=now; }
+  },{passive:true});
+}
+function startIdleAutoSync(){ stopIdleAutoSync(); idleSyncTimer=setInterval(checkIdleRemoteUpdates,3000); }
+function stopIdleAutoSync(){ if(idleSyncTimer) clearInterval(idleSyncTimer); idleSyncTimer=null; }
+function isAnyModalOpen(){
+  return ['settingsModal','profileModal','formModal','mobileNav'].some(id=>{
+    const el=document.getElementById(id);
+    if(!el) return false;
+    if(id==='mobileNav') return !el.classList.contains('hidden');
+    return el.classList.contains('show');
+  });
+}
+function createDataFingerprint(data){
+  try{
+    const d=normalizeDb(data||{});
+    const rows=(arr,keys)=>(arr||[]).map(r=>keys.map(k=>String(r[k]??'')).join('|')).join('||');
+    return [
+      rows(d.businesses,['id','name','status','updated_at']),
+      rows(d.sales,['id','business_id','sale_date','item','total_price','updated_at']),
+      rows(d.expenses,['id','business_id','expense_date','item','total_cost','updated_at']),
+      rows(d.materials,['id','business_id','name','qty_on_hand','updated_at']),
+      rows(d.products,['id','business_id','name','selling_price','updated_at']),
+      rows(d.inventory,['id','business_id','material_id','type','qty','created_at']),
+      rows(d.users,['email','name','photo_url','last_seen_at'])
+    ].join('###');
+  }catch(e){ return JSON.stringify(data||{}); }
+}
+async function checkIdleRemoteUpdates(){
+  if(!API_URL || !TOKEN || !DB || document.hidden || isFetchingData || isMutatingData) return;
+  if(Date.now()-lastUserActivityAt < 5000) return;
+  try{
+    isFetchingData=true;
+    const res=await post({action:'getBootstrap',token:TOKEN});
+    if(res.status!=='success') return;
+    const remoteDb=normalizeDb(res.data||{});
+    const fp=createDataFingerprint(remoteDb);
+    if(!lastDataFingerprint) lastDataFingerprint=createDataFingerprint(DB);
+    if(fp && fp!==lastDataFingerprint){
+      if(isAnyModalOpen()){
+        pendingRemoteDb=remoteDb;
+        toast('New updates detected. They will apply after the modal closes.');
+      }else{
+        DB=remoteDb;
+        USER=res.user||USER;
+        lastDataFingerprint=fp;
+        fillBusinessFilters();
+        renderAll();
+        renderPresence();
+        cacheAppState();
+        toast('New updates synced.');
+      }
+    }
+  }catch(e){}
+  finally{ isFetchingData=false; }
+}
+function applyPendingRemoteDb(){
+  if(!pendingRemoteDb) return;
+  DB=pendingRemoteDb;
+  pendingRemoteDb=null;
+  lastDataFingerprint=createDataFingerprint(DB);
+  fillBusinessFilters();
+  renderAll();
+  renderPresence();
+  cacheAppState();
+  toast('Pending updates applied.');
+}
 
 function handleGoogleLogin(response){
   TOKEN = response.credential;
@@ -328,6 +451,7 @@ function handleGoogleLogin(response){
   const info = parseJwt(TOKEN);
   USER = { email: info.email || '', name: info.name || '' };
   localStorage.setItem(STORAGE.lastUser, JSON.stringify(USER));
+  sessionStorage.setItem('lee_business_last_id_token', TOKEN);
   document.getElementById('login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   if(API_URL){
@@ -347,10 +471,10 @@ function buildNav(){ const html=NAV.map(([id,label,icon])=>`<button class="nav-b
 function markNav(name){ document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>{ if(b.getAttribute('onclick')===`showTab('${name}')`) b.classList.add('active'); }); }
 function toggleMobileNav(){ document.getElementById('mobileNav').classList.toggle('hidden'); }
 function toggleTheme(){ document.documentElement.classList.toggle('dark'); localStorage.setItem(STORAGE.theme, document.documentElement.classList.contains('dark')?'dark':'light'); renderDashboard(); }
-function signOut(){ TOKEN=''; USER=null; DB=null; stopPresenceTimers(); document.getElementById('app').classList.add('hidden'); document.getElementById('login').classList.remove('hidden'); if(window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); }
+function signOut(){ TOKEN=''; USER=null; DB=null; pendingRemoteDb=null; stopPresenceTimers(); stopIdleAutoSync(); localStorage.removeItem(STORAGE.lastUser); localStorage.removeItem(STORAGE.cachedDb); localStorage.removeItem(STORAGE.cachedAt); sessionStorage.removeItem('lee_business_last_id_token'); document.getElementById('app').classList.add('hidden'); document.getElementById('login').classList.remove('hidden'); if(window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); }
 
 function openSettings(){ document.getElementById('settingsMsg').innerText=''; document.getElementById('settingsModal').classList.add('show'); }
-function closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); }
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); applyPendingRemoteDb(); }
 function encryptRawUrl(){ const raw=prompt('Paste your raw Apps Script Web App /exec URL:'); if(!raw) return; const key=document.getElementById('decryptKey').value.trim(); if(!key) return alert('Enter a decryption key first.'); if(!isValidAppsScriptExecUrl(raw)) return alert('Invalid Apps Script Web App URL. It must start with https://script.google.com/macros/s/ and end with /exec'); const encrypted=CryptoJS.AES.encrypt(raw,key).toString(); document.getElementById('encryptOutputBox').classList.remove('hidden'); document.getElementById('encryptOutput').innerText=encrypted; document.getElementById('encryptedApiUrl').value=encrypted; }
 function copyEncryptedOutput(){ const text=document.getElementById('encryptOutput').innerText.trim(); if(text) navigator.clipboard.writeText(text).then(()=>toast('Encrypted URL copied.')); }
 function decryptUrl(encrypted,key){ try{ return CryptoJS.AES.decrypt(encrypted,key).toString(CryptoJS.enc.Utf8); }catch(e){ return ''; } }
@@ -375,9 +499,9 @@ async function saveSettings(silent=false){
   catch(err){ msg.innerText=err.message; toast(err.message,'error'); }
   finally{ if(!silent) hideBusy(); }
 }
-async function verifyAndLoad(){ const res=await post({action:'verifyToken',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Google verification failed.'); USER=res.user||{email:res.email||USER?.email||'',name:res.name||USER?.name||'',photo_url:res.user?.photo_url||''}; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; await reloadData(false); startPresenceTimers(); }
+async function verifyAndLoad(){ if(!TOKEN) throw new Error('Google session is not ready. Please sign in once.'); const res=await post({action:'verifyToken',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Google verification failed.'); USER=res.user||{email:res.email||USER?.email||'',name:res.name||USER?.name||'',photo_url:res.user?.photo_url||''}; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; await reloadData(false); startPresenceTimers(); cacheAppState(); }
 async function post(payload){ if(!API_URL) throw new Error('Backend is not connected.'); const r=await fetch(API_URL,{method:'POST',body:JSON.stringify(payload)}); const text=await r.text(); try{return JSON.parse(text);}catch(e){console.error(text);throw new Error('Backend returned non-JSON. Check /exec URL and Web App access.');} }
-async function reloadData(show=true){ if(!API_URL){openSettings();return;} if(show) showBusy('Syncing data...'); try{ const res=await post({action:'getBootstrap',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Failed to load data.'); USER=res.user||USER; DB=normalizeDb(res.data||{}); fillBusinessFilters(); renderAll(); renderPresence(); if(show) toast('Data synced.'); }catch(err){ toast(err.message,'error'); if(show) openSettings(); }finally{ if(show) hideBusy(); } }
+async function reloadData(show=true){ if(!API_URL){openSettings();return;} if(!TOKEN){ startGoogleAutoPrompt(); if(show) toast('Using cached data. Sign in once to sync live data.','error'); return; } if(show) showBusy('Syncing data...'); try{ isFetchingData=true; const res=await post({action:'getBootstrap',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Failed to load data.'); USER=res.user||USER; DB=normalizeDb(res.data||{}); lastDataFingerprint=createDataFingerprint(DB); fillBusinessFilters(); renderAll(); renderPresence(); cacheAppState(); if(show) toast('Data synced.'); }catch(err){ toast(err.message,'error'); if(show) openSettings(); }finally{ isFetchingData=false; if(show) hideBusy(); } }
 function normalizeDb(data){ return { businesses:data.businesses||[], sales:data.sales||[], expenses:data.expenses||[], materials:data.materials||[], inventory:data.inventory||data.inventoryMovements||[], products:data.products||[], logs:data.logs||[], users:data.users||[] }; }
 
 function fillBusinessFilters(){ const opts='<option value="ALL">All Businesses</option>'+ (DB.businesses||[]).map(b=>`<option value="${esc(b.id)}">${html(b.name)}</option>`).join(''); const a=document.getElementById('businessFilter'), b=document.getElementById('businessFilterMobile'), t=document.getElementById('tableBusinessFilter'); const old=a.value||'ALL'; const oldTable=t?t.value:'ALL'; a.innerHTML=opts; b.innerHTML=opts; if(t) t.innerHTML=opts; a.value=[...a.options].some(o=>o.value===old)?old:'ALL'; b.value=a.value; if(t) t.value=[...t.options].some(o=>o.value===oldTable)?oldTable:'ALL'; }
@@ -421,7 +545,7 @@ function labelize(s){ if(s==='business_id') return 'Business'; if(s==='material_
 function formatCell(h,v){ if(h==='id') return `<span class="font-black text-slate-500">${shortId(v)}</span>`; if(h==='business_id') return `<span class="font-bold">${html(businessName(v))}</span>`; if(h==='material_id') return html(materialName(v)); if(h==='product_id') return html(productName(v)); if(['price','total_price','total_cost','cost_per_unit','unit_cost','selling_price'].includes(h)) return `<span class="font-black">${money(v)}</span>`; if(['status','payment_status','type','action'].includes(h)) return `<span class="pill bg-slate-100 dark:bg-slate-800">${html(v||'-')}</span>`; return html(v||''); }
 function openFormFromJson(json){ try{ openForm(JSON.parse(unescapeHtml(json))); }catch(e){ toast('Unable to open record.','error'); } }
 function openForm(row=null){ const schema=SCHEMAS[current.sheet]; current.id=row?.id||null; document.getElementById('formTitle').innerText=(current.id?'Edit ':'Add ')+schema.title; document.getElementById('recordForm').innerHTML=schema.fields.map(([key,label,type,req])=>fieldHtml(key,label,type,req,row||{})).join(''); document.getElementById('formModal').classList.add('show'); }
-function closeForm(){ document.getElementById('formModal').classList.remove('show'); }
+function closeForm(){ document.getElementById('formModal').classList.remove('show'); applyPendingRemoteDb(); }
 function fieldHtml(key,label,type,req,row){ const val=row[key]||''; if(type==='business') return selectField(key,label,DB.businesses||[],'name',val,req); if(type==='material') return selectField(key,label,DB.materials||[],'name',val,req); if(type==='product') return selectField(key,label,DB.products||[],'name',val,req,true); if(type.startsWith('select:')) return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<select name="${esc(key)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500">${type.split(':')[1].split(',').map(o=>`<option value="${esc(o)}" ${o===val?'selected':''}>${html(o)}</option>`).join('')}</select></label>`; return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<input name="${esc(key)}" type="${esc(type)}" value="${esc(val)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500"></label>`; }
 function selectField(key,label,rows,display,val,req,allowBlank=false){ return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<select name="${esc(key)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500">${allowBlank?'<option value="">—</option>':''}${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===val?'selected':''}>${html(r[display])}</option>`).join('')}</select></label>`; }
 
@@ -434,8 +558,8 @@ function commitOptimistic(tempOrId, serverRecord=null){ pendingRows.delete(tempO
 function revertCreate(sheet,tempId){ const key=SCHEMAS[sheet].key; DB[key]=(DB[key]||[]).filter(r=>r.id!==tempId); pendingRows.delete(tempId); }
 function revertUpdate(sheet,id,old){ const key=SCHEMAS[sheet].key; const idx=(DB[key]||[]).findIndex(r=>r.id===id); if(idx>=0 && old) DB[key][idx]=old; pendingRows.delete(id); }
 function revertDelete(sheet,old){ const key=SCHEMAS[sheet].key; if(old) DB[key]=[...(DB[key]||[]),old]; }
-async function saveForm(e){ e.preventDefault(); const record=Object.fromEntries(new FormData(e.target).entries()); const sheet=current.sheet; const action=current.id?'updateRecord':'createRecord'; closeForm(); let temp=null, old=null; if(current.id){ old=applyLocalUpdate(sheet,current.id,record); temp={id:current.id}; } else { temp=applyLocalCreate(sheet,record); } renderAll(); showSync(current.id?'Updating in backend...':'Creating in backend...'); try{ const res=await post({action,token:TOKEN,sheet,id:current.id,record}); if(res.status!=='success') throw new Error(res.message||'Save failed'); commitOptimistic(temp.id,res.record); toast('Record saved.'); setTimeout(()=>reloadData(false),350); }catch(err){ current.id?revertUpdate(sheet,temp.id,old):revertCreate(sheet,temp.id); renderAll(); toast('Backend failed. Preview reverted: '+err.message,'error'); }finally{ hideSync(); } }
-async function deleteRecord(id){ if(!confirm('Delete this record? This will be logged.')) return; const sheet=current.sheet; const old=applyLocalDelete(sheet,id); renderAll(); showSync('Deleting in backend...'); try{ const res=await post({action:'deleteRecord',token:TOKEN,sheet,id}); if(res.status!=='success') throw new Error(res.message||'Delete failed'); toast('Record deleted.'); setTimeout(()=>reloadData(false),350); }catch(err){ revertDelete(sheet,old); renderAll(); toast('Delete failed. Record restored: '+err.message,'error'); }finally{ hideSync(); } }
+async function saveForm(e){ e.preventDefault(); if(!TOKEN){ toast('Please sign in once before saving.','error'); startGoogleAutoPrompt(); return; } isMutatingData=true; const record=Object.fromEntries(new FormData(e.target).entries()); const sheet=current.sheet; const action=current.id?'updateRecord':'createRecord'; closeForm(); let temp=null, old=null; if(current.id){ old=applyLocalUpdate(sheet,current.id,record); temp={id:current.id}; } else { temp=applyLocalCreate(sheet,record); } renderAll(); showSync(current.id?'Updating in backend...':'Creating in backend...'); try{ const res=await post({action,token:TOKEN,sheet,id:current.id,record}); if(res.status!=='success') throw new Error(res.message||'Save failed'); commitOptimistic(temp.id,res.record); toast('Record saved.'); setTimeout(()=>reloadData(false),350); }catch(err){ current.id?revertUpdate(sheet,temp.id,old):revertCreate(sheet,temp.id); renderAll(); toast('Backend failed. Preview reverted: '+err.message,'error'); }finally{ isMutatingData=false; hideSync(); cacheAppState(); } }
+async function deleteRecord(id){ if(!TOKEN){ toast('Please sign in once before deleting.','error'); startGoogleAutoPrompt(); return; } if(!confirm('Delete this record? This will be logged.')) return; isMutatingData=true; const sheet=current.sheet; const old=applyLocalDelete(sheet,id); renderAll(); showSync('Deleting in backend...'); try{ const res=await post({action:'deleteRecord',token:TOKEN,sheet,id}); if(res.status!=='success') throw new Error(res.message||'Delete failed'); toast('Record deleted.'); setTimeout(()=>reloadData(false),350); }catch(err){ revertDelete(sheet,old); renderAll(); toast('Delete failed. Record restored: '+err.message,'error'); }finally{ isMutatingData=false; hideSync(); cacheAppState(); } }
 
 
 function userInitials(name){ const parts=String(name||'User').trim().split(/\s+/).filter(Boolean); if(!parts.length) return 'LB'; if(parts.length===1) return parts[0].slice(0,2).toUpperCase(); return (parts[0][0]+parts[1][0]).toUpperCase(); }
@@ -447,10 +571,10 @@ function renderPresence(){ if(!USER) return; const users=(DB?.users||[]); const 
 function startPresenceTimers(){ stopPresenceTimers(); sendHeartbeat(false); heartbeatTimer=setInterval(()=>sendHeartbeat(false),15000); presenceRenderTimer=setInterval(renderPresence,5000); }
 function stopPresenceTimers(){ if(heartbeatTimer) clearInterval(heartbeatTimer); if(presenceRenderTimer) clearInterval(presenceRenderTimer); heartbeatTimer=null; presenceRenderTimer=null; }
 async function sendHeartbeat(showErrors=false){ if(!API_URL||!TOKEN) return; try{ const res=await post({action:'heartbeat',token:TOKEN}); if(res.status==='success'){ USER=res.user||USER; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; renderPresence(); } }catch(e){ if(showErrors) toast('Presence failed: '+e.message,'error'); } }
-function openProfileModal(){ if(!USER){toast('Please sign in first.','error');return;} const users=DB?.users||[]; const me=users.find(u=>String(u.email||'').toLowerCase()===String(USER.email||'').toLowerCase()) || USER; document.getElementById('profileEmail').value=me.email||USER.email||''; document.getElementById('profileName').value=me.name||USER.name||''; document.getElementById('profilePhotoUrl').value=me.photo_url||USER.photo_url||''; document.getElementById('profileMsg').innerText=''; updateProfilePreview(); renderPresence(); document.getElementById('profileModal').classList.add('show'); }
-function closeProfileModal(){ document.getElementById('profileModal').classList.remove('show'); }
+function openProfileModal(){ if(!USER){toast('Please sign in first.','error'); startGoogleAutoPrompt(); return;} if(!TOKEN) toast('Cached profile opened. Sign in once before saving changes.','error'); const users=DB?.users||[]; const me=users.find(u=>String(u.email||'').toLowerCase()===String(USER.email||'').toLowerCase()) || USER; document.getElementById('profileEmail').value=me.email||USER.email||''; document.getElementById('profileName').value=me.name||USER.name||''; document.getElementById('profilePhotoUrl').value=me.photo_url||USER.photo_url||''; document.getElementById('profileMsg').innerText=''; updateProfilePreview(); renderPresence(); document.getElementById('profileModal').classList.add('show'); }
+function closeProfileModal(){ document.getElementById('profileModal').classList.remove('show'); applyPendingRemoteDb(); }
 function updateProfilePreview(){ const name=document.getElementById('profileName')?.value||USER?.name||'User'; const photo=normalizePhotoUrl(document.getElementById('profilePhotoUrl')?.value||''); const img=document.getElementById('profilePreviewImg'); const initials=document.getElementById('profilePreviewInitials'); initials.textContent=userInitials(name); if(photo){ img.src=photo; img.classList.remove('hidden'); initials.classList.add('hidden'); img.onerror=()=>{img.classList.add('hidden');initials.classList.remove('hidden');}; }else{ img.src=''; img.classList.add('hidden'); initials.classList.remove('hidden'); } }
-async function saveProfile(){ const msg=document.getElementById('profileMsg'); msg.innerText=''; const profile={name:document.getElementById('profileName').value.trim(), photo_url:normalizePhotoUrl(document.getElementById('profilePhotoUrl').value.trim())}; if(!profile.name){msg.innerText='Display name is required.';return;} showSync('Saving profile...'); try{ const res=await post({action:'updateProfile',token:TOKEN,profile}); if(res.status!=='success') throw new Error(res.message||'Profile update failed'); USER=res.user||USER; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; renderPresence(); closeProfileModal(); toast('Profile updated.'); }catch(e){ msg.innerText=e.message; toast(e.message,'error'); }finally{ hideSync(); } }
+async function saveProfile(){ if(!TOKEN){ toast('Please sign in once before saving profile.','error'); startGoogleAutoPrompt(); return; } const msg=document.getElementById('profileMsg'); msg.innerText=''; const profile={name:document.getElementById('profileName').value.trim(), photo_url:normalizePhotoUrl(document.getElementById('profilePhotoUrl').value.trim())}; if(!profile.name){msg.innerText='Display name is required.';return;} showSync('Saving profile...'); try{ const res=await post({action:'updateProfile',token:TOKEN,profile}); if(res.status!=='success') throw new Error(res.message||'Profile update failed'); USER=res.user||USER; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; renderPresence(); cacheAppState(); closeProfileModal(); toast('Profile updated.'); }catch(e){ msg.innerText=e.message; toast(e.message,'error'); }finally{ hideSync(); } }
 document.addEventListener('input', e=>{ if(e.target && (e.target.id==='profileName'||e.target.id==='profilePhotoUrl')) updateProfilePreview(); });
 
 function exportCurrentCsv(){ if(!DB) return; const rows=document.getElementById('tableView').classList.contains('hidden')?dashboardExportRows():filteredRowsForTable(); const headers=document.getElementById('tableView').classList.contains('hidden')?Object.keys(rows[0]||{}):getCurrentHeaders().filter(h=>activeColumns[h]!==false); const csv=[headers.join(',')].concat(rows.map(r=>headers.map(h=>`"${String(csvValue(h,r[h])).replace(/"/g,'""')}"`).join(','))).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Lee_Business_${current.sheet||'dashboard'}_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href); }
