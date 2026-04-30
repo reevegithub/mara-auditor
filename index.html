@@ -1,3167 +1,471 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Auditor</title>
+  <title>Lee Business</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            lee: { 50:'#f0fdf4', 100:'#dcfce7', 500:'#22c55e', 600:'#16a34a', 700:'#15803d', 900:'#052e16' },
+            ink: '#0f172a'
+          },
           boxShadow: {
-            soft: '0 12px 32px rgba(15,23,42,.08)',
-            card: '0 8px 24px rgba(15,23,42,.06)',
+            soft: '0 20px 60px rgba(15,23,42,.10)',
+            card: '0 12px 30px rgba(15,23,42,.07)'
           }
         }
       }
-    };
+    }
   </script>
 
   <style>
-    html,
-    body {
-      height: 100%;
-    }
+    body{font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+    *{transition:background-color .15s,border-color .15s,color .15s,box-shadow .15s,transform .15s}
+    ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.dark ::-webkit-scrollbar-thumb{background:#475569}
+    .glass{background:rgba(255,255,255,.86);backdrop-filter:blur(16px);border:1px solid rgba(226,232,240,.92)}
+    .dark .glass{background:rgba(15,23,42,.80);border-color:rgba(51,65,85,.95)}
+    .nav-btn.active{background:#052e16;color:#fff;border-color:#052e16;box-shadow:0 16px 30px rgba(5,46,22,.18)}
+    .dark .nav-btn.active{background:#16a34a;border-color:#16a34a;color:#fff}
+    .modal{display:none}.modal.show{display:flex}
+    th{white-space:nowrap}.pill{border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;display:inline-flex;align-items:center;gap:6px}
+    .toast{animation:toastIn .22s ease-out}@keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .saving-dot{height:8px;width:8px;border-radius:999px;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:pulseDot 1.2s infinite}@keyframes pulseDot{70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+    .row-pending{position:relative;opacity:.78}.row-pending:after{content:'syncing';position:absolute;right:12px;top:8px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:900;text-transform:uppercase}
 
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .glass {
-      background: rgba(255, 255, 255, .88);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(226, 232, 240, .95);
-      box-shadow: 0 12px 32px rgba(15, 23, 42, .06);
-    }
-
-    .dark .glass {
-      background: rgba(15, 23, 42, .78);
-      border-color: rgba(51, 65, 85, .95);
-      box-shadow: 0 12px 32px rgba(2, 6, 23, .35);
-    }
-
-    .modal {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s ease;
-    }
-
-    .modal.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .nav-tab.active {
-      background: #2563eb;
-      color: white;
-      border-color: #2563eb;
-      box-shadow: 0 8px 20px rgba(37, 99, 235, .25);
-    }
-
-    .thin-scroll::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
-    }
-
-    .thin-scroll::-webkit-scrollbar-thumb {
-      background: rgba(100, 116, 139, .35);
-      border-radius: 999px;
-    }
-
-    .score-input::-webkit-outer-spin-button,
-    .score-input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .score-input {
-      -moz-appearance: textfield;
-    }
-
-    .loading-overlay {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .pulse-dot {
-      animation: pulseDot 1.2s infinite ease-in-out;
-    }
-
-    .pulse-dot:nth-child(2) {
-      animation-delay: .15s;
-    }
-
-    .pulse-dot:nth-child(3) {
-      animation-delay: .3s;
-    }
-
-    @keyframes pulseDot {
-
-      0%,
-      80%,
-      100% {
-        transform: scale(.8);
-        opacity: .45;
-      }
-
-      40% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .locked {
-      opacity: .55;
-      pointer-events: none;
-      user-select: none;
-      filter: grayscale(.1);
-    }
-
-    .sync-live-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #22c55e;
-      display: inline-block;
-      box-shadow: 0 0 0 rgba(34, 197, 94, .45);
-      animation: syncBlink 1.2s infinite ease-in-out;
-    }
-
-    @keyframes syncBlink {
-
-      0%,
-      100% {
-        opacity: 1;
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, .45);
-      }
-
-      50% {
-        opacity: .45;
-        transform: scale(.85);
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
-      }
-    }
-
-    .users-presence-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      margin-left: 8px;
-      flex-wrap: wrap;
-    }
-
-    .users-presence-label {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: rgb(100 116 139);
-      white-space: nowrap;
-    }
-
-    .users-presence-list {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 44px;
-      flex-wrap: wrap;
-    }
-
-    .presence-avatar {
-      position: relative;
-      width: 38px;
-      height: 38px;
-      border-radius: 9999px;
-      overflow: visible;
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-      color: #0f172a;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .04em;
-      border: 2px solid rgba(255, 255, 255, .95);
-      box-shadow:
-        0 6px 16px rgba(15, 23, 42, .12),
-        0 0 0 1px rgba(148, 163, 184, .18);
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-      cursor: default;
-    }
-
-    .presence-avatar:hover {
-      transform: translateY(-1px);
-      box-shadow:
-        0 10px 24px rgba(15, 23, 42, .16),
-        0 0 0 1px rgba(148, 163, 184, .24);
-    }
-
-    .presence-avatar.online {
-      border-color: rgba(34, 197, 94, .95);
-      box-shadow:
-        0 8px 18px rgba(15, 23, 42, .14),
-        0 0 0 3px rgba(34, 197, 94, .18);
-    }
-
-    .presence-avatar.online::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 9999px;
-      border: 2px solid rgba(34, 197, 94, .28);
-      animation: userRingPulse 1.6s infinite ease-out;
-      pointer-events: none;
-    }
-
-    @keyframes userRingPulse {
-      0% {
-        transform: scale(.92);
-        opacity: .85;
-      }
-
-      70% {
-        transform: scale(1.12);
-        opacity: 0;
-      }
-
-      100% {
-        transform: scale(1.12);
-        opacity: 0;
-      }
-    }
-
-    .presence-avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 9999px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .presence-initials {
-      width: 100%;
-      height: 100%;
-      border-radius: 9999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)),
-        linear-gradient(135deg, #dbeafe, #bfdbfe 45%, #c7d2fe);
-      color: #1e293b;
-    }
-
-    .dark .presence-initials {
-      background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)),
-        linear-gradient(135deg, #334155, #1e293b 55%, #0f172a);
-      color: #e2e8f0;
-    }
-
-    .presence-status-dot {
-      position: absolute;
-      right: -1px;
-      bottom: -1px;
-      width: 11px;
-      height: 11px;
-      border-radius: 9999px;
-      border: 2px solid #fff;
-      background: #94a3b8;
-      box-shadow: 0 0 0 1px rgba(15, 23, 42, .06);
-    }
-
-    .dark .presence-status-dot {
-      border-color: #0f172a;
-    }
-
-    .presence-avatar.online .presence-status-dot {
-      background: #22c55e;
-      animation: presenceDotBlink 1.2s infinite ease-in-out;
-    }
-
-    @keyframes presenceDotBlink {
-
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: 1;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, .45);
-      }
-
-      50% {
-        transform: scale(.82);
-        opacity: .6;
-        box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
-      }
-    }
-
-    .presence-empty {
-      font-size: 12px;
-      color: rgb(100 116 139);
-      font-weight: 600;
-    }
-
-    .presence-me-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 38px;
-      padding: 0 12px;
-      border-radius: 9999px;
-      border: 1px solid rgb(226 232 240);
-      background: rgba(255, 255, 255, .95);
-      box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
-      cursor: pointer;
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-
-    .presence-me-chip:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, .10);
-      border-color: rgb(59 130 246);
-    }
-
-    .dark .presence-me-chip {
-      border-color: rgb(51 65 85);
-      background: rgba(15, 23, 42, .92);
-    }
-
-    .presence-me-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.1;
-    }
-
-    .presence-me-name {
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .presence-me-sub {
-      font-size: 10px;
-      color: rgb(100 116 139);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    @media (max-width: 1024px) {
-
-      .users-presence-label,
-      .presence-me-text {
-        display: none;
-      }
-    }
+    .presence-avatar{position:relative;width:38px;height:38px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;overflow:visible;border:2px solid rgba(255,255,255,.9);box-shadow:0 10px 22px rgba(15,23,42,.13);background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#052e16;font-size:12px;font-weight:900;flex:0 0 auto}
+    .dark .presence-avatar{border-color:#0f172a;background:linear-gradient(135deg,#064e3b,#052e16);color:#dcfce7}.presence-avatar img{width:100%;height:100%;border-radius:999px;object-fit:cover;display:block}.presence-avatar.online{border-color:#22c55e;box-shadow:0 10px 22px rgba(15,23,42,.14),0 0 0 4px rgba(34,197,94,.16)}.presence-avatar.online:after{content:'';position:absolute;inset:-5px;border-radius:999px;border:2px solid rgba(34,197,94,.30);animation:userRingPulse 1.7s infinite ease-out}@keyframes userRingPulse{0%{transform:scale(.90);opacity:.9}70%,100%{transform:scale(1.15);opacity:0}}.presence-status-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:999px;border:2px solid #fff;background:#94a3b8}.dark .presence-status-dot{border-color:#0f172a}.presence-avatar.online .presence-status-dot{background:#22c55e;animation:presenceDotBlink 1.2s infinite ease-in-out}@keyframes presenceDotBlink{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.82);opacity:.65}}.presence-chip{display:inline-flex;align-items:center;gap:10px;border-radius:999px;border:1px solid #e2e8f0;background:rgba(255,255,255,.86);padding:5px 12px 5px 5px;box-shadow:0 10px 24px rgba(15,23,42,.07);cursor:pointer}.dark .presence-chip{border-color:#334155;background:rgba(15,23,42,.88)}.presence-label{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#64748b}.presence-empty{font-size:12px;font-weight:800;color:#64748b}.profile-photo-preview{width:72px;height:72px;border-radius:999px;overflow:hidden;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;background:#f1f5f9;font-weight:900}.dark .profile-photo-preview{border-color:#334155;background:#1e293b}
   </style>
 </head>
+<body class="min-h-screen bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 overflow-hidden">
+  <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,#dcfce7,transparent_32%),radial-gradient(circle_at_bottom_right,#dbeafe,transparent_30%)] dark:bg-[radial-gradient(circle_at_top_left,#064e3b,transparent_30%),radial-gradient(circle_at_bottom_right,#172554,transparent_30%)]"></div>
 
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
-  <div class="min-h-screen flex flex-col">
-    <header
-      class="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
-      <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div class="flex items-center gap-3 min-w-0 flex-wrap">
-          <div class="w-11 h-11 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
-            <img src="logo.png" alt="Logo" class="w-full h-full object-contain p-1.5"
-              onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=&quot;fa-solid fa-clipboard-check text-blue-600&quot;></i>';">
-          </div>
-
-        <div id="myPresenceChip" class="presence-me-chip hidden" title="Current auditor" onclick="openProfileModal()">
-  <div id="myPresenceAvatar"></div>
-  <div class="presence-me-text">
-    <span id="myPresenceName" class="presence-me-name">Auditor</span>
-    <span class="presence-me-sub">QA Audit System</span>
+  <div id="busyOverlay" class="hidden fixed inset-0 z-[9999] bg-slate-950/50 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-700 px-8 py-7 text-center min-w-[290px]">
+      <div class="mx-auto mb-4 h-14 w-14 rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-lee-600 animate-spin"></div>
+      <div id="busyText" class="font-black text-slate-950 dark:text-white">Loading...</div>
+      <div class="text-xs text-slate-500 mt-1">Preparing Lee Business securely.</div>
+    </div>
   </div>
-</div>
 
-          <div class="users-presence-wrap">
-            <div class="users-presence-label">Auditors:</div>
-            <div id="usersPresenceList" class="users-presence-list"></div>
-          </div>
+  <div id="syncBanner" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[9998] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-soft px-4 py-3 items-center gap-3">
+    <div class="h-5 w-5 rounded-full border-2 border-slate-200 border-t-lee-600 animate-spin"></div>
+    <div><div id="syncTitle" class="text-sm font-black">Saving changes...</div><div class="text-[10px] uppercase tracking-widest text-slate-400 font-black">Optimistic preview active</div></div>
+  </div>
+
+  <div id="login" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/92 backdrop-blur-xl">
+    <div class="w-full max-w-5xl grid lg:grid-cols-2 overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 shadow-2xl border border-white/20">
+      <div class="hidden lg:flex flex-col justify-between p-10 bg-slate-950 text-white relative overflow-hidden">
+        <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-lee-600/35 blur-3xl"></div>
+        <div class="absolute -left-20 bottom-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div class="relative">
+          <div class="h-16 w-16 rounded-3xl bg-white/10 flex items-center justify-center text-4xl mb-8">📈</div>
+          <h1 class="text-5xl font-black tracking-tight leading-tight">Lee Business</h1>
+          <p class="mt-4 text-slate-300 leading-relaxed">Fast sales, expenses, inventory, and materials dashboard powered by Google Sheets with professional audit-ready CRUD.</p>
         </div>
-
-        <div class="flex flex-wrap items-center gap-3 xl:justify-end">
-          <div id="syncStatus"
-            class="hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-            <i class="fa-solid fa-lock"></i>
-            <span>Setup Required</span>
-          </div>
-
-          <button type="button" onclick="toggleTheme()"
-            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-            <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
-            <i class="fa-solid fa-sun hidden dark:inline text-slate-400"></i>
-          </button>
-
-          <button id="btn-dash" type="button" onclick="switchTab('dash')"
-            class="nav-tab active text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            Dashboard
-          </button>
-
-          <button type="button" onclick="goToAI()"
-            class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-            A.I Chat
-          </button>
-
-          <button type="button" onclick="goToLogs()"
-            class="text-xs font-bold px-3 md:px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-            Logs
-          </button>
-
-          <button type="button" onclick="openSettings()"
-            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-            <i class="fa-solid fa-gear text-slate-500"></i>
-          </button>
+        <div class="relative grid grid-cols-3 gap-3 text-center">
+          <div class="rounded-2xl bg-white/10 p-4"><div class="text-2xl font-black">Fast</div><div class="text-[10px] uppercase tracking-widest text-slate-300">Preview</div></div>
+          <div class="rounded-2xl bg-white/10 p-4"><div class="text-2xl font-black">CSV</div><div class="text-[10px] uppercase tracking-widest text-slate-300">Export</div></div>
+          <div class="rounded-2xl bg-white/10 p-4"><div class="text-2xl font-black">PDF</div><div class="text-[10px] uppercase tracking-widest text-slate-300">Reports</div></div>
         </div>
       </div>
-    </header>
+      <div class="p-8 md:p-12 flex flex-col justify-center">
+        <div class="mb-8">
+          <div class="lg:hidden h-16 w-16 rounded-2xl bg-lee-50 dark:bg-lee-900/30 flex items-center justify-center text-3xl mb-5">📊</div>
+          <h2 class="text-3xl font-black text-slate-950 dark:text-white">Welcome back</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Google Sign-In will reuse your active browser session when possible.</p>
+        </div>
+        <div id="g_id_onload"
+             data-client_id="488546802727-vste9himgedh7ed6acg4b23uh1vqf1b9.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-auto_prompt="true"
+             data-auto_select="true">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left" data-width="320"></div>
+        <p id="loginMsg" class="text-xs text-red-600 mt-4 font-bold"></p>
+        <div class="mt-8 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-4 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          Backend URL is not hardcoded. The encrypted Apps Script <b>/exec</b> connection is saved in this browser after first setup, similar to your previous system.
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="flex-1 min-h-0">
-      <main id="view-dash" class="h-full overflow-auto thin-scroll p-4 md:p-6">
-        <div id="setupBanner" class="mb-6 glass rounded-2xl p-5 border-blue-200 dark:border-blue-900">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-black text-blue-600 dark:text-blue-400">Setup Required</h2>
-              <p class="text-sm text-slate-500 mt-1">
-                Enter your deployed Google Apps Script Web App URL before using the system.
-              </p>
-            </div>
-            <button type="button" onclick="openSettings()"
-              class="px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-              Configure Script URL
-            </button>
+  <div id="app" class="hidden h-screen flex overflow-hidden">
+    <aside class="hidden xl:flex w-76 min-w-72 glass border-r border-slate-200 dark:border-slate-800 flex-col shrink-0">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-lee-600 to-blue-500 flex items-center justify-center text-white text-2xl shadow-card">L</div>
+          <div>
+            <h1 class="font-black text-xl leading-none">Lee Business</h1>
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Command Center</p>
           </div>
         </div>
+      </div>
+      <nav class="p-4 space-y-1 flex-1 overflow-y-auto" id="sideNav"></nav>
+      <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+        <button onclick="openProfileModal()" class="w-full rounded-2xl bg-lee-50 dark:bg-lee-900/20 px-4 py-3 text-xs font-black text-left hover:bg-lee-100 dark:hover:bg-lee-900/30">👤 Profile Settings</button>
+        <button onclick="openSettings()" class="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-3 text-xs font-black text-left hover:bg-slate-200 dark:hover:bg-slate-700">⚙️ Backend Settings</button>
+        <button onclick="signOut()" class="w-full rounded-2xl bg-red-50 dark:bg-red-900/20 px-4 py-3 text-xs font-black text-red-700 dark:text-red-300 text-left hover:bg-red-100 dark:hover:bg-red-900/30">↪ Logout</button>
+      </div>
+    </aside>
 
-        <div id="appContent">
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-            <div class="glass rounded-2xl p-5">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Total Audits</p>
-              <h2 id="kpi-total" class="text-3xl font-black">0</h2>
+    <div class="flex-1 flex flex-col min-w-0">
+      <header class="glass border-b border-slate-200 dark:border-slate-800 shrink-0 z-30">
+        <div class="px-4 md:px-6 py-4 flex items-center gap-3">
+          <button onclick="toggleMobileNav()" class="xl:hidden h-10 w-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-black">☰</button>
+          <div class="min-w-0">
+            <h2 id="pageHeading" class="text-lg md:text-2xl font-black tracking-tight truncate">Dashboard</h2>
+            <p class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">Sales, expenses, inventory, and ROI analytics</p>
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <select id="businessFilter" class="hidden md:block border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-3 py-2 text-sm font-bold max-w-[240px]" onchange="renderAll()"></select>
+            <div id="presenceWrap" class="hidden lg:flex items-center gap-2 ml-2">
+              <div class="presence-label">Online</div>
+              <div id="presenceList" class="flex items-center gap-2"></div>
             </div>
-            <div class="glass rounded-2xl p-5">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Avg Overall Score</p>
-              <h2 id="kpi-avg" class="text-3xl font-black">0%</h2>
-            </div>
-            <div class="glass rounded-2xl p-5">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Active Agents</p>
-              <h2 id="kpi-agents" class="text-3xl font-black">0</h2>
-            </div>
-            <button type="button" onclick="openCrudModal()"
-              class="rounded-2xl p-5 bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg min-h-[88px]">
-              <div class="h-full flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus"></i>
-                <span>NEW AUDIT</span>
-              </div>
+            <button id="profileChip" onclick="openProfileModal()" class="presence-chip" title="Profile settings">
+              <div id="profileChipAvatar" class="presence-avatar online"><span>LB</span><span class="presence-status-dot"></span></div>
+              <div class="hidden 2xl:flex flex-col leading-tight text-left"><span id="profileChipName" class="text-xs font-black">Profile</span><span class="text-[10px] text-slate-500 font-bold uppercase">Profile</span></div>
             </button>
-          </div>
-
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-            <div class="glass rounded-2xl p-5">
-              <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Score Trends</h3>
-              <div class="h-72">
-                <canvas id="trendChart"></canvas>
-              </div>
-            </div>
-
-            <div class="glass rounded-2xl p-5">
-              <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-4">Agent Performance</h3>
-              <div class="h-72">
-                <canvas id="agentChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass rounded-2xl overflow-hidden mb-6">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3">
-              <div class="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-                <div>
-                  <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Audit Records</h3>
-                  <p class="text-xs text-slate-500 mt-1">Manage, export, and review all audit entries.</p>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                  <div class="relative w-full sm:w-72">
-                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input id="searchInput" type="text" oninput="currentPage = 1; renderAll()"
-                      placeholder="Search by audit ID, agent, channel, property field ID, note..."
-                      class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
-                  </div>
-
-                  <div class="flex items-center gap-2">
-                    <label class="text-xs font-bold text-slate-500">Rows</label>
-                    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()"
-                      class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
-                      <option value="5">5</option>
-                      <option value="10" selected>10</option>
-                      <option value="25">25</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                  </div>
-
-                  <button type="button" onclick="fetchData()"
-                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
-                  </button>
-
-                  <button type="button" onclick="exportCsv()"
-                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-file-csv mr-1"></i>Export CSV
-                  </button>
-
-                  <button type="button" onclick="exportListPdf()"
-                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    <i class="fa-solid fa-file-pdf mr-1"></i>Export PDF
-                  </button>
-
-                  <button type="button" onclick="openCrudModal()"
-                    class="px-4 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white">
-                    <i class="fa-solid fa-plus mr-1"></i>Add Audit
-                  </button>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date
-                    From</label>
-                  <input id="filterDateFrom" type="date" onchange="currentPage=1; renderAll()"
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Date
-                    To</label>
-                  <input id="filterDateTo" type="date" onchange="currentPage=1; renderAll()"
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Agent</label>
-                  <select id="filterAgentName" onchange="currentPage=1; renderAll()"
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
-                    <option value="">All Agents</option>
-                  </select>
-                </div>
-                <div class="flex items-end">
-                  <button type="button" onclick="clearAuditFilters()"
-                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="overflow-auto thin-scroll">
-              <div class="min-w-[1180px]">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                  <thead
-                    class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                    <tr class="text-[11px] uppercase tracking-wider text-slate-500">
-                      <th class="px-5 py-3 font-black">Audit ID</th>
-                      <th class="px-5 py-3 font-black">Agent</th>
-                      <th class="px-5 py-3 font-black">Channel</th>
-                      <th class="px-5 py-3 font-black">Property Field ID</th>
-                      <th class="px-5 py-3 text-center font-black">Basic</th>
-                      <th class="px-5 py-3 text-center font-black">Locator</th>
-                      <th class="px-5 py-3 text-center font-black">Occ</th>
-                      <th class="px-5 py-3 text-center font-black">Floor</th>
-                      <th class="px-5 py-3 text-center font-black">Notation</th>
-                      <th class="px-5 py-3 text-center font-black">Total</th>
-                      <th class="px-5 py-3 font-black">Auditor</th>
-                      <th class="px-5 py-3 text-right font-black">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-                </table>
-                <div
-                  class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-                  <div id="tablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 entries</div>
-                  <div id="paginationControls" class="flex items-center gap-2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass rounded-2xl overflow-hidden">
-            <div
-              class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-              <div>
-                <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">Agents</h3>
-                <p class="text-xs text-slate-500 mt-1">Manage agents saved in the Agents sheet and use them in the audit
-                  form dropdown.</p>
-              </div>
-
-              <div class="flex flex-wrap gap-2">
-                <div class="relative w-full sm:w-72">
-                  <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                  <input id="agentSearchInput" type="text" oninput="currentAgentPage = 1; renderAgentsTable()"
-                    placeholder="Search agent..."
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <label class="text-xs font-bold text-slate-500">Rows</label>
-                  <select id="agentRowsPerPageSelect" onchange="changeAgentRowsPerPage()"
-                    class="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
-                </div>
-
-                <button type="button" onclick="openAgentModal()"
-                  class="px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
-                  <i class="fa-solid fa-user-plus mr-1"></i>Add Agent
-                </button>
-              </div>
-            </div>
-
-            <div class="overflow-auto thin-scroll">
-              <div class="min-w-[700px]">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                  <thead
-                    class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                    <tr class="text-[11px] uppercase tracking-wider text-slate-500">
-                      <th class="px-5 py-3 font-black">Agent ID</th>
-                      <th class="px-5 py-3 font-black">Agent Name</th>
-                      <th class="px-5 py-3 font-black">Created</th>
-                      <th class="px-5 py-3 text-right font-black">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="agentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-                </table>
-                <div
-                  class="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-                  <div id="agentsTablePageInfo" class="text-sm text-slate-500">Showing 0 to 0 of 0 agents</div>
-                  <div id="agentsPaginationControls" class="flex items-center gap-2"></div>
-                </div>
-              </div>
-            </div>
+            <button onclick="reloadData(true)" class="rounded-2xl bg-slate-950 dark:bg-lee-600 text-white px-4 py-2 text-xs font-black shadow-card">SYNC</button>
+            <button onclick="exportCurrentCsv()" class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-black">CSV</button>
+            <button onclick="exportPdfReport()" class="rounded-2xl bg-lee-600 text-white px-4 py-2 text-xs font-black shadow-card">PDF</button>
+            <button onclick="toggleTheme()" class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-black">◐</button>
           </div>
         </div>
+        <div class="xl:hidden px-4 pb-4">
+          <select id="businessFilterMobile" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-3 py-2 text-sm font-bold" onchange="syncMobileBusinessFilter()"></select>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto p-4 md:p-6">
+        <section id="dashboard" class="view space-y-6">
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="glass rounded-3xl p-5 shadow-card border-l-4 border-blue-500"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Sales</p><h2 id="kpiSales" class="text-2xl font-black mt-2">₱0</h2><p id="kpiSalesSub" class="text-xs text-slate-500 mt-1">0 transactions</p></div>
+            <div class="glass rounded-3xl p-5 shadow-card border-l-4 border-red-500"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expenses</p><h2 id="kpiExpenses" class="text-2xl font-black mt-2">₱0</h2><p id="kpiExpensesSub" class="text-xs text-slate-500 mt-1">0 entries</p></div>
+            <div class="glass rounded-3xl p-5 shadow-card border-l-4 border-emerald-500"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Income</p><h2 id="kpiIncome" class="text-2xl font-black mt-2">₱0</h2><p id="kpiMargin" class="text-xs text-slate-500 mt-1">0% margin</p></div>
+            <div class="glass rounded-3xl p-5 shadow-card border-l-4 border-violet-500"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Businesses</p><h2 id="kpiBusinesses" class="text-2xl font-black mt-2">0</h2><p class="text-xs text-slate-500 mt-1">active records</p></div>
+            <div class="glass rounded-3xl p-5 shadow-card border-l-4 border-amber-500"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Low Stock</p><h2 id="kpiLowStock" class="text-2xl font-black mt-2">0</h2><p class="text-xs text-slate-500 mt-1">needs attention</p></div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div class="glass rounded-3xl p-5 shadow-card xl:col-span-2">
+              <div class="flex items-center justify-between mb-4"><div><h3 class="font-black text-lg">Sales vs Expenses</h3><p class="text-xs text-slate-500">Grouped by business</p></div><span class="pill bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">Performance</span></div>
+              <div class="h-80"><canvas id="chartBusiness"></canvas></div>
+            </div>
+            <div class="glass rounded-3xl p-5 shadow-card">
+              <div class="flex items-center justify-between mb-4"><div><h3 class="font-black text-lg">ROI Split</h3><p class="text-xs text-slate-500">Sales, expenses, income</p></div><span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">ROI</span></div>
+              <div class="h-80"><canvas id="chartRoi"></canvas></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div class="glass rounded-3xl p-5 shadow-card xl:col-span-2">
+              <div class="flex items-center justify-between mb-4"><h3 class="font-black text-lg">Recent Sales</h3><button onclick="showTab('sales')" class="text-xs font-black text-lee-600">VIEW ALL</button></div>
+              <div id="recentSales" class="overflow-x-auto"></div>
+            </div>
+            <div class="glass rounded-3xl p-5 shadow-card">
+              <h3 class="font-black text-lg mb-4">Low Stock Watchlist</h3>
+              <div id="lowStockList" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tableView" class="view hidden glass rounded-3xl shadow-card overflow-hidden">
+          <div class="p-4 md:p-5 border-b border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex flex-col md:flex-row gap-3 md:items-center">
+              <div><h2 id="tableTitle" class="font-black text-xl">Table</h2><p id="tableSubtitle" class="text-xs text-slate-500 mt-1">Manage records with fast optimistic previews.</p></div>
+              <div class="md:ml-auto flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <input id="searchBox" oninput="renderCurrentTable()" placeholder="Search records..." class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 text-sm w-full md:w-72 outline-none focus:ring-2 ring-lee-500">
+                <button onclick="toggleColumnMenu(event)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-2xl text-xs font-black">COLUMNS</button>
+                <button onclick="exportCurrentCsv()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-2xl text-xs font-black">EXPORT CSV</button>
+                <button id="addBtn" onclick="openForm()" class="bg-lee-600 hover:bg-lee-700 text-white px-5 py-2 rounded-2xl text-xs font-black shadow-card">ADD NEW</button>
+              </div>
+            </div>
+            <div class="grid md:grid-cols-5 gap-3">
+              <select id="tableBusinessFilter" onchange="renderCurrentTable()" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 text-sm font-bold"><option value="ALL">All Businesses</option></select>
+              <select id="statusFilter" onchange="renderCurrentTable()" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 text-sm font-bold"><option value="ALL">All Status / Types</option></select>
+              <input id="dateFrom" onchange="renderCurrentTable()" type="date" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 text-sm font-bold">
+              <input id="dateTo" onchange="renderCurrentTable()" type="date" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-2xl px-4 py-2 text-sm font-bold">
+              <button onclick="clearTableFilters()" class="rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-2 text-xs font-black">CLEAR FILTERS</button>
+            </div>
+            <div id="columnMenu" class="hidden rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4"><div class="text-[10px] uppercase tracking-widest font-black text-slate-400 mb-3">Column Visibility</div><div id="columnList" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2"></div></div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead id="thead" class="bg-slate-950 dark:bg-slate-800 text-white text-[11px] uppercase tracking-widest"></thead>
+              <tbody id="tbody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+          </div>
+          <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-2 md:items-center justify-between text-xs font-bold text-slate-500"><span id="tableCount">0 records</span><span>Business names are shown in tables. Internal IDs stay hidden except record IDs shortened to 4 characters.</span></div>
+        </section>
       </main>
     </div>
-
-    <footer
-      class="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 md:px-6 py-3">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-        <div id="footerBrand">© 2026 Auditor</div>
-        <div>Audit tracking, reporting, and AI-assisted review</div>
-      </div>
-    </footer>
   </div>
 
-  <div id="crudModal" class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm p-2 sm:p-4 md:p-6">
-    <div class="w-full max-w-6xl mx-auto h-full flex items-center justify-center">
-      <div
-        class="w-full max-h-[96vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col overflow-hidden">
-        <div
-          class="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-start sm:items-center justify-between gap-3">
-          <div class="min-w-0">
-            <h2 id="modalTitle" class="text-xl font-black">Create Audit</h2>
-            <p class="text-xs text-slate-500">One row per agent audit</p>
-          </div>
-          <button type="button" onclick="closeCrudModal()"
-            class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+  <div id="mobileNav" class="hidden fixed inset-0 z-[80] bg-slate-950/50 backdrop-blur-sm xl:hidden" onclick="toggleMobileNav()">
+    <div class="w-80 max-w-[85vw] h-full glass p-4" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4"><div class="font-black text-lg">Lee Business</div><button onclick="toggleMobileNav()" class="text-2xl">×</button></div>
+      <div id="mobileSideNav" class="space-y-1"></div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center"><div><h3 class="font-black text-2xl">Backend Connection</h3><p class="text-xs text-slate-500 mt-1">Encrypted Apps Script /exec URL. Saved in this browser.</p></div><button onclick="closeSettings()" class="ml-auto text-2xl h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">×</button></div>
+      <div class="p-6 space-y-4">
+        <div class="rounded-2xl bg-lee-50 dark:bg-lee-900/20 border border-lee-100 dark:border-lee-800 p-4 text-sm text-lee-900 dark:text-lee-100 leading-relaxed">First setup only: enter encrypted URL and key, then Connect. Use cache mode to remember the decrypted connection so you do not need to type the key every reload.</div>
+        <div><label class="text-xs font-black uppercase text-slate-500">Encrypted Apps Script /exec URL</label><textarea id="encryptedApiUrl" rows="4" class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-xs font-mono outline-none focus:ring-2 ring-lee-500" placeholder="Paste encrypted URL here"></textarea></div>
+        <div class="grid md:grid-cols-2 gap-4"><div><label class="text-xs font-black uppercase text-slate-500">Decryption Key</label><input id="decryptKey" type="password" class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500" placeholder="Enter secret key"></div><div><label class="text-xs font-black uppercase text-slate-500">Connection Cache</label><select id="cacheMode" class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none"><option value="decrypted">Remember connection, no key next reload</option><option value="encrypted">Save encrypted only, require key next reload</option></select></div></div>
+        <p id="settingsMsg" class="text-xs text-red-600 font-bold"></p>
+        <div class="flex flex-col md:flex-row gap-2 justify-end"><button onclick="forgetBackend()" class="px-5 py-3 rounded-2xl bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 text-xs font-black">FORGET CONNECTION</button><button onclick="encryptRawUrl()" class="px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black">ENCRYPT URL</button><button onclick="saveSettings(false)" class="px-5 py-3 rounded-2xl bg-slate-950 dark:bg-lee-600 text-white text-xs font-black shadow-card">CONNECT</button></div>
+        <div id="encryptOutputBox" class="hidden"><label class="text-xs font-black uppercase text-slate-500">Encrypted Output</label><div id="encryptOutput" class="mt-1 p-4 rounded-2xl bg-slate-950 text-green-300 text-xs font-mono break-all"></div><button onclick="copyEncryptedOutput()" class="mt-2 px-4 py-2 rounded-2xl bg-lee-600 text-white text-xs font-black">COPY</button></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="profileModal" class="modal fixed inset-0 z-[85] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-xl rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center gap-4">
+        <div class="profile-photo-preview"><img id="profilePreviewImg" class="hidden w-full h-full object-cover" alt="Preview"><span id="profilePreviewInitials">LB</span></div>
+        <div class="min-w-0"><h3 class="font-black text-xl">Profile Settings</h3><p class="text-xs text-slate-500 mt-1">Update your display name and photo used in online presence.</p></div>
+        <button onclick="closeProfileModal()" class="ml-auto h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-black">×</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="text-xs font-black uppercase text-slate-500">Google Email</label>
+          <input id="profileEmail" readonly class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-3 text-sm font-bold">
         </div>
-
-        <div class="flex-1 overflow-auto thin-scroll">
-          <div class="p-4 md:p-6 pb-8">
-            <form id="auditForm" class="space-y-6" oninput="calculateScores()"
-              onsubmit="event.preventDefault(); saveAudit();">
-              <input type="hidden" id="audit_id" />
-
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
-                    Date</label>
-                  <input id="audit_date" type="date" required
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div class="md:col-span-2">
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agent
-                    Name</label>
-                  <select id="agent_name" required
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-                    <option value="">Select agent</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
-                    Channel</label>
-                  <input id="audit_channel" type="text"  required 
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
-                    Field ID</label>
-                  <input id="property_field_id" type="text" required 
-                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <section
-                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h3 class="font-black text-blue-600 dark:text-blue-400">Basic Info</h3>
-                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                      <span id="disp_basic_weighted">0.00</span> / 50
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
-                        Name</label><input id="property_name_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Mgmt
-                        Company</label><input id="mgmt_company_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Apartment
-                        Mgr</label><input id="apartment_mgr_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Regional
-                        Mgr</label><input id="regional_mgr_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email</label><input
-                        id="email_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Website</label><input
-                        id="website_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Office
-                        Hours</label><input id="office_hours_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                  </div>
-                </section>
-
-                <section
-                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h3 class="font-black text-blue-600 dark:text-blue-400">Locator Info</h3>
-                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                      <span id="disp_locator_weighted">0.00</span> / 20
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Commission</label><input
-                        id="commission_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Locator
-                        Note</label><input id="locator_note_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Requirements</label><input
-                        id="requirements_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                <section
-                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h3 class="font-black text-blue-600 dark:text-blue-400">Occupancy</h3>
-                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                      <span id="disp_occupancy_weighted">0.00</span> / 10
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Occupancy</label><input
-                        id="occupancy_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Special
-                        Coding</label><input id="special_coding_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                  </div>
-                </section>
-
-                <section
-                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h3 class="font-black text-blue-600 dark:text-blue-400">Floorplan / Pricing</h3>
-                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                      <span id="disp_floorplan_weighted">0.00</span> / 10
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Pricing</label><input
-                        id="pricing_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Availability</label><input
-                        id="availability_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                  </div>
-                </section>
-
-                <section
-                  class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <h3 class="font-black text-blue-600 dark:text-blue-400">Notation</h3>
-                    <span class="text-xs font-black px-3 py-1 rounded-full bg-white dark:bg-slate-900">
-                      <span id="disp_notation_weighted">0.00</span> / 10
-                    </span>
-                  </div>
-                  <div class="grid grid-cols-1 gap-3">
-                    <div><label
-                        class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Notation</label><input
-                        id="notation_score" type="number" min="0" max="5" step="1" required
-                        class="score-input w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <section
-                class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Error /
-                  Note</label>
-                <textarea id="final_error_note" rows="4"
-                  class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"></textarea>
-              </section>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                <div class="rounded-2xl bg-slate-900 text-white p-4">
-                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Basic Raw</p>
-                  <div id="disp_basic_raw" class="text-2xl font-black">0.00</div>
-                </div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4">
-                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Locator Raw</p>
-                  <div id="disp_locator_raw" class="text-2xl font-black">0.00</div>
-                </div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4">
-                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Occ Raw</p>
-                  <div id="disp_occupancy_raw" class="text-2xl font-black">0.00</div>
-                </div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4">
-                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Floor Raw</p>
-                  <div id="disp_floorplan_raw" class="text-2xl font-black">0.00</div>
-                </div>
-                <div class="rounded-2xl bg-slate-900 text-white p-4">
-                  <p class="text-[10px] uppercase tracking-wider text-slate-300 font-bold">Notation Raw</p>
-                  <div id="disp_notation_raw" class="text-2xl font-black">0.00</div>
-                </div>
-              </div>
-
-              <div
-                class="rounded-2xl bg-blue-600 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-               <div>
-  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Computed Overall</div>
-  <div id="disp_overall_raw" class="text-2xl font-black">0 / 75</div>
-</div>
-<div class="sm:text-right">
-  <div class="text-xs font-bold uppercase tracking-wider text-blue-100">Overall Score</div>
-  <div id="disp_overall_score" class="text-4xl font-black">0</div>
-</div>
-              </div>
-            </form>
-          </div>
+        <div>
+          <label class="text-xs font-black uppercase text-slate-500">Display Name</label>
+          <input id="profileName" class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500" placeholder="Your name">
         </div>
-
-        <div
-          class="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex flex-col-reverse sm:flex-row justify-end gap-3">
-          <button type="button" onclick="closeCrudModal()"
-            class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-            Cancel
-          </button>
-          <button type="submit" form="auditForm" id="saveBtn"
-            class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-            <i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit
-          </button>
+        <div>
+          <label class="text-xs font-black uppercase text-slate-500">Photo URL</label>
+          <input id="profilePhotoUrl" class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500" placeholder="https://example.com/photo.png">
+          <p class="mt-2 text-[11px] text-slate-500 font-semibold">Use a direct public image link. Google Drive sharing links are auto-converted when possible.</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-4">
+          <div class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Who is online</div>
+          <div id="profileOnlineList" class="flex flex-wrap gap-3"></div>
+        </div>
+        <p id="profileMsg" class="text-xs text-red-600 font-bold"></p>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeProfileModal()" class="rounded-2xl border border-slate-200 dark:border-slate-700 px-5 py-3 text-xs font-black">CANCEL</button>
+          <button onclick="saveProfile()" class="rounded-2xl bg-lee-600 text-white px-5 py-3 text-xs font-black shadow-card">SAVE PROFILE</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="agentModal"
-    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div
-      class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
-      <input type="hidden" id="agent_id" />
-      <h2 id="agentModalTitle" class="text-xl font-black mb-2">Add Agent</h2>
-      <p class="text-sm text-slate-500 mb-4">Agents here will be saved in the Agents sheet and shown in the audit form
-        dropdown.</p>
-
-      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Agent Name</label>
-      <input id="agent_modal_name" type="text" placeholder="Enter agent name"
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-emerald-500 text-sm" />
-
-      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-        <button type="button" onclick="closeAgentModal()"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-          Cancel
-        </button>
-        <button type="button" onclick="saveAgent()" id="agentSaveBtn"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
-          Save Agent
-        </button>
-      </div>
+  <div id="formModal" class="modal fixed inset-0 z-[70] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
+      <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center"><div><h3 id="formTitle" class="font-black text-2xl">Form</h3><p class="text-xs text-slate-500 mt-1">Preview updates instantly; backend sync happens after you save.</p></div><button onclick="closeForm()" class="ml-auto text-2xl h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">×</button></div>
+      <form id="recordForm" class="p-6 overflow-y-auto grid md:grid-cols-2 gap-4" onsubmit="saveForm(event)"></form>
+      <div class="p-5 border-t border-slate-200 dark:border-slate-800 flex gap-2 justify-end"><button onclick="closeForm()" class="px-5 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black">CANCEL</button><button onclick="document.getElementById('recordForm').requestSubmit()" class="px-5 py-3 rounded-2xl bg-slate-950 dark:bg-lee-600 text-white text-xs font-black shadow-card">SAVE RECORD</button></div>
     </div>
   </div>
 
-  <div id="settingsModal"
-    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div
-      class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
-      <h2 class="text-xl font-black mb-2">System Settings</h2>
-      <p class="text-sm text-slate-500 mb-4">Paste your deployed Google Apps Script Web App URL. The system stays locked
-        until this is saved and connected.</p>
-
-      <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Apps Script URL</label>
-      <input id="appScriptUrl" type="text" placeholder="https://script.google.com/macros/s/........../exec"
-        class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm" />
-
-      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-        <button type="button" onclick="closeSettings()"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-          Close
-        </button>
-        <button type="button" onclick="saveSettings()"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-          Save & Connect
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="profileModal"
-    class="modal fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div
-      class="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6">
-      <h2 class="text-xl font-black mb-2">Update Profile Image</h2>
-      <p class="text-sm text-slate-500 mb-4">
-        Set your profile image by pasting a direct image link. This will be saved to the <b>Users</b> sheet for your current user.
-      </p>
-
-      <div class="mb-4">
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Current User</label>
-        <input id="profileActorName" type="text" readonly
-          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm">
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Image URL</label>
-        <input id="profileImageUrl" type="text" placeholder="https://example.com/photo.png"
-          class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500 text-sm">
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Preview</label>
-        <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <img id="profilePreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
-            <span id="profilePreviewInitials" class="text-sm font-black text-slate-500">AU</span>
-          </div>
-          <div class="text-xs text-slate-500">
-            Paste a direct JPG, PNG, WEBP, or GIF image link.
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-4 mb-5">
-        <div class="text-sm font-black mb-2">Guide</div>
-        <ol class="text-xs text-slate-500 space-y-1 list-decimal pl-4">
-          <li>Upload your image somewhere public like Google Drive, Imgur, your website, or CDN.</li>
-          <li>Get the direct image link ending in .jpg, .jpeg, .png, or .webp when possible.</li>
-          <li>Paste it here and click Save Profile Image.</li>
-          <li>If the image does not load, check that the link is publicly accessible.</li>
-        </ol>
-      </div>
-
-      <div class="mt-5 flex flex-col-reverse sm:flex-row justify-end gap-3">
-        <button type="button" onclick="closeProfileModal()"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
-          Cancel
-        </button>
-        <button type="button" onclick="saveProfileImage()" id="profileSaveBtn"
-          class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white">
-          Save Profile Image
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="loadingOverlay"
-    class="loading-overlay fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div
-      class="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl p-6 text-center">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg mb-4">
-        <i id="loadingIcon" class="fa-solid fa-spinner fa-spin text-2xl"></i>
-      </div>
-      <h3 id="loadingTitle" class="text-lg font-black">Processing</h3>
-      <p id="loadingText" class="text-sm text-slate-500 mt-2">Please wait...</p>
-      <div class="mt-4 flex items-center justify-center gap-2">
-        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-        <span class="pulse-dot w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const WEIGHTS = {
-      basic: 50,
-      locator: 20,
-      occupancy: 10,
-      floorplan: 10,
-      notation: 10
-    };
-
-    const SCORE_FIELDS = [
-      'property_name_score',
-      'mgmt_company_score',
-      'apartment_mgr_score',
-      'regional_mgr_score',
-      'email_score',
-      'website_score',
-      'office_hours_score',
-      'commission_score',
-      'locator_note_score',
-      'requirements_score',
-      'occupancy_score',
-      'special_coding_score',
-      'pricing_score',
-      'availability_score',
-      'notation_score'
-    ];
-
-    let db = [];
-    let agentsDb = [];
-    let usersDb = [];
-
-    let apiUrl = localStorage.getItem('auditorAppUrl') || '';
-    let trendChart = null;
-    let agentChart = null;
-    let currentPage = 1;
-    let rowsPerPage = 10;
-    let currentAgentPage = 1;
-    let agentRowsPerPage = 10;
-
-let lastUserActivityAt = Date.now();
-let idleSyncTimer = null;
-let isFetchingData = false;
-let isMutatingData = false;
-let lastDataFingerprint = '';
-let mouseActivityThrottleAt = 0;
-
-    let currentActorName = localStorage.getItem('auditorActorName') || 'Auditor';
-    let currentActorPhoto = localStorage.getItem('auditorActorPhoto') || '';
-    let heartbeatTimer = null;
-    let presenceRefreshTimer = null;
-    let interactionHeartbeatThrottleMs = 8000;
-    let lastHeartbeatAt = 0;
-
-    function getPossessiveActorTitle(actorName) {
-      const actor = String(actorName || '').trim();
-      if (!actor) return 'Auditor';
-      if (actor.toLowerCase().endsWith('s')) return `${actor}' Auditor`;
-      return `${actor}'s Auditor`;
-    }
-
-function applyActorBranding() {
-  const brandedTitle = getPossessiveActorTitle(currentActorName);
-
-  document.title = brandedTitle;
-
-  const footerBrand = document.getElementById('footerBrand');
-  if (footerBrand) footerBrand.textContent = `© 2026 ${brandedTitle}`;
-
-  const myName = document.getElementById('myPresenceName');
-  if (myName) myName.textContent = currentActorName || 'Auditor';
-
-  localStorage.setItem('auditorActorName', currentActorName || 'Auditor');
-  localStorage.setItem('auditorActorPhoto', currentActorPhoto || '');
-}
-
-    function initApp() {
-      document.getElementById('appScriptUrl').value = apiUrl;
-      applyActorBranding();
-      applyLockState();
-
-      if (apiUrl) {
-        fetchData();
-        startHeartbeat();
-        startPresenceRefresh();
-      } else {
-        setSyncStatus('Setup Required', 'lock', 'error');
-        renderEmptyState();
-      }
-    }
-
-    function applyLockState() {
-      const hasApi = !!apiUrl;
-      const appContent = document.getElementById('appContent');
-      const setupBanner = document.getElementById('setupBanner');
-
-      appContent.classList.toggle('locked', !hasApi);
-      setupBanner.classList.toggle('hidden', hasApi);
-    }
-
-    function requireConfiguredApi() {
-      if (apiUrl) return true;
-      alert('Please enter your Google Apps Script URL first in System Settings.');
-      openSettings();
-      return false;
-    }
-
-    function renderEmptyState() {
-      db = [];
-      agentsDb = [];
-      usersDb = [];
-      renderAll();
-      applyActorBranding();
-    }
-
-    function changeRowsPerPage() {
-      rowsPerPage = Number(document.getElementById('rowsPerPageSelect').value || 10);
-      currentPage = 1;
-      renderTable();
-    }
-
-    function changeAgentRowsPerPage() {
-      agentRowsPerPage = Number(document.getElementById('agentRowsPerPageSelect').value || 10);
-      currentAgentPage = 1;
-      renderAgentsTable();
-    }
-
-    function goToPage(page) {
-      currentPage = page;
-      renderTable();
-    }
-
-    function goToAgentPage(page) {
-      currentAgentPage = page;
-      renderAgentsTable();
-    }
-
-    function renderPagination(totalRows) {
-      const pageInfo = document.getElementById('tablePageInfo');
-      const controls = document.getElementById('paginationControls');
-      if (!pageInfo || !controls) return;
-
-      const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const start = totalRows === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1;
-      const end = Math.min(currentPage * rowsPerPage, totalRows);
-
-      pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} entries`;
-
-      let html = '';
-
-      html += `
-      <button type="button"
-        onclick="goToPage(${Math.max(1, currentPage - 1)})"
-        class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
-        ${currentPage === 1 ? 'disabled' : ''}>
-        Prev
-      </button>
-    `;
-
-      const totalPagesToShow = Math.ceil(totalRows / rowsPerPage) || 1;
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPagesToShow, currentPage + 2);
-
-      if (currentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
-      if (currentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
-
-      for (let i = startPage; i <= endPage; i++) {
-        html += `
-        <button type="button"
-          onclick="goToPage(${i})"
-          class="px-3 py-2 rounded-xl border text-sm font-semibold ${i === currentPage
-            ? 'bg-blue-600 text-white border-blue-600'
-            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
-          }">
-          ${i}
-        </button>
-      `;
-      }
-
-      html += `
-      <button type="button"
-        onclick="goToPage(${Math.min(totalPagesToShow, currentPage + 1)})"
-        class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
-        ${currentPage === totalPagesToShow ? 'disabled' : ''}>
-        Next
-      </button>
-    `;
-
-      controls.innerHTML = html;
-    }
-
-    function renderAgentsPagination(totalRows) {
-      const pageInfo = document.getElementById('agentsTablePageInfo');
-      const controls = document.getElementById('agentsPaginationControls');
-      if (!pageInfo || !controls) return;
-
-      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
-      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
-
-      const start = totalRows === 0 ? 0 : ((currentAgentPage - 1) * agentRowsPerPage) + 1;
-      const end = Math.min(currentAgentPage * agentRowsPerPage, totalRows);
-
-      pageInfo.textContent = `Showing ${start} to ${end} of ${totalRows} agents`;
-
-      let html = '';
-
-      html += `
-      <button type="button"
-        onclick="goToAgentPage(${Math.max(1, currentAgentPage - 1)})"
-        class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}"
-        ${currentAgentPage === 1 ? 'disabled' : ''}>
-        Prev
-      </button>
-    `;
-
-      const totalPagesToShow = Math.ceil(totalRows / agentRowsPerPage) || 1;
-      let startPage = Math.max(1, currentAgentPage - 2);
-      let endPage = Math.min(totalPagesToShow, currentAgentPage + 2);
-
-      if (currentAgentPage <= 3) endPage = Math.min(totalPagesToShow, 5);
-      if (currentAgentPage >= totalPagesToShow - 2) startPage = Math.max(1, totalPagesToShow - 4);
-
-      for (let i = startPage; i <= endPage; i++) {
-        html += `
-        <button type="button"
-          onclick="goToAgentPage(${i})"
-          class="px-3 py-2 rounded-xl border text-sm font-semibold ${i === currentAgentPage
-            ? 'bg-emerald-600 text-white border-emerald-600'
-            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
-          }">
-          ${i}
-        </button>
-      `;
-      }
-
-      html += `
-      <button type="button"
-        onclick="goToAgentPage(${Math.min(totalPagesToShow, currentAgentPage + 1)})"
-        class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold ${currentAgentPage === totalPagesToShow ? 'opacity-50 cursor-not-allowed' : ''}"
-        ${currentAgentPage === totalPagesToShow ? 'disabled' : ''}>
-        Next
-      </button>
-    `;
-
-      controls.innerHTML = html;
-    }
-
-    function showLoading(title = 'Processing', text = 'Please wait...', icon = 'spinner', spinning = true) {
-      const overlay = document.getElementById('loadingOverlay');
-      const titleEl = document.getElementById('loadingTitle');
-      const textEl = document.getElementById('loadingText');
-      const iconEl = document.getElementById('loadingIcon');
-
-      titleEl.textContent = title;
-      textEl.textContent = text;
-      iconEl.className = `fa-solid fa-${icon}${spinning ? ' fa-spin' : ''} text-2xl`;
-      overlay.classList.add('active');
-    }
-
-    function hideLoading() {
-      document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    function toggleTheme() {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('auditorTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      renderCharts();
-    }
-
-    function applySavedTheme() {
-      const saved = localStorage.getItem('auditorTheme');
-      if (saved === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
-    }
-
-    function goToAI() {
-      if (!requireConfiguredApi()) return;
-      window.location.href = 'AI.html';
-    }
-
-    function goToLogs() {
-      if (!requireConfiguredApi()) return;
-      window.location.href = 'Logs.html';
-    }
-
-    function switchTab() {
-      document.getElementById('view-dash').classList.remove('hidden');
-      document.getElementById('btn-dash').classList.add('active');
-      renderCharts();
-    }
-
-    function openSettings() {
-      document.getElementById('appScriptUrl').value = apiUrl;
-      document.getElementById('settingsModal').classList.add('active');
-    }
-
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.remove('active');
-    }
-
-    async function saveSettings() {
-      const url = (document.getElementById('appScriptUrl').value || '').trim();
-      if (!url) {
-        alert('Apps Script URL is required.');
-        return;
-      }
-
-      apiUrl = url;
-      localStorage.setItem('auditorAppUrl', apiUrl);
-      closeSettings();
-      applyLockState();
-      await fetchData();
-      startHeartbeat();
-      startPresenceRefresh();
-    }
-
-function openCrudModal(id = null) {
-  if (!requireConfiguredApi()) return;
-
-  const form = document.getElementById('auditForm');
-  form.reset();
-
-  document.getElementById('audit_id').value = '';
-  document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
-
-  renderAgentDropdown();
-  setAuditFormLockedState(false);
-
-  if (id) {
-    const record = db.find(r => String(r.audit_id).trim() === String(id).trim());
-
-    if (!record) {
-      alert('Record not found locally yet. Please refresh once.');
-      return;
-    }
-
-    const fields = [
-      'audit_id',
-      'audit_date',
-      'agent_name',
-      'audit_channel',
-      'property_field_id',
-      'property_name_score',
-      'mgmt_company_score',
-      'apartment_mgr_score',
-      'regional_mgr_score',
-      'email_score',
-      'website_score',
-      'office_hours_score',
-      'commission_score',
-      'locator_note_score',
-      'requirements_score',
-      'occupancy_score',
-      'special_coding_score',
-      'pricing_score',
-      'availability_score',
-      'notation_score',
-      'final_error_note'
-    ];
-
-    fields.forEach(key => {
-      const el = document.getElementById(key);
-      if (!el) return;
-
-      if (key === 'audit_date') {
-        el.value = normalizeDateForInput(record[key]);
-      } else {
-        el.value = record[key] ?? '';
-      }
-    });
-
-    if (!canEditAuditRecord(record)) {
-      setAuditFormLockedState(true, getAuditOwnershipMessage(record));
-    }
-  } else {
-    document.getElementById('audit_date').value = getTodayLocal();
-  }
-
-  calculateScores();
-  document.getElementById('crudModal').classList.add('active');
-}
-function closeCrudModal() {
-  setAuditFormLockedState(false);
-  document.getElementById('crudModal').classList.remove('active');
-}
-    function openAgentModal(id = null) {
-      if (!requireConfiguredApi()) return;
-
-      document.getElementById('agent_id').value = '';
-      document.getElementById('agent_modal_name').value = '';
-      document.getElementById('agentModalTitle').textContent = id ? 'Edit Agent' : 'Add Agent';
-      document.getElementById('agentSaveBtn').innerHTML = id ? 'Update Agent' : 'Save Agent';
-
-      if (id) {
-        const agent = agentsDb.find(a => String(a.agent_id) === String(id));
-        if (agent) {
-          document.getElementById('agent_id').value = agent.agent_id || '';
-          document.getElementById('agent_modal_name').value = agent.agent_name || '';
-        }
-      }
-
-      document.getElementById('agentModal').classList.add('active');
-    }
-
-    function closeAgentModal() {
-      document.getElementById('agentModal').classList.remove('active');
-    }
-
-    function normalizeDateForInput(value) {
-      if (!value) return '';
-      const s = String(value);
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-      const d = new Date(s);
-      if (isNaN(d.getTime())) return '';
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    }
-
-    function getTodayLocal() {
-      const d = new Date();
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    }
-
-    function pad(n) {
-      return String(n).padStart(2, '0');
-    }
-
-    function toNumber(value) {
-      const n = Number(value);
-      return Number.isFinite(n) ? n : 0;
-    }
-
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
-
-    function round2(n) {
-      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-    }
-
-  function getScore(id) {
-  const el = document.getElementById(id);
-  if (!el) return 0;
-
-  let raw = String(el.value || '').trim();
-  if (raw === '') return 0;
-
-  let val = toNumber(raw);
-  val = Math.round(val);
-  val = clamp(val, 0, 5);
-
-  if (String(val) !== raw) el.value = val;
-  return val;
-}
-
-    function scaleScore(raw, maxRaw, weightedMax) {
-      if (!maxRaw) return 0;
-      return round2((raw / maxRaw) * weightedMax);
-    }
-
-    function calculateScores() {
-      const basic_raw = round2(
-        getScore('property_name_score') +
-        getScore('mgmt_company_score') +
-        getScore('apartment_mgr_score') +
-        getScore('regional_mgr_score') +
-        getScore('email_score') +
-        getScore('website_score') +
-        getScore('office_hours_score')
-      );
-
-      const locator_raw = round2(
-        getScore('commission_score') +
-        getScore('locator_note_score') +
-        getScore('requirements_score')
-      );
-
-      const occupancy_raw = round2(
-        getScore('occupancy_score') +
-        getScore('special_coding_score')
-      );
-
-      const floorplan_raw = round2(
-        getScore('pricing_score') +
-        getScore('availability_score')
-      );
-
-      const notation_raw = round2(getScore('notation_score'));
-
-      const basic_weighted = scaleScore(basic_raw, 35, WEIGHTS.basic);
-      const locator_weighted = scaleScore(locator_raw, 15, WEIGHTS.locator);
-      const occupancy_weighted = scaleScore(occupancy_raw, 10, WEIGHTS.occupancy);
-      const floorplan_weighted = scaleScore(floorplan_raw, 10, WEIGHTS.floorplan);
-      const notation_weighted = scaleScore(notation_raw, 5, WEIGHTS.notation);
-
-      const overall_raw = round2(basic_raw + locator_raw + occupancy_raw + floorplan_raw + notation_raw);
-      const overall_score_100 = round2(basic_weighted + locator_weighted + occupancy_weighted + floorplan_weighted + notation_weighted);
-
-      setText('disp_basic_raw', basic_raw.toFixed(2));
-      setText('disp_locator_raw', locator_raw.toFixed(2));
-      setText('disp_occupancy_raw', occupancy_raw.toFixed(2));
-      setText('disp_floorplan_raw', floorplan_raw.toFixed(2));
-      setText('disp_notation_raw', notation_raw.toFixed(2));
-
-      setText('disp_basic_weighted', basic_weighted.toFixed(2));
-      setText('disp_locator_weighted', locator_weighted.toFixed(2));
-      setText('disp_occupancy_weighted', occupancy_weighted.toFixed(2));
-      setText('disp_floorplan_weighted', floorplan_weighted.toFixed(2));
-      setText('disp_notation_weighted', notation_weighted.toFixed(2));
-
-     setText('disp_overall_raw', `${Math.round(overall_raw)} / 75`);
-setText('disp_overall_score', overall_score_100.toFixed(2));
-
-      return {
-        basic_raw,
-        basic_weighted,
-        locator_raw,
-        locator_weighted,
-        occupancy_raw,
-        occupancy_weighted,
-        floorplan_raw,
-        floorplan_weighted,
-        notation_raw,
-        notation_weighted,
-        overall_raw,
-        overall_score_100
-      };
-    }
-
-    function setText(id, value) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    }
-
-    function buildPayload() {
-      const calc = calculateScores();
-
-      return {
-        audit_id: (document.getElementById('audit_id').value || '').trim(),
-        audit_date: (document.getElementById('audit_date').value || '').trim(),
-        agent_name: (document.getElementById('agent_name').value || '').trim(),
-        audit_channel: (document.getElementById('audit_channel').value || '').trim(),
-        property_field_id: (document.getElementById('property_field_id').value || '').trim(),
-        auditor: currentActorName,
-
-        property_name_score: getScore('property_name_score'),
-        mgmt_company_score: getScore('mgmt_company_score'),
-        apartment_mgr_score: getScore('apartment_mgr_score'),
-        regional_mgr_score: getScore('regional_mgr_score'),
-        email_score: getScore('email_score'),
-        website_score: getScore('website_score'),
-        office_hours_score: getScore('office_hours_score'),
-
-        commission_score: getScore('commission_score'),
-        locator_note_score: getScore('locator_note_score'),
-        requirements_score: getScore('requirements_score'),
-
-        occupancy_score: getScore('occupancy_score'),
-        special_coding_score: getScore('special_coding_score'),
-
-        pricing_score: getScore('pricing_score'),
-        availability_score: getScore('availability_score'),
-        notation_score: getScore('notation_score'),
-
-        final_error_note: (document.getElementById('final_error_note').value || '').trim(),
-        ...calc
-      };
-    }
-
-  function validatePayload(payload) {
-  const requiredFields = [
-    ['audit_date', 'Audit date'],
-    ['agent_name', 'Agent name'],
-    ['audit_channel', 'Audit channel'],
-    ['property_field_id', 'Property field ID'],
-    ['property_name_score', 'Property name score'],
-    ['mgmt_company_score', 'Management company score'],
-    ['apartment_mgr_score', 'Apartment manager score'],
-    ['regional_mgr_score', 'Regional manager score'],
-    ['email_score', 'Email score'],
-    ['website_score', 'Website score'],
-    ['office_hours_score', 'Office hours score'],
-    ['commission_score', 'Commission score'],
-    ['locator_note_score', 'Locator note score'],
-    ['requirements_score', 'Requirements score'],
-    ['occupancy_score', 'Occupancy score'],
-    ['special_coding_score', 'Special coding score'],
-    ['pricing_score', 'Pricing score'],
-    ['availability_score', 'Availability score'],
-    ['notation_score', 'Notation score']
-  ];
-
-  for (const [fieldId, label] of requiredFields) {
-    const el = document.getElementById(fieldId);
-    const value = el ? String(el.value || '').trim() : '';
-
-    if (value === '') {
-      alert(`${label} is required.`);
-      el?.focus();
-      return false;
-    }
-  }
-
-  return true;
-}
-
-    async function apiPost(formObj) {
-      const body = new URLSearchParams();
-      Object.keys(formObj).forEach(key => {
-        body.set(key, formObj[key] == null ? '' : String(formObj[key]));
-      });
-
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: body.toString()
-      });
-
-      const text = await res.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (e) {
-        console.error('Raw server response:', text);
-        throw new Error('Invalid server response. Check Apps Script deployment.');
-      }
-
-      if (!json || json.status !== 'success') {
-        throw new Error(json?.message || 'API request failed.');
-      }
-
-      return json;
-    }
-
-async function saveAudit() {
-  if (!requireConfiguredApi()) return;
-
-  const payload = buildPayload();
-  if (!validatePayload(payload)) return;
-
-  if (payload.audit_id) {
-    const existingRecord = db.find(r => String(r.audit_id) === String(payload.audit_id));
-    if (existingRecord && !canEditAuditRecord(existingRecord)) {
-      alert(getAuditOwnershipMessage(existingRecord));
-      setAuditFormLockedState(true, getAuditOwnershipMessage(existingRecord));
-      return;
-    }
-  }
-
-  const action = payload.audit_id ? 'update' : 'create';
-
-  try {
-    isMutatingData = true;
-    toggleSaveButton(true);
-    showLoading('Saving Audit', 'Saving record...');
-    setSyncStatus('Saving...', 'spinner', 'loading');
-
-    const res = await apiPost({ action, ...payload, actor: currentActorName });
-
-    const savedRecord = normalizeRecord({
-      ...payload,
-      ...(res?.record || {}),
-      audit_id: String(res?.record?.audit_id ?? res?.audit_id ?? payload.audit_id ?? '').trim(),
-      auditor: String(res?.record?.auditor ?? payload.auditor ?? currentActorName ?? '').trim()
-    });
-
-    if (savedRecord.audit_id) {
-      if (action === 'create') {
-        db.unshift(savedRecord);
-      } else {
-        const index = db.findIndex(r => String(r.audit_id) === String(savedRecord.audit_id));
-        if (index >= 0) db[index] = savedRecord;
-        else db.unshift(savedRecord);
-      }
-
-      db.sort(sortRecords);
-      renderAuditOnly();
-      
-    }
-   
-    closeCrudModal();
-    hideLoading();
-    lastDataFingerprint = '';
-    lastUserActivityAt = Date.now();
-    setSyncStatus('Synced', 'check', 'success');
-
-    await fetchData(false);
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Error saving audit.');
-    setSyncStatus('Save failed', 'triangle-exclamation', 'error');
-  } finally {
-    isMutatingData = false;
-    toggleSaveButton(false);
- 
+  <div id="toastWrap" class="fixed bottom-4 right-4 z-[10000] space-y-2"></div>
+
+<script>
+const STORAGE = {
+  encryptedApi: 'lee_business_encrypted_api_url',
+  decryptedApi: 'lee_business_decrypted_api_url_cache',
+  cacheMode: 'lee_business_cache_mode',
+  theme: 'lee_business_theme',
+  columns: 'lee_business_columns_',
+  lastUser: 'lee_business_last_user'
+};
+let API_URL = localStorage.getItem(STORAGE.decryptedApi) || '';
+let TOKEN = '';
+let USER = null;
+let DB = null;
+let current = { sheet: 'businesses', id: null };
+let chartBusiness = null;
+let chartRoi = null;
+let activeColumns = {};
+let pendingRows = new Set();
+let heartbeatTimer = null;
+let presenceRenderTimer = null;
+
+const NAV = [
+  ['dashboard','Dashboard','📊'], ['businesses','Businesses','🏢'], ['sales','Sales','💰'], ['expenses','Expenses','🧾'], ['materials','Materials','🧱'], ['inventory','Inventory','📦'], ['products','Products','🛍️'], ['logs','Audit Logs','🕒']
+];
+const SCHEMAS = {
+  businesses:{title:'Businesses',key:'businesses',fields:[['name','Business Name','text',true],['description','Description','text',false],['status','Status','select:Active,Inactive',true]]},
+  sales:{title:'Sales',key:'sales',dateKey:'sale_date',fields:[['business_id','Business','business',true],['sale_date','Date','date',true],['item','Item','text',true],['product_id','Product','product',false],['price','Price','number',true],['qty','Qty','number',true],['customer','Customer','text',false],['payment_status','Payment Status','select:Paid,Unpaid,In-process',true],['remarks','Remarks','text',false]]},
+  expenses:{title:'Expenses',key:'expenses',dateKey:'expense_date',fields:[['business_id','Business','business',true],['expense_date','Date','date',true],['item','Item','text',true],['type','Type','select:Equipment/Tools,Consumables,Service/Fees,Rent,Utilities,Payroll,Other',true],['vendor','Vendor','text',false],['price','Price','number',true],['qty','Qty','number',true],['remarks','Remarks','text',false]]},
+  materials:{title:'Materials',key:'materials',fields:[['business_id','Business','business',true],['name','Material Name','text',true],['unit','Unit','text',true],['qty_on_hand','Qty On Hand','number',true],['cost_per_unit','Cost per Unit','number',true],['reorder_level','Reorder Level','number',false],['status','Status','select:Active,Inactive',true]]},
+  inventory:{title:'Inventory Movements',key:'inventory',dateKey:'movement_date',fields:[['business_id','Business','business',true],['material_id','Material','material',true],['type','Type','select:IN,OUT,WASTE',true],['qty','Qty','number',true],['unit_cost','Unit Cost','number',false],['reference','Reference','text',false],['remarks','Remarks','text',false],['movement_date','Movement Date','date',true]]},
+  products:{title:'Products',key:'products',fields:[['business_id','Business','business',true],['name','Product Name','text',true],['sku','SKU','text',false],['selling_price','Selling Price','number',true],['target_margin_percent','Target Margin %','number',false],['status','Status','select:Active,Inactive',true]]},
+  logs:{title:'Audit Logs',key:'logs',readOnly:true,dateKey:'timestamp',fields:[]}
+};
+
+window.addEventListener('load', () => {
+  buildNav();
+  if(localStorage.getItem(STORAGE.theme)==='dark') document.documentElement.classList.add('dark');
+  document.getElementById('encryptedApiUrl').value = localStorage.getItem(STORAGE.encryptedApi) || '';
+  document.getElementById('cacheMode').value = localStorage.getItem(STORAGE.cacheMode) || 'decrypted';
+});
+
+function handleGoogleLogin(response){
+  TOKEN = response.credential;
+  showBusy('Signing in...');
+  const info = parseJwt(TOKEN);
+  USER = { email: info.email || '', name: info.name || '' };
+  localStorage.setItem(STORAGE.lastUser, JSON.stringify(USER));
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  if(API_URL){
+    verifyAndLoad().finally(hideBusy);
+  }else{
+    hideBusy();
+    openSettings();
   }
 }
- async function saveAgent() {
-  if (!requireConfiguredApi()) return;
+function parseJwt(token){ try { return JSON.parse(atob(token.split('.')[1])); } catch(e){ return {}; } }
+function showBusy(text='Loading...'){ document.getElementById('busyText').innerText=text; document.getElementById('busyOverlay').classList.remove('hidden'); document.getElementById('busyOverlay').classList.add('flex'); }
+function hideBusy(){ document.getElementById('busyOverlay').classList.add('hidden'); document.getElementById('busyOverlay').classList.remove('flex'); }
+function showSync(text='Saving changes...'){ document.getElementById('syncTitle').innerText=text; document.getElementById('syncBanner').classList.remove('hidden'); document.getElementById('syncBanner').classList.add('flex'); }
+function hideSync(){ document.getElementById('syncBanner').classList.add('hidden'); document.getElementById('syncBanner').classList.remove('flex'); }
+function toast(msg,type='success'){ const wrap=document.getElementById('toastWrap'); const el=document.createElement('div'); el.className=`toast rounded-2xl px-4 py-3 shadow-2xl text-sm font-bold border ${type==='error'?'bg-red-50 text-red-700 border-red-100':'bg-white text-slate-800 border-slate-200'}`; el.innerText=msg; wrap.appendChild(el); setTimeout(()=>el.remove(),3800); }
+function buildNav(){ const html=NAV.map(([id,label,icon])=>`<button class="nav-btn ${id==='dashboard'?'active':''} w-full rounded-2xl px-4 py-3 text-sm font-black flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent" onclick="showTab('${id}')"><span>${icon}</span><span>${label}</span></button>`).join(''); document.getElementById('sideNav').innerHTML=html; document.getElementById('mobileSideNav').innerHTML=html; }
+function markNav(name){ document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>{ if(b.getAttribute('onclick')===`showTab('${name}')`) b.classList.add('active'); }); }
+function toggleMobileNav(){ document.getElementById('mobileNav').classList.toggle('hidden'); }
+function toggleTheme(){ document.documentElement.classList.toggle('dark'); localStorage.setItem(STORAGE.theme, document.documentElement.classList.contains('dark')?'dark':'light'); renderDashboard(); }
+function signOut(){ TOKEN=''; USER=null; DB=null; stopPresenceTimers(); document.getElementById('app').classList.add('hidden'); document.getElementById('login').classList.remove('hidden'); if(window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); }
 
-  const agentId = (document.getElementById('agent_id').value || '').trim();
-  const agentName = (document.getElementById('agent_modal_name').value || '').trim();
-
-  if (!agentName) {
-    alert('Agent name is required.');
-    return;
+function openSettings(){ document.getElementById('settingsMsg').innerText=''; document.getElementById('settingsModal').classList.add('show'); }
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('show'); }
+function encryptRawUrl(){ const raw=prompt('Paste your raw Apps Script Web App /exec URL:'); if(!raw) return; const key=document.getElementById('decryptKey').value.trim(); if(!key) return alert('Enter a decryption key first.'); if(!isValidAppsScriptExecUrl(raw)) return alert('Invalid Apps Script Web App URL. It must start with https://script.google.com/macros/s/ and end with /exec'); const encrypted=CryptoJS.AES.encrypt(raw,key).toString(); document.getElementById('encryptOutputBox').classList.remove('hidden'); document.getElementById('encryptOutput').innerText=encrypted; document.getElementById('encryptedApiUrl').value=encrypted; }
+function copyEncryptedOutput(){ const text=document.getElementById('encryptOutput').innerText.trim(); if(text) navigator.clipboard.writeText(text).then(()=>toast('Encrypted URL copied.')); }
+function decryptUrl(encrypted,key){ try{ return CryptoJS.AES.decrypt(encrypted,key).toString(CryptoJS.enc.Utf8); }catch(e){ return ''; } }
+function isValidAppsScriptExecUrl(url){ return String(url||'').startsWith('https://script.google.com/macros/s/') && String(url||'').endsWith('/exec'); }
+function forgetBackend(){ localStorage.removeItem(STORAGE.encryptedApi); localStorage.removeItem(STORAGE.decryptedApi); API_URL=''; document.getElementById('encryptedApiUrl').value=''; toast('Backend connection removed.'); }
+async function saveSettings(silent=false){
+  const msg=document.getElementById('settingsMsg'); msg.innerText='';
+  const encrypted=document.getElementById('encryptedApiUrl').value.trim();
+  const key=document.getElementById('decryptKey').value.trim();
+  const cacheMode=document.getElementById('cacheMode').value;
+  if(!API_URL){
+    if(!encrypted) { msg.innerText='Encrypted URL is required.'; return; }
+    const decrypted=decryptUrl(encrypted,key);
+    if(!decrypted || !isValidAppsScriptExecUrl(decrypted)){ msg.innerText='Wrong key or invalid encrypted URL.'; return; }
+    API_URL=decrypted;
   }
-
-  try {
-    isMutatingData = true;
-    showLoading(agentId ? 'Updating Agent' : 'Creating Agent', 'Saving agent...');
-    setSyncStatus(agentId ? 'Updating agent...' : 'Creating agent...', 'spinner', 'loading');
-
-    const res = await apiPost({
-      action: agentId ? 'update_agent' : 'create_agent',
-      agent_id: agentId,
-      agent_name: agentName,
-      actor: currentActorName
-    });
-
-    const savedAgent = {
-      agent_id: String(res?.data?.agent_id || agentId || '').trim(),
-      agent_name: String(res?.data?.agent_name || agentName || '').trim(),
-      created_at: String(res?.data?.created_at || '').trim()
-    };
-
-    if (agentId) {
-      const index = agentsDb.findIndex(a => String(a.agent_id) === String(agentId));
-      if (index >= 0) {
-        agentsDb[index] = savedAgent;
-      } else {
-        agentsDb.unshift(savedAgent);
-      }
-    } else {
-      agentsDb.unshift(savedAgent);
-    }
-
-    renderAgentsOnly();
-    closeAgentModal();
-     hideLoading();
-    lastDataFingerprint = '';
-    lastUserActivityAt = Date.now();
-    setSyncStatus('Agent saved', 'check', 'success');
-
-    await fetchData(false);
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Error saving agent.');
-    setSyncStatus('Agent save failed', 'triangle-exclamation', 'error');
-  } finally {
-    isMutatingData = false;
-   
-  }
+  localStorage.setItem(STORAGE.cacheMode,cacheMode);
+  if(encrypted) localStorage.setItem(STORAGE.encryptedApi,encrypted);
+  if(cacheMode==='decrypted') localStorage.setItem(STORAGE.decryptedApi,API_URL); else localStorage.removeItem(STORAGE.decryptedApi);
+  if(!silent) showBusy('Connecting...');
+  try{ await verifyAndLoad(); closeSettings(); toast('Backend connected.'); }
+  catch(err){ msg.innerText=err.message; toast(err.message,'error'); }
+  finally{ if(!silent) hideBusy(); }
 }
-function toggleSaveButton(loading) { const btn = document.getElementById('saveBtn'); if (!btn) return; const auditId = (document.getElementById('audit_id')?.value || '').trim(); const existingRecord = auditId ? db.find(r => String(r.audit_id) === String(auditId)) : null; const lockedByOwner = existingRecord && !canEditAuditRecord(existingRecord); if (lockedByOwner) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked'; btn.title = getAuditOwnershipMessage(existingRecord); return; } btn.disabled = loading; btn.classList.toggle('opacity-70', loading); btn.classList.toggle('cursor-not-allowed', loading); btn.innerHTML = loading ? '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...' : '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit'; btn.title = ''; }
-  async function deleteAudit(id) {
-  if (!requireConfiguredApi()) return;
-  if (!confirm('Delete this audit record?')) return;
+async function verifyAndLoad(){ const res=await post({action:'verifyToken',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Google verification failed.'); USER=res.user||{email:res.email||USER?.email||'',name:res.name||USER?.name||'',photo_url:res.user?.photo_url||''}; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; await reloadData(false); startPresenceTimers(); }
+async function post(payload){ if(!API_URL) throw new Error('Backend is not connected.'); const r=await fetch(API_URL,{method:'POST',body:JSON.stringify(payload)}); const text=await r.text(); try{return JSON.parse(text);}catch(e){console.error(text);throw new Error('Backend returned non-JSON. Check /exec URL and Web App access.');} }
+async function reloadData(show=true){ if(!API_URL){openSettings();return;} if(show) showBusy('Syncing data...'); try{ const res=await post({action:'getBootstrap',token:TOKEN}); if(res.status!=='success') throw new Error(res.message||'Failed to load data.'); USER=res.user||USER; DB=normalizeDb(res.data||{}); fillBusinessFilters(); renderAll(); renderPresence(); if(show) toast('Data synced.'); }catch(err){ toast(err.message,'error'); if(show) openSettings(); }finally{ if(show) hideBusy(); } }
+function normalizeDb(data){ return { businesses:data.businesses||[], sales:data.sales||[], expenses:data.expenses||[], materials:data.materials||[], inventory:data.inventory||data.inventoryMovements||[], products:data.products||[], logs:data.logs||[], users:data.users||[] }; }
 
-  try {
-    isMutatingData = true;
-    showLoading('Deleting Audit', 'Removing record...');
-    setSyncStatus('Deleting...', 'spinner', 'loading');
+function fillBusinessFilters(){ const opts='<option value="ALL">All Businesses</option>'+ (DB.businesses||[]).map(b=>`<option value="${esc(b.id)}">${html(b.name)}</option>`).join(''); const a=document.getElementById('businessFilter'), b=document.getElementById('businessFilterMobile'), t=document.getElementById('tableBusinessFilter'); const old=a.value||'ALL'; const oldTable=t?t.value:'ALL'; a.innerHTML=opts; b.innerHTML=opts; if(t) t.innerHTML=opts; a.value=[...a.options].some(o=>o.value===old)?old:'ALL'; b.value=a.value; if(t) t.value=[...t.options].some(o=>o.value===oldTable)?oldTable:'ALL'; }
+function syncMobileBusinessFilter(){ document.getElementById('businessFilter').value=document.getElementById('businessFilterMobile').value; renderAll(); }
+function selectedBusiness(){ return document.getElementById('businessFilter').value || 'ALL'; }
+function frows(key){ if(!DB||!DB[key]) return []; const bid=selectedBusiness(); return DB[key].filter(r=>bid==='ALL'||!r.business_id||r.business_id===bid||r.id===bid); }
+function money(n){ return '₱'+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function num(v){ const n=Number(String(v||0).replace(/[₱,\s]/g,'')); return isFinite(n)?n:0; }
+function shortId(id){ const s=String(id||''); return s ? '#'+s.slice(-4).toUpperCase() : ''; }
+function businessName(id){ return (DB.businesses||[]).find(b=>b.id===id)?.name || '-'; }
+function materialName(id){ return (DB.materials||[]).find(m=>m.id===id)?.name || '-'; }
+function productName(id){ return (DB.products||[]).find(p=>p.id===id)?.name || '-'; }
+function currentDateKey(){ return SCHEMAS[current.sheet]?.dateKey || ''; }
 
-    await apiPost({ action: 'delete', audit_id: id, actor: currentActorName });
-
-    db = db.filter(r => String(r.audit_id) !== String(id));
-    renderAuditOnly();
-    hideLoading();
-    lastDataFingerprint = '';
-    lastUserActivityAt = Date.now();
-    setSyncStatus('Deleted', 'check', 'success');
-
-    await fetchData(false);
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Error deleting audit.');
-    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-  } finally {
-    isMutatingData = false;
-    
-  }
+function renderAll(){ if(!DB) return; renderDashboard(); if(!document.getElementById('tableView').classList.contains('hidden')) renderCurrentTable(); }
+function getStats(){ const sales=frows('sales'), expenses=frows('expenses'), materials=frows('materials'), businesses=selectedBusiness()==='ALL'?DB.businesses:DB.businesses.filter(b=>b.id===selectedBusiness()); const ts=sales.reduce((a,r)=>a+(num(r.total_price)||num(r.price)*num(r.qty||1)),0); const te=expenses.reduce((a,r)=>a+(num(r.total_cost)||num(r.price)*num(r.qty||1)),0); const income=ts-te; return {sales,expenses,materials,businesses,totalSales:ts,totalExpenses:te,income,margin:ts?(income/ts)*100:0,low:materials.filter(m=>num(m.qty_on_hand)<=num(m.reorder_level))}; }
+function renderDashboard(){ if(!DB) return; const s=getStats(); document.getElementById('kpiSales').innerText=money(s.totalSales); document.getElementById('kpiExpenses').innerText=money(s.totalExpenses); document.getElementById('kpiIncome').innerText=money(s.income); document.getElementById('kpiBusinesses').innerText=s.businesses.length; document.getElementById('kpiLowStock').innerText=s.low.length; document.getElementById('kpiSalesSub').innerText=`${s.sales.length} transactions`; document.getElementById('kpiExpensesSub').innerText=`${s.expenses.length} entries`; document.getElementById('kpiMargin').innerText=`${s.margin.toFixed(1)}% margin`;
+  const labels=s.businesses.map(b=>b.name); const salesData=s.businesses.map(b=>s.sales.filter(r=>r.business_id===b.id).reduce((a,r)=>a+(num(r.total_price)||num(r.price)*num(r.qty||1)),0)); const expenseData=s.businesses.map(b=>s.expenses.filter(r=>r.business_id===b.id).reduce((a,r)=>a+(num(r.total_cost)||num(r.price)*num(r.qty||1)),0));
+  if(chartBusiness) chartBusiness.destroy(); chartBusiness=new Chart(document.getElementById('chartBusiness'),{type:'bar',data:{labels,datasets:[{label:'Sales',data:salesData,borderRadius:10},{label:'Expenses',data:expenseData,borderRadius:10}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true}}}});
+  if(chartRoi) chartRoi.destroy(); chartRoi=new Chart(document.getElementById('chartRoi'),{type:'doughnut',data:{labels:['Sales','Expenses','Income'],datasets:[{data:[s.totalSales,s.totalExpenses,Math.max(s.income,0)],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+  renderRecentSales(s.sales); renderLowStock(s.low);
 }
-
- async function deleteAgent(id) {
-  if (!requireConfiguredApi()) return;
-  if (!confirm('Delete this agent?')) return;
-
-  try {
-    isMutatingData = true;
-    showLoading('Deleting Agent', 'Removing agent...');
-    setSyncStatus('Deleting agent...', 'spinner', 'loading');
-
-    await apiPost({ action: 'delete_agent', agent_id: id, actor: currentActorName });
-
-    agentsDb = agentsDb.filter(a => String(a.agent_id) !== String(id));
-    renderAgentsOnly();
-     hideLoading();
-    lastDataFingerprint = '';
-    lastUserActivityAt = Date.now();
-    setSyncStatus('Agent deleted', 'check', 'success');
-
-    await fetchData(false);
-  } catch (error) {
-    console.error(error);
-    alert(error.message || 'Error deleting agent.');
-    setSyncStatus('Delete failed', 'triangle-exclamation', 'error');
-  } finally {
-    isMutatingData = false;
-   
-  }
-}
-
-    function isAnyModalOpen() {
-      return ['crudModal', 'agentModal', 'settingsModal', 'profileModal'].some(id =>
-        document.getElementById(id)?.classList.contains('active')
-      );
-    }
-
- function canAutoSync() {
-  return (
-    !!apiUrl &&
-    !document.hidden &&
-    !isFetchingData &&
-    !isMutatingData
-  );
-}
-
-    function createDataFingerprint(json) {
-      const audits = Array.isArray(json?.data) ? json.data : [];
-      const agents = Array.isArray(json?.agents) ? json.agents : [];
-      const users = Array.isArray(json?.users) ? json.users : [];
-      const actor = String(json?.actor || '');
-      const actorPhoto = String(json?.actor_photo || '');
-
-      const auditKey = audits.map(row => [
-        row.audit_id || '',
-        row.audit_date || '',
-        row.agent_name || '',
-        row.audit_channel || '',
-        row.property_field_id || '',
-        row.auditor || '',
-        row.overall_score_100 || '',
-        row.final_error_note || ''
-      ].join('|')).join('||');
-
-      const agentKey = agents.map(row => [
-        row.agent_id || '',
-        row.agent_name || '',
-        row.created_at || ''
-      ].join('|')).join('||');
-
-      const userKey = users.map(row => [
-        row.user_name || '',
-        row.photo_url || '',
-        row.last_seen || ''
-      ].join('|')).join('||');
-
-      return `${actor}###${actorPhoto}###${auditKey}###${agentKey}###${userKey}`;
-    }
-
-async function checkForRemoteUpdates() {
-  if (!canAutoSync()) return;
-
-  const idleMs = Date.now() - lastUserActivityAt;
-
-  // exact rule: sync check runs every 3s, but only when idle for 5s
-  if (idleMs < 5000) return;
-
-  isFetchingData = true;
-
-  try {
-    setSyncStatus('Checking updates...', 'spinner', 'loading');
-
-    const res = await fetch(apiUrl + '?t=' + Date.now(), {
-      method: 'GET',
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch (e) {
-      console.error('Raw auto-sync response:', text);
-      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-      return;
-    }
-
-    if (!json || json.status !== 'success') {
-      setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-      return;
-    }
-
-    const remoteFingerprint = createDataFingerprint(json);
-
-    if (!lastDataFingerprint || remoteFingerprint !== lastDataFingerprint) {
-      db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
-      agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
-      usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
-      db.sort(sortRecords);
-
-      currentActorName = json.actor || currentActorName || 'Auditor';
-      currentActorPhoto = json.actor_photo || currentActorPhoto || '';
-      lastDataFingerprint = remoteFingerprint;
-
-      applyActorBranding();
-      renderAll();
-      applyLockState();
-      setSyncStatus('New data synced', 'check', 'success');
-      return;
-    }
-
-    setSyncStatus('Synced', 'check', 'success');
-  } catch (error) {
-    console.error(error);
-    setSyncStatus('Auto-sync failed', 'triangle-exclamation', 'error');
-  } finally {
-    isFetchingData = false;
-  }
-}
-function startIdleAutoSync() {
-  if (idleSyncTimer) clearInterval(idleSyncTimer);
-
-  idleSyncTimer = setInterval(() => {
-    checkForRemoteUpdates();
-  }, 3000);
-}
-
-function markUserActivity() {
-  lastUserActivityAt = Date.now();
-}
-
-    function maybeSendInteractionHeartbeat() {
-      const now = Date.now();
-      if (!apiUrl) return;
-      if (document.hidden) return;
-      if (isFetchingData || isMutatingData) return;
-      if ((now - lastHeartbeatAt) < interactionHeartbeatThrottleMs) return;
-      sendHeartbeat(false);
-    }
-
-   function bindUserActivityListeners() {
-  const strongActivityEvents = ['mousedown', 'keydown', 'touchstart', 'click', 'input', 'focusin'];
-
-  strongActivityEvents.forEach(evt => {
-    document.addEventListener(evt, () => {
-      markUserActivity();
-      maybeSendInteractionHeartbeat();
-    }, { passive: true });
-  });
-
-  // optional: mousemove counts as activity, but throttled so it doesn't block idle forever
-  document.addEventListener('mousemove', () => {
-    const now = Date.now();
-    if ((now - mouseActivityThrottleAt) < 2000) return; // count mouse movement at most once every 2s
-    mouseActivityThrottleAt = now;
-    markUserActivity();
-  }, { passive: true });
-
-  // do not treat scroll as hard activity for idle sync
-}
-
-    function normalizeUser(user) {
-      return {
-        user_name: String(user?.user_name || '').trim(),
-        photo_url: String(user?.photo_url || '').trim(),
-        last_seen: String(user?.last_seen || '').trim()
-      };
-    }
-
-    function parseServerDateTime(value) {
-      const s = String(value || '').trim();
-      if (!s) return 0;
-
-      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)) {
-        const [datePart, timePart] = s.split(' ');
-        const [y, m, d] = datePart.split('-').map(Number);
-        const [hh, mm, ss] = timePart.split(':').map(Number);
-        return new Date(y, m - 1, d, hh, mm, ss).getTime();
-      }
-
-      const ms = new Date(s).getTime();
-      return Number.isFinite(ms) ? ms : 0;
-    }
-
-    function isUserOnline(user) {
-      const lastSeenMs = parseServerDateTime(user?.last_seen);
-      if (!lastSeenMs) return false;
-      return (Date.now() - lastSeenMs) <= 60000;
-    }
-
-    function getUserInitials(name) {
-      const cleaned = String(name || '').trim();
-      if (!cleaned) return 'AU';
-
-      const parts = cleaned.split(/\s+/).filter(Boolean);
-      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-
-    function buildAvatarInnerHtml(user) {
-      const initials = getUserInitials(user.user_name);
-      const hasPhoto = !!user.photo_url;
-
-      return `
-        ${hasPhoto ? `
-          <img
-            src="${escapeHtml(user.photo_url)}"
-            alt="${escapeHtml(user.user_name || 'User')}"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
-          >
-          <span class="presence-initials" style="display:none;">${escapeHtml(initials)}</span>
-        ` : `
-          <span class="presence-initials">${escapeHtml(initials)}</span>
-        `}
-        <span class="presence-status-dot"></span>
-      `;
-    }
-
-    function buildAvatarHtml(user) {
-      const online = isUserOnline(user);
-      const title = `${user.user_name || 'User'}${online ? ' • Online' : ' • Offline'}`;
-
-      return `
-        <div class="presence-avatar ${online ? 'online' : ''}" title="${escapeHtml(title)}">
-          ${buildAvatarInnerHtml(user)}
-        </div>
-      `;
-    }
-
-    function renderMyPresence() {
-      const chip = document.getElementById('myPresenceChip');
-      const avatarWrap = document.getElementById('myPresenceAvatar');
-      const nameEl = document.getElementById('myPresenceName');
-
-      if (!chip || !avatarWrap || !nameEl) return;
-
-      const me = {
-        user_name: currentActorName,
-        photo_url: currentActorPhoto,
-        last_seen: new Date().toISOString()
-      };
-
-      chip.classList.remove('hidden');
-      avatarWrap.innerHTML = buildAvatarHtml(me);
-      nameEl.textContent = currentActorName || 'Auditor';
-    }
-
-    function renderUsersPresence() {
-      const list = document.getElementById('usersPresenceList');
-      if (!list) return;
-
-      renderMyPresence();
-
-      const others = [...usersDb]
-        .filter(u => String(u.user_name || '').trim())
-        .filter(u => String(u.user_name || '').trim().toLowerCase() !== String(currentActorName || '').trim().toLowerCase())
-        .sort((a, b) => {
-          const aOnline = isUserOnline(a) ? 1 : 0;
-          const bOnline = isUserOnline(b) ? 1 : 0;
-          if (aOnline !== bOnline) return bOnline - aOnline;
-          return String(a.user_name || '').localeCompare(String(b.user_name || ''));
-        });
-
-      const onlineUsers = others.filter(isUserOnline);
-
-      if (!onlineUsers.length) {
-        list.innerHTML = `<div class="presence-empty">No other online auditors</div>`;
-        return;
-      }
-
-      list.innerHTML = onlineUsers.map(user => buildAvatarHtml(user)).join('');
-    }
-
-    async function sendHeartbeat(force = false) {
-      if (!apiUrl || isFetchingData || isMutatingData) return;
-      if (document.hidden && !force) return;
-
-      try {
-        lastHeartbeatAt = Date.now();
-
-        const json = await apiPost({
-          action: 'heartbeat',
-          actor: currentActorName,
-          photo_url: currentActorPhoto
-        });
-
-        if (Array.isArray(json.users)) {
-          usersDb = json.users.map(normalizeUser);
-        }
-
-        if (json.actor) currentActorName = String(json.actor || currentActorName || 'Auditor');
-        if (json.actor_photo != null) currentActorPhoto = String(json.actor_photo || '');
-
-        applyActorBranding();
-        renderUsersPresence();
-      } catch (error) {
-        console.error('Heartbeat failed:', error);
-      }
-    }
-
-    function startHeartbeat() {
-      if (heartbeatTimer) clearInterval(heartbeatTimer);
-      if (!apiUrl) return;
-
-      sendHeartbeat(true);
-
-      heartbeatTimer = setInterval(() => {
-        sendHeartbeat(false);
-      }, 15000);
-    }
-
-    function startPresenceRefresh() {
-      if (presenceRefreshTimer) clearInterval(presenceRefreshTimer);
-
-      presenceRefreshTimer = setInterval(() => {
-        renderUsersPresence();
-      }, 5000);
-    }
-
-    async function fetchData(showOverlay = true) {
-      if (!apiUrl) {
-        setSyncStatus('Setup Required', 'lock', 'error');
-        renderEmptyState();
-        return;
-      }
-
-      if (isFetchingData) return;
-      isFetchingData = true;
-
-      try {
-        if (showOverlay) showLoading('Loading Data', 'Syncing with Google Sheets and users...');
-        setSyncStatus('Loading...', 'spinner', 'loading');
-
-        const res = await fetch(apiUrl + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
-        const text = await res.text();
-
-        let json;
-        try {
-          json = JSON.parse(text);
-        } catch (e) {
-          console.error('Raw GET response:', text);
-          throw new Error('Could not read API response. Check /exec URL and deployment permissions.');
-        }
-
-        if (!json || json.status !== 'success') {
-          throw new Error(json?.message || 'Failed to load data.');
-        }
-
-        db = Array.isArray(json.data) ? json.data.map(normalizeRecord) : [];
-        agentsDb = Array.isArray(json.agents) ? json.agents.map(a => ({ ...a })) : [];
-        usersDb = Array.isArray(json.users) ? json.users.map(normalizeUser) : [];
-        db.sort(sortRecords);
-        currentActorName = json.actor || currentActorName || 'Auditor';
-        currentActorPhoto = json.actor_photo || currentActorPhoto || '';
-        lastDataFingerprint = createDataFingerprint(json);
-
-        applyActorBranding();
-        renderAll();
-        applyLockState();
-        setSyncStatus('Synced', 'check', 'success');
-
-        sendHeartbeat(true);
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Connection error');
-        setSyncStatus('Connection error', 'triangle-exclamation', 'error');
-      } finally {
-        isFetchingData = false;
-        if (showOverlay) hideLoading();
-      }
-    }
-
-    function normalizeRecord(record) {
-      const obj = { ...record };
-
-      obj.audit_id = String(obj.audit_id || '').trim();
-      obj.audit_date = String(obj.audit_date || '').trim();
-      obj.agent_name = String(obj.agent_name || '').trim();
-      obj.audit_channel = String(obj.audit_channel || '').trim();
-      obj.property_field_id = String(obj.property_field_id || '').trim();
-      obj.auditor = String(obj.auditor || '').trim();
-      obj.final_error_note = String(obj.final_error_note || '').trim();
-
-      SCORE_FIELDS.forEach(field => {
-        obj[field] = round2(toNumber(obj[field]));
-      });
-
-      [
-        'basic_raw', 'basic_weighted',
-        'locator_raw', 'locator_weighted',
-        'occupancy_raw', 'occupancy_weighted',
-        'floorplan_raw', 'floorplan_weighted',
-        'notation_raw', 'notation_weighted',
-        'overall_raw', 'overall_score_100'
-      ].forEach(field => {
-        obj[field] = round2(toNumber(obj[field]));
-      });
-
-      return obj;
-    }
-
-    function sortRecords(a, b) {
-      const da = String(a.audit_date || '');
-      const dbb = String(b.audit_date || '');
-      if (da !== dbb) return dbb.localeCompare(da);
-      return String(b.audit_id || '').localeCompare(String(a.audit_id || ''));
-    }
-
-    function setSyncStatus(text, icon, state) {
-      const el = document.getElementById('syncStatus');
-      if (!el) return;
-
-      const colorMap = {
-        neutral: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-        success: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
-        error: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900',
-        loading: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900'
-      };
-
-      el.className = `hidden md:flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-full border ${colorMap[state] || colorMap.neutral}`;
-
-      if (state === 'success') {
-        el.innerHTML = `<span class="sync-live-dot"></span><span>${escapeHtml(text)}</span>`;
-        return;
-      }
-
-      el.innerHTML = `<i class="fa-solid fa-${icon} ${icon === 'spinner' ? 'fa-spin' : ''}"></i><span>${escapeHtml(text)}</span>`;
-    }
-
-    function clearAuditFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('filterDateFrom').value = '';
-      document.getElementById('filterDateTo').value = '';
-      document.getElementById('filterAgentName').value = '';
-      currentPage = 1;
-      renderAll();
-    }
-
-    function getFilteredData() {
-      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-      const dateFrom = (document.getElementById('filterDateFrom')?.value || '').trim();
-      const dateTo = (document.getElementById('filterDateTo')?.value || '').trim();
-      const agentFilter = (document.getElementById('filterAgentName')?.value || '').trim().toLowerCase();
-
-      return db.filter(row => {
-        const auditDate = normalizeDateForInput(row.audit_date);
-        const rowAgent = String(row.agent_name || '').trim().toLowerCase();
-
-        const matchesSearch = !q || [
-          row.audit_id,
-          row.audit_date,
-          row.agent_name,
-          row.audit_channel,
-          row.final_error_note,
-          row.property_field_id,
-          row.auditor
-        ].some(v => String(v || '').toLowerCase().includes(q));
-
-        const matchesDateFrom = !dateFrom || (auditDate && auditDate >= dateFrom);
-        const matchesDateTo = !dateTo || (auditDate && auditDate <= dateTo);
-        const matchesAgent = !agentFilter || rowAgent === agentFilter;
-
-        return matchesSearch && matchesDateFrom && matchesDateTo && matchesAgent;
-      });
-    }
-
-    function getFilteredAgents() {
-      const q = (document.getElementById('agentSearchInput')?.value || '').trim().toLowerCase();
-      if (!q) return [...agentsDb];
-      return agentsDb.filter(a =>
-        String(a.agent_id || '').toLowerCase().includes(q) ||
-        String(a.agent_name || '').toLowerCase().includes(q)
-      );
-    }
-
-    function renderAll() {
-      renderTable();
-      renderAgentsTable();
-      renderKPIs();
-      renderCharts();
-      renderAgentDropdown();
-      renderAuditFilterAgentDropdown();
-      renderUsersPresence();
-    }
-
-    function renderKPIs() {
-      const total = db.length;
-      const avg = total ? round2(db.reduce((sum, row) => sum + toNumber(row.overall_score_100), 0) / total) : 0;
-      const agents = agentsDb.length;
-
-      setText('kpi-total', total);
-      setText('kpi-avg', `${avg.toFixed(2)}%`);
-      setText('kpi-agents', agents);
-    }
-
-    function renderAgentDropdown() {
-      const select = document.getElementById('agent_name');
-      if (!select) return;
-
-      const currentValue = select.value;
-      let html = `<option value="">Select agent</option>`;
-
-      const sortedAgents = [...agentsDb].sort((a, b) =>
-        String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
-      );
-
-      html += sortedAgents.map(agent =>
-        `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
-      ).join('');
-
-      select.innerHTML = html;
-
-      if ([...select.options].some(opt => opt.value === currentValue)) {
-        select.value = currentValue;
-      }
-    }
-
-    function renderAuditFilterAgentDropdown() {
-      const select = document.getElementById('filterAgentName');
-      if (!select) return;
-
-      const currentValue = select.value;
-      let html = `<option value="">All Agents</option>`;
-
-      const sortedAgents = [...agentsDb].sort((a, b) =>
-        String(a.agent_name || '').localeCompare(String(b.agent_name || ''))
-      );
-
-      html += sortedAgents.map(agent =>
-        `<option value="${escapeHtml(agent.agent_name || '')}">${escapeHtml(agent.agent_name || '')}</option>`
-      ).join('');
-
-      select.innerHTML = html;
-
-      if ([...select.options].some(opt => opt.value === currentValue)) {
-        select.value = currentValue;
-      }
-    }
-
-    function getScoreBadge(score) {
-      if (score >= 90) return 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400';
-      if (score >= 75) return 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400';
-      if (score >= 60) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400';
-      return 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400';
-    }
-
-    function renderTable() {
-      const tbody = document.getElementById('tableBody');
-      const rows = getFilteredData();
-
-      if (!rows.length) {
-        tbody.innerHTML = `
-        <tr>
-          <td colspan="12" class="px-5 py-10 text-center text-slate-500">
-            No audit records found.
-          </td>
-        </tr>
-      `;
-        renderPagination(0);
-        return;
-      }
-
-      const totalRows = rows.length;
-      const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-
-      if (currentPage > totalPages) currentPage = totalPages;
-
-      const startIndex = (currentPage - 1) * rowsPerPage;
-      const pagedRows = rows.slice(startIndex, startIndex + rowsPerPage);
-
-      tbody.innerHTML = pagedRows.map(row => {
-        const total = round2(toNumber(row.overall_score_100));
-        const badge = getScoreBadge(total);
-
-        return `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-          <td class="px-5 py-4">
-            <div class="font-black text-blue-600 dark:text-blue-400">${escapeHtml(row.audit_id || '')}</div>
-            <div class="text-xs text-slate-500">${escapeHtml(formatDisplayDate(row.audit_date))}</div>
-          </td>
-          <td class="px-5 py-4 font-semibold">${escapeHtml(row.agent_name || '-')}</td>
-          <td class="px-5 py-4">${escapeHtml(row.audit_channel || '-')}</td>
-          <td class="px-5 py-4">${escapeHtml(row.property_field_id || '-')}</td>
-          <td class="px-5 py-4 text-center">${formatNum(row.basic_weighted)}</td>
-          <td class="px-5 py-4 text-center">${formatNum(row.locator_weighted)}</td>
-          <td class="px-5 py-4 text-center">${formatNum(row.occupancy_weighted)}</td>
-          <td class="px-5 py-4 text-center">${formatNum(row.floorplan_weighted)}</td>
-          <td class="px-5 py-4 text-center">${formatNum(row.notation_weighted)}</td>
-          <td class="px-5 py-4 text-center">
-            <span class="px-3 py-1 rounded-full text-xs font-black ${badge}">
-              ${formatNum(total)}%
-            </span>
-          </td>
-          <td class="px-5 py-4">${escapeHtml(row.auditor || '-')}</td>
-        <td class="px-5 py-4 text-right">
-  <button type="button" onclick="openPdfInNewTab('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Open PDF">
-    <i class="fa-solid fa-file-pdf"></i>
-  </button>
-
-  <button type="button"
-    onclick="openCrudModal('${escapeJs(row.audit_id)}')"
-    class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 ${canEditAuditRecord(row) ? 'hover:text-blue-600' : 'hover:text-amber-600'}"
-    title="${canEditAuditRecord(row) ? 'Edit' : 'View only'}">
-    <i class="fa-solid ${canEditAuditRecord(row) ? 'fa-pen' : 'fa-eye'}"></i>
-  </button>
-
-  ${canEditAuditRecord(row) ? `
-    <button type="button" onclick="deleteAudit('${escapeJs(row.audit_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete">
-      <i class="fa-solid fa-trash"></i>
-    </button>
-  ` : `
-    <button type="button" disabled class="w-9 h-9 rounded-lg opacity-40 cursor-not-allowed text-slate-400" title="Only ${escapeHtml(row.auditor || 'the owner')} can delete this">
-      <i class="fa-solid fa-trash"></i>
-    </button>
-  `}
-</td>
-        </tr>
-      `;
-      }).join('');
-
-      renderPagination(totalRows);
-    }
-
-    function renderAgentsTable() {
-      const tbody = document.getElementById('agentsTableBody');
-      const rows = getFilteredAgents();
-
-      if (!rows.length) {
-        tbody.innerHTML = `
-        <tr>
-          <td colspan="4" class="px-5 py-10 text-center text-slate-500">
-            No agents found.
-          </td>
-        </tr>
-      `;
-        renderAgentsPagination(0);
-        return;
-      }
-
-      const totalRows = rows.length;
-      const totalPages = Math.max(1, Math.ceil(totalRows / agentRowsPerPage));
-
-      if (currentAgentPage > totalPages) currentAgentPage = totalPages;
-
-      const startIndex = (currentAgentPage - 1) * agentRowsPerPage;
-      const pagedRows = rows.slice(startIndex, startIndex + agentRowsPerPage);
-
-      tbody.innerHTML = pagedRows.map(agent => `
-      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-        <td class="px-5 py-4 font-semibold text-emerald-600 dark:text-emerald-400">${escapeHtml(agent.agent_id || '')}</td>
-        <td class="px-5 py-4 font-semibold">${escapeHtml(agent.agent_name || '-')}</td>
-        <td class="px-5 py-4 text-slate-500">${escapeHtml(agent.created_at || '-')}</td>
-        <td class="px-5 py-4 text-right">
-          <button type="button" onclick="openAgentModal('${escapeJs(agent.agent_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600" title="Edit Agent">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button type="button" onclick="deleteAgent('${escapeJs(agent.agent_id)}')" class="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-red-600" title="Delete Agent">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-      renderAgentsPagination(totalRows);
-    }
-
-    function formatDisplayDate(value) {
-      if (!value) return '-';
-      const s = String(value);
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-        const [y, m, d] = s.split('-').map(Number);
-        const dt = new Date(y, m - 1, d);
-        return dt.toLocaleDateString();
-      }
-      const dt = new Date(s);
-      return isNaN(dt.getTime()) ? s : dt.toLocaleDateString();
-    }
-
-    function formatNum(value) {
-      return round2(toNumber(value)).toFixed(2);
-    }
-
-    function renderCharts() {
-      const trendCanvas = document.getElementById('trendChart');
-      const agentCanvas = document.getElementById('agentChart');
-      if (!trendCanvas || !agentCanvas) return;
-
-      const isDark = document.documentElement.classList.contains('dark');
-      const tickColor = isDark ? '#94a3b8' : '#475569';
-      const gridColor = isDark ? 'rgba(148,163,184,.12)' : 'rgba(71,85,105,.12)';
-
-      if (trendChart) trendChart.destroy();
-      if (agentChart) agentChart.destroy();
-      if (!db.length) return;
-
-      const trendRows = [...db]
-        .sort((a, b) => String(a.audit_date).localeCompare(String(b.audit_date)))
-        .slice(-12);
-
-      trendChart = new Chart(trendCanvas.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: trendRows.map(r => formatDisplayDate(r.audit_date)),
-          datasets: [{
-            label: 'Overall Score',
-            data: trendRows.map(r => toNumber(r.overall_score_100)),
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37,99,235,.10)',
-            fill: true,
-            tension: 0.35,
-            borderWidth: 2,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
-            x: { ticks: { color: tickColor }, grid: { color: gridColor } }
-          }
-        }
-      });
-
-      const agentMap = {};
-      db.forEach(row => {
-        const name = String(row.agent_name || 'Unknown').trim() || 'Unknown';
-        if (!agentMap[name]) agentMap[name] = { total: 0, count: 0 };
-        agentMap[name].total += toNumber(row.overall_score_100);
-        agentMap[name].count += 1;
-      });
-
-      const agentRows = Object.keys(agentMap).map(name => ({
-        name,
-        avg: round2(agentMap[name].total / agentMap[name].count)
-      })).sort((a, b) => b.avg - a.avg);
-
-      agentChart = new Chart(agentCanvas.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: agentRows.map(r => r.name),
-          datasets: [{
-            label: 'Average Score',
-            data: agentRows.map(r => r.avg),
-            backgroundColor: '#7c3aed',
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { min: 0, max: 100, ticks: { color: tickColor }, grid: { color: gridColor } },
-            x: { ticks: { color: tickColor }, grid: { display: false } }
-          }
-        }
-      });
-    }
-
-    function itemScoreTotal(score, multiplier) {
-      return formatNum(round2(toNumber(score) * multiplier));
-    }
-
-    function buildPdf(record) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-
-      const outerMargin = 8;
-      const footerReserve = 5;
-      const footerY = pageHeight - 4.2;
-
-      const wLabel = 112;
-      const wScoreCols = 13;
-      const wScoreTotal = 23;
-      const rowH = 6.8;
-      const tableWidth = wLabel + (wScoreCols * 5) + wScoreTotal;
-      const tableX = (pageWidth - tableWidth) / 2;
-
-      const fillHeader = [214, 214, 214];
-      const fillScore = [235, 226, 190];
-      const border = [40, 40, 40];
-      const footerGray = [140, 140, 140];
-
-      doc.setDrawColor(...border);
-      doc.setTextColor(10, 10, 10);
-      doc.setLineWidth(0.2);
-
-      function drawFooter() {
-        const pages = doc.internal.getNumberOfPages();
-        const footerAuditor = String(record.auditor || currentActorName || 'Auditor').trim();
-
-        for (let i = 1; i <= pages; i++) {
-          doc.setPage(i);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(...footerGray);
-
-          doc.text(`Audited By: ${footerAuditor}`, tableX, footerY);
-          doc.text(`Page ${i} of ${pages}`, tableX + tableWidth, footerY, { align: 'right' });
-        }
-
-        doc.setTextColor(10, 10, 10);
-      }
-
-      function rect(x, y, w, h, fill = null) {
-        if (fill) {
-          doc.setFillColor(...fill);
-          doc.rect(x, y, w, h, 'FD');
-        } else {
-          doc.rect(x, y, w, h);
-        }
-      }
-
-      function text(str, x, y, opts = {}) {
-        const { size = 8, style = 'normal', align = 'left', color = [10, 10, 10] } = opts;
-        doc.setFont('helvetica', style);
-        doc.setFontSize(size);
-        doc.setTextColor(...color);
-
-        if (Array.isArray(str)) doc.text(str, x, y, { align });
-        else doc.text(String(str ?? ''), x, y, { align });
-
-        doc.setTextColor(10, 10, 10);
-      }
-
-      function scoreMark(score, colIndex, startX, y) {
-        const rounded = Math.max(0, Math.min(5, Math.round(Number(score) || 0)));
-        if (rounded === colIndex) {
-          text('X', startX + (wScoreCols / 2), y + 5.3, {
-            size: 8,
-            style: 'bold',
-            align: 'center'
-          });
-        }
-      }
-
-      function ensureSpace(heightNeeded) {
-        if (y + heightNeeded > pageHeight - outerMargin - footerReserve) {
-          doc.addPage();
-          y = 14;
-        }
-      }
-
-      function drawSectionHeader(yPos, title, showScoreLabel = false) {
-        rect(tableX, yPos, wLabel, rowH, fillHeader);
-        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH, fillHeader);
-        rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH, fillScore);
-
-        text(title, tableX + 2, yPos + 5.2, { size: 7.5, style: 'normal' });
-
-        for (let i = 1; i <= 5; i++) {
-          const x = tableX + wLabel + ((i - 1) * wScoreCols) + (wScoreCols / 2);
-          text(i, x, yPos + 5.2, { size: 7, style: 'bold', align: 'center' });
-        }
-
-        if (showScoreLabel) {
-          text('Score Total', tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
-            size: 7,
-            style: 'bold',
-            align: 'center'
-          });
-        }
-      }
-
-      function drawRow(yPos, label, score, scoreTotal, italic = false) {
-        rect(tableX, yPos, wLabel, rowH);
-        for (let i = 0; i < 5; i++) rect(tableX + wLabel + (i * wScoreCols), yPos, wScoreCols, rowH);
-        rect(tableX + wLabel + (5 * wScoreCols), yPos, wScoreTotal, rowH);
-
-        text(label, tableX + 2, yPos + 5.2, { size: 7, style: italic ? 'italic' : 'normal' });
-
-        for (let i = 1; i <= 5; i++) {
-          scoreMark(score, i, tableX + wLabel + ((i - 1) * wScoreCols), yPos);
-        }
-
-        text(scoreTotal, tableX + wLabel + (5 * wScoreCols) + (wScoreTotal / 2), yPos + 5.2, {
-          size: 7,
-          align: 'center'
-        });
-      }
-
-      let y = 10;
-
-      rect(tableX, y, tableWidth, 14);
-      text('MRI Apartment Data', tableX + (tableWidth / 2), y + 7, { size: 10, style: 'bold', align: 'center' });
-      text('Audit Form', tableX + (tableWidth / 2), y + 11.5, { size: 8, align: 'center' });
-      y += 14;
-
-      rect(tableX, y, tableWidth, 10);
-      text(`Audit Date: ${formatDisplayDate(record.audit_date)}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-      y += 10;
-
-      rect(tableX, y, tableWidth, 10);
-      rect(tableX, y, 94, 10);
-      rect(tableX + 94, y, tableWidth - 94, 10);
-      text(`Agent: ${record.agent_name || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-      text(`Channel: ${record.audit_channel || '-'}`, tableX + 96, y + 6, { size: 7, style: 'italic' });
-      y += 10;
-
-      rect(tableX, y, tableWidth, 10);
-      text(`Property Field ID: ${record.property_field_id || '-'}`, tableX + 2, y + 6, { size: 7, style: 'italic' });
-      y += 13;
-
-      text('Criteria for Evaluation (Rate 1-5, 1 being poor, 5 being excellent):', tableX, y, { size: 7 });
-      y += 4;
-
-      ensureSpace(8 * rowH + 10);
-      drawSectionHeader(y, 'Basic Information (Counts 2X)', true); y += rowH;
-      drawRow(y, 'Property Name:', record.property_name_score, itemScoreTotal(record.property_name_score, 2)); y += rowH;
-      drawRow(y, 'Management Company:', record.mgmt_company_score, itemScoreTotal(record.mgmt_company_score, 2)); y += rowH;
-      drawRow(y, 'Apartment Manager:', record.apartment_mgr_score, itemScoreTotal(record.apartment_mgr_score, 2)); y += rowH;
-      drawRow(y, 'Regional Manager:', record.regional_mgr_score, itemScoreTotal(record.regional_mgr_score, 2)); y += rowH;
-      drawRow(y, 'Email Address:', record.email_score, itemScoreTotal(record.email_score, 2)); y += rowH;
-      drawRow(y, 'Website:', record.website_score, itemScoreTotal(record.website_score, 2)); y += rowH;
-      drawRow(y, 'Office Hours:', record.office_hours_score, itemScoreTotal(record.office_hours_score, 2)); y += rowH;
-      drawRow(y, 'Subtotal:', record.basic_raw / 7, formatNum(record.basic_weighted), true); y += 10;
-
-      ensureSpace(4 * rowH + 10);
-      drawSectionHeader(y, 'Locator Information (Counts 2X)'); y += rowH;
-      drawRow(y, 'Commission:', record.commission_score, itemScoreTotal(record.commission_score, 2)); y += rowH;
-      drawRow(y, 'Note:', record.locator_note_score, itemScoreTotal(record.locator_note_score, 2)); y += rowH;
-      drawRow(y, 'Requirements:', record.requirements_score, itemScoreTotal(record.requirements_score, 2)); y += rowH;
-      drawRow(y, 'Subtotal:', record.locator_raw / 3, formatNum(record.locator_weighted), true); y += 10;
-
-      ensureSpace(3 * rowH + 10);
-      drawSectionHeader(y, 'Occupancy/Special'); y += rowH;
-      drawRow(y, 'Occupancy:', record.occupancy_score, itemScoreTotal(record.occupancy_score, 1)); y += rowH;
-      drawRow(y, 'Special Coding:', record.special_coding_score, itemScoreTotal(record.special_coding_score, 1)); y += rowH;
-      drawRow(y, 'Subtotal:', record.occupancy_raw / 2, formatNum(record.occupancy_weighted), true); y += 10;
-
-      ensureSpace(3 * rowH + 10);
-      drawSectionHeader(y, 'Floorplan/Pricing'); y += rowH;
-      drawRow(y, 'Pricing:', record.pricing_score, itemScoreTotal(record.pricing_score, 1)); y += rowH;
-      drawRow(y, 'Availability:', record.availability_score, itemScoreTotal(record.availability_score, 1)); y += rowH;
-      drawRow(y, 'Subtotal:', record.floorplan_raw / 2, formatNum(record.floorplan_weighted), true); y += 10;
-
-      ensureSpace(2 * rowH + 14);
-      drawSectionHeader(y, 'Note:'); y += rowH;
-      drawRow(y, 'Notation', record.notation_score, itemScoreTotal(record.notation_score, 2)); y += rowH;
-
-      ensureSpace(rowH + 8);
-      rect(tableX, y, wLabel + (wScoreCols * 5), rowH);
-      rect(tableX + wLabel + (wScoreCols * 5), y, wScoreTotal, rowH);
-
-      text('Overall Rating: [Overall Rating out of 100]', tableX + 2, y + 5.2, {
-        size: 7.5,
-        style: 'italic'
-      });
-
-      text(formatNum(record.overall_score_100), tableX + wLabel + (wScoreCols * 5) + (wScoreTotal / 2), y + 5.2, {
-        size: 10,
-        style: 'bold',
-        align: 'center'
-      });
-      y += 11;
-
-      const note = record.final_error_note || 'No note provided.';
-      const wrapped = doc.splitTextToSize('Error/Note: ' + note, tableWidth - 4);
-
-      ensureSpace(wrapped.length * 4 + 2);
-      text(wrapped, tableX, y, { size: 7.5 });
-      y += (wrapped.length * 4);
-
-      drawFooter();
-      return doc;
-    }
-
-    function openPdfInNewTab(id) {
-      if (!requireConfiguredApi()) return;
-
-      const record = db.find(r => String(r.audit_id) === String(id));
-      if (!record) {
-        alert('Record not found.');
-        return;
-      }
-
-      showLoading('Generating PDF', 'Preparing professional score sheet...');
-      try {
-        const doc = buildPdf(record);
-        const blob = doc.output('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank', 'noopener,noreferrer');
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function exportCsv() {
-      if (!requireConfiguredApi()) return;
-
-      const rows = getFilteredData();
-      if (!rows.length) {
-        alert('No records to export.');
-        return;
-      }
-
-      showLoading('Exporting CSV', 'Building export file...');
-      try {
-        const headers = [
-          'audit_id',
-          'audit_date',
-          'agent_name',
-          'audit_channel',
-          'property_field_id',
-          'auditor',
-          'basic_weighted',
-          'locator_weighted',
-          'occupancy_weighted',
-          'floorplan_weighted',
-          'notation_weighted',
-          'overall_score_100',
-          'final_error_note'
-        ];
-
-        const csv = [
-          headers.join(','),
-          ...rows.map(row => headers.map(h => csvEscape(row[h])).join(','))
-        ].join('\n');
-
-        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), 'auditor_audits.csv');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function exportListPdf() {
-      if (!requireConfiguredApi()) return;
-
-      const rows = getFilteredData();
-      if (!rows.length) {
-        alert('No records to export.');
-        return;
-      }
-
-      showLoading('Exporting PDF', 'Preparing summary report...');
-      try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'mm', 'a4');
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text(`${getPossessiveActorTitle(currentActorName)} - Audit Summary`, 14, 14);
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 20);
-
-        doc.autoTable({
-          startY: 26,
-          head: [[
-            'Audit ID', 'Date', 'Agent', 'Channel', 'Property Field ID',
-            'Basic', 'Locator', 'Occ', 'Floor', 'Notation', 'Total'
-          ]],
-          body: rows.map(r => [
-            r.audit_id || '',
-            formatDisplayDate(r.audit_date),
-            r.agent_name || '',
-            r.audit_channel || '',
-            r.property_field_id || '',
-            formatNum(r.basic_weighted),
-            formatNum(r.locator_weighted),
-            formatNum(r.occupancy_weighted),
-            formatNum(r.floorplan_weighted),
-            formatNum(r.notation_weighted),
-            formatNum(r.overall_score_100) + '%'
-          ]),
-          theme: 'grid',
-          headStyles: { fillColor: [37, 99, 235] },
-          styles: { fontSize: 8, cellPadding: 2.5 }
-        });
-
-        const blob = doc.output('blob');
-        downloadBlob(blob, 'auditor_audits_summary.pdf');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function downloadBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    }
-
-    function csvEscape(value) {
-      const s = String(value ?? '');
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function escapeJs(value) {
-      return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    }
-
-    function normalizeImageUrl(url) {
-      const s = String(url || '').trim();
-      if (!s) return '';
-
-      const driveFileMatch = s.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
-      if (driveFileMatch) {
-        return `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
-      }
-
-      const driveOpenMatch = s.match(/[?&]id=([^&]+)/i);
-      if (/drive\.google\.com/i.test(s) && driveOpenMatch) {
-        return `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
-      }
-
-      return s;
-    }
-
-    function openProfileModal() {
-      if (!requireConfiguredApi()) return;
-
-      document.getElementById('profileActorName').value = currentActorName || 'Auditor';
-      document.getElementById('profileImageUrl').value = currentActorPhoto || '';
-      updateProfilePreview();
-      document.getElementById('profileModal').classList.add('active');
-    }
-
-    function closeProfileModal() {
-      document.getElementById('profileModal').classList.remove('active');
-    }
-
-    function updateProfilePreview() {
-      const url = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
-      const img = document.getElementById('profilePreviewImg');
-      const initials = document.getElementById('profilePreviewInitials');
-      const actorName = document.getElementById('profileActorName')?.value || currentActorName || 'Auditor';
-
-      initials.textContent = getUserInitials(actorName);
-
-      if (url) {
-        img.src = url;
-        img.classList.remove('hidden');
-        initials.classList.add('hidden');
-
-        img.onerror = function () {
-          img.classList.add('hidden');
-          initials.classList.remove('hidden');
-        };
-
-        img.onload = function () {
-          img.classList.remove('hidden');
-          initials.classList.add('hidden');
-        };
-      } else {
-        img.src = '';
-        img.classList.add('hidden');
-        initials.classList.remove('hidden');
-      }
-    }
-
-    async function saveProfileImage() {
-      if (!requireConfiguredApi()) return;
-
-      const photoUrl = normalizeImageUrl(document.getElementById('profileImageUrl').value || '');
-
-      try {
-        showLoading('Saving Profile', 'Updating your profile image...');
-        document.getElementById('profileSaveBtn').disabled = true;
-
-        const res = await apiPost({
-          action: 'update_profile_photo',
-          actor: currentActorName,
-          photo_url: photoUrl
-        });
-
-        currentActorPhoto = String(res?.actor_photo || photoUrl || '');
-        if (res?.actor) currentActorName = String(res.actor || currentActorName || 'Auditor');
-        usersDb = Array.isArray(res?.users) ? res.users.map(normalizeUser) : usersDb;
-
-        renderUsersPresence();
-        applyActorBranding();
-        closeProfileModal();
-        setSyncStatus('Profile updated', 'check', 'success');
-        sendHeartbeat(true);
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Failed to save profile image.');
-        setSyncStatus('Profile update failed', 'triangle-exclamation', 'error');
-      } finally {
-        document.getElementById('profileSaveBtn').disabled = false;
-        hideLoading();
-      }
-    }
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        closeCrudModal();
-        closeSettings();
-        closeAgentModal();
-        closeProfileModal();
-      }
-    });
-
-    document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) {
-        sendHeartbeat(true);
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const profileImageUrlInput = document.getElementById('profileImageUrl');
-      if (profileImageUrlInput) {
-        profileImageUrlInput.addEventListener('input', updateProfilePreview);
-      }
-
-      applySavedTheme();
-      initApp();
-      bindUserActivityListeners();
-      startIdleAutoSync();
-      markUserActivity();
-    });
-
-
-function normalizeActorName(value) {
-    return String(value || '').trim().toLowerCase();
-  }
-
-  function canEditAuditRecord(record) {
-    if (!record) return true; // new record
-    return normalizeActorName(record.auditor) === normalizeActorName(currentActorName);
-  }
-
-  function getAuditOwnershipMessage(record) {
-    const owner = String(record?.auditor || '').trim() || 'another auditor';
-    return `This audit belongs to ${owner}. Only the original auditor can edit this record.`;
-  }
-
-  function setAuditFormLockedState(locked, message = '') {
-    const saveBtn = document.getElementById('saveBtn');
-    const modalTitle = document.getElementById('modalTitle');
-    const form = document.getElementById('auditForm');
-
-    if (!saveBtn || !form) return;
-
-    form.querySelectorAll('input, select, textarea').forEach(el => {
-      if (el.id === 'audit_id') return;
-      el.disabled = !!locked;
-    });
-
-    saveBtn.disabled = !!locked;
-    saveBtn.classList.toggle('opacity-50', !!locked);
-    saveBtn.classList.toggle('cursor-not-allowed', !!locked);
-
-    if (locked) {
-      saveBtn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i>Locked';
-      saveBtn.title = message || 'You cannot edit this record.';
-    } else {
-      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i>Save Audit';
-      saveBtn.title = '';
-    }
-
-    let notice = document.getElementById('auditLockNotice');
-    if (!notice) {
-      notice = document.createElement('div');
-      notice.id = 'auditLockNotice';
-      notice.className = 'hidden rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300 px-4 py-3 text-sm font-semibold';
-      modalTitle?.parentElement?.insertAdjacentElement('afterend', notice);
-    }
-
-    if (locked) {
-      notice.textContent = message || 'This record is locked.';
-      notice.classList.remove('hidden');
-    } else {
-      notice.textContent = '';
-      notice.classList.add('hidden');
-    }
-  }
-
-function renderAuditOnly() {
-  renderTable();
-  renderKPIs();
-  renderCharts();
-}
-
-function renderAgentsOnly() {
-  renderAgentsTable();
-  renderAgentDropdown();
-  renderAuditFilterAgentDropdown();
-  renderKPIs();
-}
-
-function renderPresenceOnly() {
-  renderUsersPresence();
-}
-  </script>
+function renderRecentSales(sales){ const rows=[...sales].slice(-8).reverse(); document.getElementById('recentSales').innerHTML=`<table class="w-full text-sm"><thead class="text-[10px] uppercase text-slate-400"><tr><th class="text-left py-2">Date</th><th class="text-left py-2">Business</th><th class="text-left py-2">Item</th><th class="text-right py-2">Total</th></tr></thead><tbody>${rows.map(r=>`<tr class="border-t border-slate-100 dark:border-slate-800"><td class="py-3 text-slate-500">${html(r.sale_date||'')}</td><td class="py-3 font-bold">${html(businessName(r.business_id))}</td><td class="py-3">${html(r.item||'')}</td><td class="py-3 text-right font-black">${money(num(r.total_price)||num(r.price)*num(r.qty||1))}</td></tr>`).join('')||'<tr><td class="py-8 text-center text-slate-400" colspan="4">No sales yet.</td></tr>'}</tbody></table>`; }
+function renderLowStock(low){ document.getElementById('lowStockList').innerHTML=low.slice(0,8).map(m=>`<div class="rounded-2xl border border-amber-100 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4"><div class="font-black">${html(m.name)}</div><div class="text-xs text-slate-500 mt-1">${html(businessName(m.business_id))}</div><div class="mt-2 text-sm"><b>${num(m.qty_on_hand)}</b> ${html(m.unit||'')} left • reorder at ${num(m.reorder_level)}</div></div>`).join('')||'<div class="text-sm text-slate-500">No low stock items.</div>'; }
+
+function showTab(name){ markNav(name); if(document.getElementById('mobileNav')&&!document.getElementById('mobileNav').classList.contains('hidden')) toggleMobileNav(); document.getElementById('pageHeading').innerText=NAV.find(n=>n[0]===name)?.[1]||'Dashboard'; if(name==='dashboard'){document.getElementById('dashboard').classList.remove('hidden'); document.getElementById('tableView').classList.add('hidden'); renderDashboard(); return;} document.getElementById('dashboard').classList.add('hidden'); document.getElementById('tableView').classList.remove('hidden'); current.sheet=name; resetTableControlsForSheet(); renderCurrentTable(); }
+function resetTableControlsForSheet(){ document.getElementById('searchBox').value=''; document.getElementById('dateFrom').value=''; document.getElementById('dateTo').value=''; const bf=document.getElementById('tableBusinessFilter'); if(bf){ bf.value='ALL'; const canFilter=!!(SCHEMAS[current.sheet] && ['sales','expenses','materials','inventory','products'].includes(SCHEMAS[current.sheet].key)); bf.disabled=!canFilter; bf.classList.toggle('opacity-50',!canFilter); } loadColumnVisibility(); populateStatusFilter(); }
+function loadColumnVisibility(){ const saved=JSON.parse(localStorage.getItem(STORAGE.columns+current.sheet)||'{}'); activeColumns=saved; }
+function saveColumnVisibility(){ localStorage.setItem(STORAGE.columns+current.sheet,JSON.stringify(activeColumns)); }
+function toggleColumnMenu(e){ if(e) e.stopPropagation(); document.getElementById('columnMenu').classList.toggle('hidden'); renderColumnList(); }
+function renderColumnList(headers=null){ headers=headers||getCurrentHeaders(); const list=document.getElementById('columnList'); list.innerHTML=headers.map(h=>{ const checked=activeColumns[h]!==false; return `<label class="flex items-center gap-2 text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2"><input type="checkbox" ${checked?'checked':''} onchange="setColumn('${esc(h)}',this.checked)"><span>${html(labelize(h))}</span></label>`; }).join(''); }
+function setColumn(h,val){ activeColumns[unescapeHtml(h)]=val; saveColumnVisibility(); renderCurrentTable(); }
+function getCurrentHeaders(){ const schema=SCHEMAS[current.sheet]; const rows=current.sheet==='logs'?(DB.logs||[]):frows(schema.key); return Object.keys(rows[0]||sampleHeaders(schema.key)); }
+function populateStatusFilter(){ const schema=SCHEMAS[current.sheet]; const rows=current.sheet==='logs'?(DB.logs||[]):frows(schema.key); const vals=[...new Set(rows.map(r=>r.status||r.payment_status||r.type||r.action).filter(Boolean))].sort(); const sel=document.getElementById('statusFilter'); sel.innerHTML='<option value="ALL">All Status / Types</option>'+vals.map(v=>`<option value="${esc(v)}">${html(v)}</option>`).join(''); }
+function clearTableFilters(){ document.getElementById('searchBox').value=''; document.getElementById('statusFilter').value='ALL'; document.getElementById('dateFrom').value=''; document.getElementById('dateTo').value=''; renderCurrentTable(); }
+function filteredRowsForTable(){ const schema=SCHEMAS[current.sheet]; let rows=current.sheet==='logs'?(DB.logs||[]):frows(schema.key); const q=document.getElementById('searchBox').value.toLowerCase(); const status=document.getElementById('statusFilter').value; const tableBusiness=document.getElementById('tableBusinessFilter')?.value || 'ALL'; const from=document.getElementById('dateFrom').value; const to=document.getElementById('dateTo').value; const dateKey=currentDateKey(); if(tableBusiness!=='ALL' && ['sales','expenses','materials','inventory','products'].includes(schema.key)) rows=rows.filter(r=>r.business_id===tableBusiness); rows=rows.filter(r=>!q||JSON.stringify({...r,business_name:businessName(r.business_id),material_name:materialName(r.material_id),product_name:productName(r.product_id)}).toLowerCase().includes(q)); if(status && status!=='ALL') rows=rows.filter(r=>(r.status||r.payment_status||r.type||r.action||'')===status); if(dateKey && from) rows=rows.filter(r=>String(r[dateKey]||'')>=from); if(dateKey && to) rows=rows.filter(r=>String(r[dateKey]||'')<=to); return rows; }
+function renderCurrentTable(){ if(!DB) return; const schema=SCHEMAS[current.sheet]; document.getElementById('tableTitle').innerText=schema.title; document.getElementById('tableSubtitle').innerText=schema.readOnly?'View system access and CRUD history.':'Create, edit, delete, filter, export, and preview updates instantly.'; document.getElementById('addBtn').classList.toggle('hidden',!!schema.readOnly); const filtered=filteredRowsForTable(); const allHeaders=Object.keys(filtered[0]||sampleHeaders(schema.key)); const headers=allHeaders.filter(h=>activeColumns[h]!==false); document.getElementById('tableCount').innerText=`${filtered.length} records`; renderColumnList(allHeaders); document.getElementById('thead').innerHTML='<tr>'+headers.map(h=>`<th class="px-4 py-4 text-left">${html(labelize(h))}</th>`).join('')+(!schema.readOnly?'<th class="px-4 py-4 text-right">Actions</th>':'')+'</tr>'; document.getElementById('tbody').innerHTML=filtered.map(r=>rowHtml(headers,r,schema)).join('')||'<tr><td class="p-10 text-center text-slate-400" colspan="99">No records found.</td></tr>'; }
+function rowHtml(headers,r,schema){ const encoded=esc(JSON.stringify(r)); const pending=pendingRows.has(r.id); return `<tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 ${pending?'row-pending':''}">${headers.map(h=>`<td class="px-4 py-4 align-top">${formatCell(h,r[h])}</td>`).join('')}${!schema.readOnly?`<td class="px-4 py-4 text-right whitespace-nowrap"><button class="text-blue-700 dark:text-blue-300 font-black text-xs mr-3" onclick="openFormFromJson('${encoded}')">EDIT</button><button class="text-red-700 dark:text-red-300 font-black text-xs" onclick="deleteRecord('${esc(r.id)}')">DELETE</button></td>`:''}</tr>`; }
+function sampleHeaders(key){ return {businesses:{id:'',name:'',status:''},sales:{id:'',sale_date:'',business_id:'',item:'',price:'',qty:'',total_price:'',payment_status:''},expenses:{id:'',expense_date:'',business_id:'',item:'',type:'',total_cost:''},materials:{id:'',business_id:'',name:'',qty_on_hand:'',cost_per_unit:'',reorder_level:''},inventory:{id:'',movement_date:'',business_id:'',material_id:'',type:'',qty:''},products:{id:'',business_id:'',name:'',selling_price:'',status:''},logs:{timestamp:'',email:'',action:'',detail:''}}[key]||{}; }
+function labelize(s){ if(s==='business_id') return 'Business'; if(s==='material_id') return 'Material'; if(s==='product_id') return 'Product'; return String(s||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
+function formatCell(h,v){ if(h==='id') return `<span class="font-black text-slate-500">${shortId(v)}</span>`; if(h==='business_id') return `<span class="font-bold">${html(businessName(v))}</span>`; if(h==='material_id') return html(materialName(v)); if(h==='product_id') return html(productName(v)); if(['price','total_price','total_cost','cost_per_unit','unit_cost','selling_price'].includes(h)) return `<span class="font-black">${money(v)}</span>`; if(['status','payment_status','type','action'].includes(h)) return `<span class="pill bg-slate-100 dark:bg-slate-800">${html(v||'-')}</span>`; return html(v||''); }
+function openFormFromJson(json){ try{ openForm(JSON.parse(unescapeHtml(json))); }catch(e){ toast('Unable to open record.','error'); } }
+function openForm(row=null){ const schema=SCHEMAS[current.sheet]; current.id=row?.id||null; document.getElementById('formTitle').innerText=(current.id?'Edit ':'Add ')+schema.title; document.getElementById('recordForm').innerHTML=schema.fields.map(([key,label,type,req])=>fieldHtml(key,label,type,req,row||{})).join(''); document.getElementById('formModal').classList.add('show'); }
+function closeForm(){ document.getElementById('formModal').classList.remove('show'); }
+function fieldHtml(key,label,type,req,row){ const val=row[key]||''; if(type==='business') return selectField(key,label,DB.businesses||[],'name',val,req); if(type==='material') return selectField(key,label,DB.materials||[],'name',val,req); if(type==='product') return selectField(key,label,DB.products||[],'name',val,req,true); if(type.startsWith('select:')) return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<select name="${esc(key)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500">${type.split(':')[1].split(',').map(o=>`<option value="${esc(o)}" ${o===val?'selected':''}>${html(o)}</option>`).join('')}</select></label>`; return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<input name="${esc(key)}" type="${esc(type)}" value="${esc(val)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500"></label>`; }
+function selectField(key,label,rows,display,val,req,allowBlank=false){ return `<label class="text-xs font-black uppercase text-slate-500">${html(label)}<select name="${esc(key)}" ${req?'required':''} class="mt-1 w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 ring-lee-500">${allowBlank?'<option value="">—</option>':''}${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===val?'selected':''}>${html(r[display])}</option>`).join('')}</select></label>`; }
+
+function calculateDerived(sheet, record){ const r={...record}; if(sheet==='sales') r.total_price=String(num(r.price)*num(r.qty||1)); if(sheet==='expenses') r.total_cost=String(num(r.price)*num(r.qty||1)); return r; }
+function makeTempId(){ return 'tmp_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); }
+function applyLocalCreate(sheet, record){ const key=SCHEMAS[sheet].key; const optimistic={...calculateDerived(sheet,record),id:makeTempId(),created_at:new Date().toISOString(),_optimistic:true}; DB[key]=[...(DB[key]||[]),optimistic]; pendingRows.add(optimistic.id); return optimistic; }
+function applyLocalUpdate(sheet,id,record){ const key=SCHEMAS[sheet].key; const arr=DB[key]||[]; const idx=arr.findIndex(r=>r.id===id); if(idx<0) return null; const old={...arr[idx]}; arr[idx]={...arr[idx],...calculateDerived(sheet,record),updated_at:new Date().toISOString(),_optimistic:true}; pendingRows.add(id); return old; }
+function applyLocalDelete(sheet,id){ const key=SCHEMAS[sheet].key; const arr=DB[key]||[]; const idx=arr.findIndex(r=>r.id===id); if(idx<0) return null; const old=arr[idx]; DB[key]=arr.filter(r=>r.id!==id); return old; }
+function commitOptimistic(tempOrId, serverRecord=null){ pendingRows.delete(tempOrId); for(const key of Object.keys(DB)){ const idx=(DB[key]||[]).findIndex(r=>r.id===tempOrId); if(idx>=0){ if(serverRecord && serverRecord.id){ DB[key][idx]={...DB[key][idx],...serverRecord,_optimistic:false}; } else { DB[key][idx]._optimistic=false; } } } }
+function revertCreate(sheet,tempId){ const key=SCHEMAS[sheet].key; DB[key]=(DB[key]||[]).filter(r=>r.id!==tempId); pendingRows.delete(tempId); }
+function revertUpdate(sheet,id,old){ const key=SCHEMAS[sheet].key; const idx=(DB[key]||[]).findIndex(r=>r.id===id); if(idx>=0 && old) DB[key][idx]=old; pendingRows.delete(id); }
+function revertDelete(sheet,old){ const key=SCHEMAS[sheet].key; if(old) DB[key]=[...(DB[key]||[]),old]; }
+async function saveForm(e){ e.preventDefault(); const record=Object.fromEntries(new FormData(e.target).entries()); const sheet=current.sheet; const action=current.id?'updateRecord':'createRecord'; closeForm(); let temp=null, old=null; if(current.id){ old=applyLocalUpdate(sheet,current.id,record); temp={id:current.id}; } else { temp=applyLocalCreate(sheet,record); } renderAll(); showSync(current.id?'Updating in backend...':'Creating in backend...'); try{ const res=await post({action,token:TOKEN,sheet,id:current.id,record}); if(res.status!=='success') throw new Error(res.message||'Save failed'); commitOptimistic(temp.id,res.record); toast('Record saved.'); setTimeout(()=>reloadData(false),350); }catch(err){ current.id?revertUpdate(sheet,temp.id,old):revertCreate(sheet,temp.id); renderAll(); toast('Backend failed. Preview reverted: '+err.message,'error'); }finally{ hideSync(); } }
+async function deleteRecord(id){ if(!confirm('Delete this record? This will be logged.')) return; const sheet=current.sheet; const old=applyLocalDelete(sheet,id); renderAll(); showSync('Deleting in backend...'); try{ const res=await post({action:'deleteRecord',token:TOKEN,sheet,id}); if(res.status!=='success') throw new Error(res.message||'Delete failed'); toast('Record deleted.'); setTimeout(()=>reloadData(false),350); }catch(err){ revertDelete(sheet,old); renderAll(); toast('Delete failed. Record restored: '+err.message,'error'); }finally{ hideSync(); } }
+
+
+function userInitials(name){ const parts=String(name||'User').trim().split(/\s+/).filter(Boolean); if(!parts.length) return 'LB'; if(parts.length===1) return parts[0].slice(0,2).toUpperCase(); return (parts[0][0]+parts[1][0]).toUpperCase(); }
+function normalizePhotoUrl(url){ const s=String(url||'').trim(); if(!s) return ''; const file=s.match(/drive\.google\.com\/file\/d\/([^/]+)/i); if(file) return `https://drive.google.com/uc?export=view&id=${file[1]}`; const open=s.match(/[?&]id=([^&]+)/i); if(/drive\.google\.com/i.test(s)&&open) return `https://drive.google.com/uc?export=view&id=${open[1]}`; return s; }
+function parseSeen(value){ const s=String(value||'').trim(); if(!s) return 0; if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(s)){ const p=s.split(/[- :]/).map(Number); return new Date(p[0],p[1]-1,p[2],p[3],p[4],p[5]).getTime(); } const d=new Date(s).getTime(); return isFinite(d)?d:0; }
+function isOnlineUser(u){ if(typeof u.online==='boolean') return u.online; const seen=parseSeen(u.last_seen_at); return seen && (Date.now()-seen)<=75000; }
+function avatarHtml(user, size='normal'){ const name=user?.name||user?.email||'User'; const photo=normalizePhotoUrl(user?.photo_url||''); const online=isOnlineUser(user); const cls=size==='small'?'presence-avatar online':'presence-avatar '+(online?'online':''); return `<div class="${cls}" title="${html(name)}${online?' • Online':' • Offline'}">${photo?`<img src="${esc(photo)}" alt="${html(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';"><span style="display:none">${html(userInitials(name))}</span>`:`<span>${html(userInitials(name))}</span>`}<span class="presence-status-dot"></span></div>`; }
+function renderPresence(){ if(!USER) return; const users=(DB?.users||[]); const me=users.find(u=>String(u.email||'').toLowerCase()===String(USER.email||'').toLowerCase()) || USER; const chipAvatar=document.getElementById('profileChipAvatar'); const chipName=document.getElementById('profileChipName'); if(chipAvatar) chipAvatar.outerHTML=avatarHtml({...me,online:true},'small').replace('presence-avatar','presence-avatar').replace('<div','<div id="profileChipAvatar"'); if(chipName) chipName.textContent=me.name||USER.name||USER.email||'Profile'; const list=document.getElementById('presenceList'); const onlineUsers=users.filter(u=>String(u.email||'').toLowerCase()!==String(USER.email||'').toLowerCase()).filter(isOnlineUser).slice(0,5); if(list) list.innerHTML=onlineUsers.length?onlineUsers.map(u=>avatarHtml(u)).join(''):'<span class="presence-empty">No others</span>'; const pList=document.getElementById('profileOnlineList'); if(pList) pList.innerHTML=(users.filter(isOnlineUser).length?users.filter(isOnlineUser).map(u=>`<div class="flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2">${avatarHtml(u)}<div><div class="text-xs font-black">${html(u.name||u.email)}</div><div class="text-[10px] text-lee-600 font-black uppercase">Online</div></div></div>`).join(''):'<div class="presence-empty">No online users yet.</div>'); }
+function startPresenceTimers(){ stopPresenceTimers(); sendHeartbeat(false); heartbeatTimer=setInterval(()=>sendHeartbeat(false),15000); presenceRenderTimer=setInterval(renderPresence,5000); }
+function stopPresenceTimers(){ if(heartbeatTimer) clearInterval(heartbeatTimer); if(presenceRenderTimer) clearInterval(presenceRenderTimer); heartbeatTimer=null; presenceRenderTimer=null; }
+async function sendHeartbeat(showErrors=false){ if(!API_URL||!TOKEN) return; try{ const res=await post({action:'heartbeat',token:TOKEN}); if(res.status==='success'){ USER=res.user||USER; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; renderPresence(); } }catch(e){ if(showErrors) toast('Presence failed: '+e.message,'error'); } }
+function openProfileModal(){ if(!USER){toast('Please sign in first.','error');return;} const users=DB?.users||[]; const me=users.find(u=>String(u.email||'').toLowerCase()===String(USER.email||'').toLowerCase()) || USER; document.getElementById('profileEmail').value=me.email||USER.email||''; document.getElementById('profileName').value=me.name||USER.name||''; document.getElementById('profilePhotoUrl').value=me.photo_url||USER.photo_url||''; document.getElementById('profileMsg').innerText=''; updateProfilePreview(); renderPresence(); document.getElementById('profileModal').classList.add('show'); }
+function closeProfileModal(){ document.getElementById('profileModal').classList.remove('show'); }
+function updateProfilePreview(){ const name=document.getElementById('profileName')?.value||USER?.name||'User'; const photo=normalizePhotoUrl(document.getElementById('profilePhotoUrl')?.value||''); const img=document.getElementById('profilePreviewImg'); const initials=document.getElementById('profilePreviewInitials'); initials.textContent=userInitials(name); if(photo){ img.src=photo; img.classList.remove('hidden'); initials.classList.add('hidden'); img.onerror=()=>{img.classList.add('hidden');initials.classList.remove('hidden');}; }else{ img.src=''; img.classList.add('hidden'); initials.classList.remove('hidden'); } }
+async function saveProfile(){ const msg=document.getElementById('profileMsg'); msg.innerText=''; const profile={name:document.getElementById('profileName').value.trim(), photo_url:normalizePhotoUrl(document.getElementById('profilePhotoUrl').value.trim())}; if(!profile.name){msg.innerText='Display name is required.';return;} showSync('Saving profile...'); try{ const res=await post({action:'updateProfile',token:TOKEN,profile}); if(res.status!=='success') throw new Error(res.message||'Profile update failed'); USER=res.user||USER; if(!DB) DB=normalizeDb({}); if(Array.isArray(res.users)) DB.users=res.users; renderPresence(); closeProfileModal(); toast('Profile updated.'); }catch(e){ msg.innerText=e.message; toast(e.message,'error'); }finally{ hideSync(); } }
+document.addEventListener('input', e=>{ if(e.target && (e.target.id==='profileName'||e.target.id==='profilePhotoUrl')) updateProfilePreview(); });
+
+function exportCurrentCsv(){ if(!DB) return; const rows=document.getElementById('tableView').classList.contains('hidden')?dashboardExportRows():filteredRowsForTable(); const headers=document.getElementById('tableView').classList.contains('hidden')?Object.keys(rows[0]||{}):getCurrentHeaders().filter(h=>activeColumns[h]!==false); const csv=[headers.join(',')].concat(rows.map(r=>headers.map(h=>`"${String(csvValue(h,r[h])).replace(/"/g,'""')}"`).join(','))).join('\n'); const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Lee_Business_${current.sheet||'dashboard'}_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href); }
+function dashboardExportRows(){ const s=getStats(); return [{metric:'Total Sales',value:s.totalSales},{metric:'Total Expenses',value:s.totalExpenses},{metric:'Net Income',value:s.income},{metric:'Margin %',value:s.margin.toFixed(2)},{metric:'Businesses',value:s.businesses.length},{metric:'Low Stock',value:s.low.length}]; }
+function csvValue(h,v){ if(h==='business_id') return businessName(v); if(h==='material_id') return materialName(v); if(h==='product_id') return productName(v); return v??''; }
+async function exportPdfReport(){ if(!DB) return; const { jsPDF } = window.jspdf; const doc=new jsPDF('p','mm','a4'); const s=getStats(); const margin=14; let y=14; doc.setFillColor(5,46,22); doc.rect(0,0,210,26,'F'); doc.setTextColor(255); doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text('Lee Business Report',margin,16); doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.text(`Generated: ${new Date().toLocaleString()}`,margin,22); doc.text(`Filter: ${selectedBusiness()==='ALL'?'All Businesses':businessName(selectedBusiness())}`,196,16,{align:'right'}); y=36; doc.setTextColor(15,23,42); doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Executive Summary',margin,y); y+=6;
+  doc.autoTable({startY:y,theme:'grid',head:[['Metric','Value']],body:[['Total Sales',money(s.totalSales)],['Expenses',money(s.totalExpenses)],['Net Income',money(s.income)],['Margin',s.margin.toFixed(1)+'%'],['Businesses',String(s.businesses.length)],['Low Stock',String(s.low.length)]],headStyles:{fillColor:[5,46,22]},styles:{fontSize:9}}); y=doc.lastAutoTable.finalY+10;
+  try{ const c1=document.getElementById('chartBusiness'); if(c1){ doc.addImage(c1.toDataURL('image/png'),'PNG',margin,y,182,70); y+=78; } }catch(e){}
+  if(y>210){doc.addPage();y=14;} doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Recent Sales',margin,y); y+=4; const recent=[...s.sales].slice(-15).reverse().map(r=>[r.sale_date||'',businessName(r.business_id),r.item||'',money(num(r.total_price)||num(r.price)*num(r.qty||1))]); doc.autoTable({startY:y,head:[['Date','Business','Item','Total']],body:recent,headStyles:{fillColor:[22,163,74]},styles:{fontSize:8}});
+  doc.addPage(); y=14; doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.text('Low Stock Watchlist',margin,y); y+=4; const low=s.low.map(m=>[businessName(m.business_id),m.name||'',String(num(m.qty_on_hand)),String(num(m.reorder_level)),m.unit||'']); doc.autoTable({startY:y,head:[['Business','Material','Qty','Reorder','Unit']],body:low,headStyles:{fillColor:[245,158,11]},styles:{fontSize:8}});
+  doc.save(`Lee_Business_Report_${new Date().toISOString().slice(0,10)}.pdf`); }
+
+function html(s){ return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+function esc(s){ return html(s); }
+function unescapeHtml(s){ const t=document.createElement('textarea'); t.innerHTML=s; return t.value; }
+</script>
 </body>
-
 </html>
