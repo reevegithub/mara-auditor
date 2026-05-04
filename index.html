@@ -718,8 +718,20 @@
                 <div>
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Audit
                     Channel</label>
-                  <input id="audit_channel" type="text"  required 
+                  <select id="audit_channel_select" required
+                    onchange="handleAuditChannelChange(this)"
                     class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                    <option value="">Select channel</option>
+                    <option value="PblcSourcd">PblcSourcd</option>
+                    <option value="AI PblcSourcd">AI PblcSourcd</option>
+                    <option value="AI">AI</option>
+                    <option value="Email">Email</option>
+                    <option value="Others">Others</option>
+                  </select>
+                  <input id="audit_channel_other" type="text" placeholder="Specify channel..."
+                    style="display:none"
+                    class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 ring-blue-500">
+                  <input id="audit_channel" type="hidden">
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Property
@@ -1375,6 +1387,9 @@ function openCrudModal(id = null) {
 
   const form = document.getElementById('auditForm');
   form.reset();
+  document.getElementById('audit_channel').value = '';
+  document.getElementById('audit_channel_other').style.display = 'none';
+  document.getElementById('audit_channel_other').required = false;
 
   document.getElementById('audit_id').value = '';
   document.getElementById('modalTitle').textContent = id ? 'Edit Audit' : 'Create Audit';
@@ -1420,6 +1435,21 @@ function openCrudModal(id = null) {
 
       if (key === 'audit_date') {
         el.value = normalizeDateForInput(record[key]);
+      } else if (key === 'audit_channel') {
+        const val = record[key] ?? '';
+        const sel = document.getElementById('audit_channel_select');
+        const otherInput = document.getElementById('audit_channel_other');
+        const knownOptions = ['PblcSourcd', 'AI PblcSourcd', 'AI', 'Email', 'Others'];
+        if (knownOptions.includes(val)) {
+          sel.value = val;
+        } else if (val) {
+          sel.value = 'Others';
+          otherInput.style.display = '';
+          otherInput.required = true;
+          otherInput.value = val;
+          otherInput.oninput = () => { document.getElementById('audit_channel').value = otherInput.value.trim(); };
+        }
+        el.value = val;
       } else {
         el.value = record[key] ?? '';
       }
@@ -1492,6 +1522,22 @@ function closeCrudModal() {
     function round2(n) {
       return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
     }
+
+  function handleAuditChannelChange(sel) {
+    const otherInput = document.getElementById('audit_channel_other');
+    const hidden = document.getElementById('audit_channel');
+    if (sel.value === 'Others') {
+      otherInput.style.display = '';
+      otherInput.required = true;
+      otherInput.oninput = () => { hidden.value = otherInput.value.trim(); };
+      hidden.value = otherInput.value.trim();
+    } else {
+      otherInput.style.display = 'none';
+      otherInput.required = false;
+      otherInput.value = '';
+      hidden.value = sel.value;
+    }
+  }
 
   function getScore(id) {
   const el = document.getElementById(id);
